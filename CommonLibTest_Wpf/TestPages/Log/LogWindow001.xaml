@@ -1,0 +1,24 @@
+﻿<Page x:Class="CommonLibTest_Wpf.TestPages.Log.LogWindow001"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:CommonLibTest_Wpf.TestPages.Log"
+      mc:Ignorable="d" 
+      d:DesignHeight="300" d:DesignWidth="600"
+      Title="LogWindow001" Background="White">
+
+    <Page.Resources>
+        <Style TargetType="Button">
+            <Setter Property="Margin" Value="2"></Setter>
+            <Setter Property="Width" Value="100"></Setter>
+            <Setter Property="Height" Value="25"></Setter>
+        </Style>
+    </Page.Resources>
+    <WrapPanel>
+        <Button Click="Button_Click">Def Info 100条</Button>
+        <Button Click="Button_Click_1">Def Error</Button>
+        <Button Click="Button_Click_2">Def Error 长信息</Button>
+        <Button Click="Button_Click_3">Def Error 带异常</Button>
+    </WrapPanel>
+</Page>

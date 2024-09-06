@@ -1,0 +1,65 @@
+﻿<Page x:Class="CommonLibTest_Wpf.TestPages.Ui.Inputer.DoubleInputer001"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:CommonLibTest_Wpf.TestPages.Ui.Inputer"
+      xmlns:fg="clr-namespace:Common_Wpf.Controls.FeatureGroup;assembly=Common_Wpf"
+      xmlns:vb="clr-namespace:Common_Wpf.Controls.ValueBox;assembly=Common_Wpf"
+      xmlns:contverter="clr-namespace:Common_Wpf.Converter;assembly=Common_Wpf"
+      xmlns:sys="clr-namespace:System;assembly=mscorlib"
+      mc:Ignorable="d" 
+      d:DataContext="{d:DesignInstance local:DoubleInputer001Model}"
+      d:DesignHeight="450" d:DesignWidth="800"
+      Title="DoubleInputer001">
+
+    <Page.Resources>
+        <Style TargetType="Button">
+            <Setter Property="Padding" Value="5"></Setter>
+        </Style>
+        <contverter:IfNullThenDefaultConverter x:Key="IfNullThenDefaultConverter">
+            <contverter:IfNullThenDefaultConverter.DefaultValue>
+                <sys:String>null</sys:String>
+            </contverter:IfNullThenDefaultConverter.DefaultValue>
+        </contverter:IfNullThenDefaultConverter>
+    </Page.Resources>
+    <StackPanel>
+        <fg:KeyValuePairContainer KeyText="Double输入">
+            <vb:DoubleInputer001 HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                                 Value="{Binding CurrentInput, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                 EmptyValue="{Binding EmptyValue}"></vb:DoubleInputer001>
+        </fg:KeyValuePairContainer>
+
+        <fg:KeyValuePairContainer KeyText="当前输入值(只读)">
+            <vb:DoubleInputer001 HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ReadOnly="True"
+                                 Value="{Binding CurrentInput}"></vb:DoubleInputer001>
+        </fg:KeyValuePairContainer>
+
+        <fg:KeyValuePairContainer KeyText="当前空数据值">
+            <vb:DoubleInputer001 HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                                 Value="{Binding EmptyValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"></vb:DoubleInputer001>
+        </fg:KeyValuePairContainer>
+
+        <fg:KeyValuePairContainer KeyText="当前空数据值输入(只读)">
+            <vb:DoubleInputer001 HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ReadOnly="True"
+                                 Value="{Binding EmptyValue}"></vb:DoubleInputer001>
+        </fg:KeyValuePairContainer>
+
+        <fg:KeyValuePairContainer KeyText="当前 double 输入(文本显示)">
+            <Label Content="{Binding CurrentInput, Converter={StaticResource IfNullThenDefaultConverter}}"></Label>
+        </fg:KeyValuePairContainer>
+        <fg:KeyValuePairContainer KeyText="当前空数据值输入(文本显示)">
+            <Label Content="{Binding EmptyValue, Converter={StaticResource IfNullThenDefaultConverter}}"></Label>
+        </fg:KeyValuePairContainer>
+
+        <fg:KeyValuePairContainer KeyText="其他操作">
+            <StackPanel Orientation="Horizontal">
+                <Button Click="Button_Click">输入随机值</Button>
+                <Button Click="Button_Click_1">设置当前值为空数据值</Button>
+                <Button Click="Button_Click_2">设置 null 为空数据值</Button>
+                <Button Click="Button_Click_3">设置 100.01 为空数据值</Button>
+            </StackPanel>
+        </fg:KeyValuePairContainer>
+
+    </StackPanel>
+</Page>

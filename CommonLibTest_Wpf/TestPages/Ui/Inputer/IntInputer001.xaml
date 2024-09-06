@@ -1,0 +1,47 @@
+﻿<Page x:Class="CommonLibTest_Wpf.TestPages.Ui.Inputer.IntInputer001"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:CommonLibTest_Wpf.TestPages.Ui.Inputer"
+      xmlns:vb="clr-namespace:Common_Wpf.Controls.ValueBox;assembly=Common_Wpf"
+      mc:Ignorable="d" 
+      d:DataContext="{d:DesignInstance local:IntInputer001}"
+      d:DesignHeight="450" d:DesignWidth="800"
+      Title="IntInputer001">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+
+        <Label Grid.Row="0" Grid.Column="0">当前输入</Label>
+        <TextBox Text="{Binding CurrentInput, Mode=OneWay}" IsReadOnly="True"
+                 Grid.Row="0" Grid.Column="1"></TextBox>
+
+        <Label Grid.Row="1" Grid.Column="0">当前空值</Label>
+        <TextBox Text="{Binding CurrentEmptyValue, Mode=OneWay}" IsReadOnly="True"
+                 Grid.Row="1" Grid.Column="1"></TextBox>
+
+        <Label Grid.Row="2" Grid.Column="0">当前空值</Label>
+        <vb:IntInputer001 Value="{Binding Input, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                          EmptyValue="{Binding EmptyValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                          HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                          Grid.Row="2" Grid.Column="1"></vb:IntInputer001>
+        <Label Grid.Row="3" Grid.Column="0">其他操作</Label>
+        <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal">
+            <Button Click="Button_Click">设定当前值为空值</Button>
+            <Button Click="Button_Click_1">输入随机值</Button>
+        </StackPanel>
+
+    </Grid>
+</Page>

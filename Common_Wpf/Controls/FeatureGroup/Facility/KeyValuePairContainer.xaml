@@ -1,0 +1,87 @@
+﻿<ResourceDictionary 
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:converter="clr-namespace:Common_Wpf.Converter"
+    mc:Ignorable="d"
+    xmlns:local_FeatureGroup="clr-namespace:Common_Wpf.Controls.FeatureGroup">
+
+    <Style TargetType="{x:Type local_FeatureGroup:KeyValuePairContainer}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="local_FeatureGroup:KeyValuePairContainer">
+                    <ControlTemplate.Resources>
+                        <converter:IsEmptyConverter x:Key="IsEmptyConverter"></converter:IsEmptyConverter>
+
+                        <Style x:Key="Current" TargetType="ContentControl">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding KeyTemplate, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource IsEmptyConverter}}" Value="True">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate>
+                                                <Label 
+                                                    HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                                    HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                                    <TextBlock
+                                                        TextWrapping="Wrap"
+                                                        Text="{Binding KeyText, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local_FeatureGroup:KeyValuePairContainer}}}">
+                                                    </TextBlock>
+                                                </Label>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding KeyTemplate, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource IsEmptyConverter}}" Value="False">
+                                    <Setter Property="Template" Value="{Binding KeyTemplate, RelativeSource={RelativeSource TemplatedParent}}">
+                                    </Setter>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                        
+                    </ControlTemplate.Resources>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition 
+                                Width="{Binding KeyWidth, RelativeSource={RelativeSource TemplatedParent}}" 
+                                MinWidth="{Binding KeyMinWidth, RelativeSource={RelativeSource TemplatedParent}}" 
+                                MaxWidth="{Binding KeyMaxWidth, RelativeSource={RelativeSource TemplatedParent}}" />
+                            <ColumnDefinition 
+                                Width="{Binding ValueWidth, RelativeSource={RelativeSource TemplatedParent}}" 
+                                MinWidth="{Binding ValueMinWidth, RelativeSource={RelativeSource TemplatedParent}}" 
+                                MaxWidth="{Binding ValueMaxWidth, RelativeSource={RelativeSource TemplatedParent}}" />
+                        </Grid.ColumnDefinitions>
+
+                        <ContentControl Style="{StaticResource Current}" Grid.Row="0" Grid.Column="0">
+                            <!--<ContentControl.Triggers>
+                                <DataTrigger Binding="{Binding Template, Source={RelativeSource TemplatedParent}, Converter={StaticResource IsNullConverter}}" Value="True">
+                                    <Setter Property="Content">
+                                        <Setter.Value>
+                                            <Label 
+                                                HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                                HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                                <TextBlock
+                                                    TextWrapping="Wrap"
+                                                    Text="{Binding KeyText, Source={RelativeSource TemplatedParent}}">
+                                                </TextBlock>
+                                            </Label>
+                                        </Setter.Value>
+                                    </Setter>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Template, Source={RelativeSource TemplatedParent}, Converter={StaticResource IsNullConverter}}" Value="False">
+                                    <Setter Property="Template" Value="{Binding Template, Source={RelativeSource TemplatedParent}}">
+                                    </Setter>
+                                </DataTrigger>
+                            </ContentControl.Triggers>-->
+                        </ContentControl>
+                        <ContentControl Grid.Row="0" Grid.Column="1"
+                                        HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+                            <ContentPresenter/>
+                        </ContentControl>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    
+</ResourceDictionary>

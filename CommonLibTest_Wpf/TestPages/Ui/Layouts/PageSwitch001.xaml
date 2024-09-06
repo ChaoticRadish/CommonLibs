@@ -1,0 +1,147 @@
+﻿<Page x:Class="CommonLibTest_Wpf.TestPages.Ui.Layouts.PageSwitch001"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:CommonLibTest_Wpf.TestPages.Ui.Layouts"
+      xmlns:testPages="clr-namespace:CommonLibTest_Wpf.TestPages.Ui"
+      xmlns:converter="clr-namespace:Common_Wpf.Converter;assembly=Common_Wpf"
+      xmlns:commonVM="clr-namespace:Common_Wpf.CommonViewModel;assembly=Common_Wpf"
+      xmlns:layouts="clr-namespace:Common_Wpf.Controls.LayoutPanel;assembly=Common_Wpf"
+      xmlns:util="clr-namespace:Common_Wpf.Utility;assembly=Common_Wpf"
+      mc:Ignorable="d" 
+      d:DesignHeight="450" d:DesignWidth="800"
+      Title="PageSwitch001">
+
+    <Page.Resources>
+        <converter:GetTypeConverter x:Key="getTypeConverter"></converter:GetTypeConverter>
+        <converter:IsNullConverter x:Key="isNullConverter"></converter:IsNullConverter>
+        <converter:BoolToVisibilityConverter x:Key="boolToVisibilityConverter"></converter:BoolToVisibilityConverter>
+
+        <Page x:Key="InnerPageTest">
+            <StackPanel Orientation="Vertical">
+                <Label>测试1</Label>
+                <Label>测试2</Label>
+                <Label>测试3</Label>
+            </StackPanel>
+        </Page>
+        
+    </Page.Resources>
+    
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="auto"/>
+        </Grid.ColumnDefinitions>
+        
+        <layouts:LeftMenuPageSwitcher Grid.Column="0" x:Name="pageSwitcher" DefaultMenuItemMaxWidth="100">
+            <layouts:LeftMenuPageSwitcher.Pages>
+                <commonVM:PageSwictherItemWithPageType Id="1" Name="带可收起区域的容器测试" 
+                                                       PageType="{x:Type local:RetractableContainer001}">
+                    <commonVM:PageSwictherItemWithPageType.CustomItemTemplate>
+                        <ControlTemplate>
+                            <StackPanel Orientation="Horizontal" Background="Red" 
+                                        d:DataContext="{d:DesignInstance commonVM:PageSwictherItemWithPageType}">
+                                <Label Content="{Binding Name}"></Label>
+                                <Button Command="{Binding SwitchPageCommand}">跳转</Button>
+                            </StackPanel>
+                        </ControlTemplate>
+                    </commonVM:PageSwictherItemWithPageType.CustomItemTemplate>
+                </commonVM:PageSwictherItemWithPageType>
+                <commonVM:PageSwictherItemWithPageType Id="2" Name="Base001" Brief="测试页: Base001! " 
+                                                       PageType="{x:Type testPages:Base001}"/>
+                <commonVM:PageSwictherItemWithPageType Id="3" Name="Base002" Brief="测试页: Base002! " 
+                                                       PageType="{x:Type testPages:Base002}"/>
+                <commonVM:PageSwictherItemWithPageType Id="4" Name="Base003" Brief="测试页: Base003! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !" 
+                                                       PageType="{x:Type testPages:Base003}"/>
+                
+                <!-- 实际运行会传入 System.Windows.Controls.Page, 可以正常运行. 这里先注释掉了, 会有警告, 看着难受 -->
+                <!--<commonVM:PageSwictherItemWithPage Id="5" Name="内部测试页" Brief="静态资源: InnerPageTest" 
+                                                       Page="{StaticResource InnerPageTest}"/>-->
+                
+                <commonVM:PageSwictherItemWithPageType Id="6" Name="Base003(测试2)" 
+                                                       PageType="{x:Type testPages:Base003}"/>
+                <commonVM:PageSwictherItemWithPageType Id="7" Name="Base004" Brief="仅 Debug 可见" DebugVisible="True" ReleaseVisible="False" 
+                                                       PageType="{x:Type testPages:Base004}"/>
+                <commonVM:PageSwictherItemWithPageType Id="8" Name="Base004" Brief="仅 Release 可见" DebugVisible="False" ReleaseVisible="True" 
+                                                       PageType="{x:Type testPages:Base004}"/>
+
+            </layouts:LeftMenuPageSwitcher.Pages>
+
+            <!-- 自定义菜单样式的测试, 取消注释后就会使用自定义的 -->
+            <layouts:LeftMenuPageSwitcher.CustomMenuTemplate>
+                <ControlTemplate>
+                    <StackPanel>
+                        <Label Content="自定义菜单样式"/>
+                        <Label Content="{Binding Converter={StaticResource isNullConverter}}"/>
+                        <Label Content="{Binding Converter={StaticResource getTypeConverter}}"/>
+                        <Label DataContext="{Binding CurrentPage}" Content="{Binding Converter={StaticResource getTypeConverter}}"/>
+                        <Label Content="{Binding ViewModel.Pages.Id}"/>
+                        <ListBox ItemsSource="{Binding Pages}" DataContext="{Binding ViewModel}" d:DataContext="{d:DesignInstance commonVM:PageSwitcher}" MinWidth="50">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate DataType="{x:Type commonVM:PageSwitcherItem}">
+                                    <StackPanel Orientation="Vertical">
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
+                                            <Label Content="{Binding Name}"></Label>
+                                            <Button Command="{Binding SwitchPageCommand}">跳转</Button>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
+                                            <Label Foreground="Gray" Visibility="{Binding DebugVisible, Converter={StaticResource boolToVisibilityConverter}}">Debug</Label>
+                                            <Label Foreground="Gray" Visibility="{Binding ReleaseVisible, Converter={StaticResource boolToVisibilityConverter}}">Release</Label>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+                </ControlTemplate>
+            </layouts:LeftMenuPageSwitcher.CustomMenuTemplate>
+
+            <layouts:LeftMenuPageSwitcher.CustomPageContainerTemplate>
+                <ControlTemplate>
+                    <Grid d:DataContext="{d:DesignInstance layouts:LeftMenuPageSwitcher}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+
+                        <StackPanel Grid.Row="0" Orientation="Vertical">
+                            <Label Content="自定义页面样式"/>
+                            <Separator/>
+                            <Label Content="{Binding Converter={StaticResource isNullConverter}}"/>
+                            <Label Content="{Binding Converter={StaticResource getTypeConverter}}"/>
+                            <Separator/>
+                            <Label Content="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}, Converter={StaticResource isNullConverter}}"/>
+                            <Label Content="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}, Converter={StaticResource getTypeConverter}}"/>
+                            <Separator/>
+                            <Label Content="{Binding DataContext, RelativeSource={RelativeSource Mode=TemplatedParent}, Converter={StaticResource isNullConverter}}"/>
+                            <Label Content="{Binding DataContext, RelativeSource={RelativeSource Mode=TemplatedParent}, Converter={StaticResource getTypeConverter}}"/>
+                            <Separator/>
+                            <Label Content="{Binding CurrentPage.Title}" FontSize="20" FontWeight="Bold"></Label>
+                            <Label Content="{Binding ViewModel.CurrentSelected.Name}" FontWeight="Bold"></Label>
+                            <Separator/>
+                            
+                        </StackPanel>
+
+                        <ContentControl Grid.Row="1" Content="{Binding Content, RelativeSource={RelativeSource TemplatedParent}}"/>
+
+                    </Grid>
+                </ControlTemplate>
+            </layouts:LeftMenuPageSwitcher.CustomPageContainerTemplate>
+            
+            <StackPanel Orientation="Vertical">
+                <Label>测试, 无页面选择下的页面</Label>
+                <Label Content="{Binding Converter={StaticResource getTypeConverter}}"></Label>
+                <Label Content="{Binding Converter={StaticResource isNullConverter}}"></Label>
+                <Label Content="{Binding Id, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type layouts:LeftMenuPageSwitcher}}}"></Label>
+                <Label Content="{Binding Pages.Id, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type layouts:LeftMenuPageSwitcher}}}"></Label>
+                <Label Content="{Binding ViewModel.Pages.Id, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type layouts:LeftMenuPageSwitcher}}}"></Label>
+            </StackPanel>
+            
+        </layouts:LeftMenuPageSwitcher>
+
+        <StackPanel Orientation="Vertical" Grid.Column="1">
+            <Button Command="{Binding ClearSelectedPageCommand, ElementName=pageSwitcher}">取消页面选择</Button>
+        </StackPanel>
+    </Grid>
+</Page>

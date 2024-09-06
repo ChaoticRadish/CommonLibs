@@ -1,0 +1,59 @@
+﻿<Page x:Class="CommonLibTest_Wpf.TestPages.Ui.Grid.DataGrid001"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:CommonLibTest_Wpf.TestPages.Ui.Grid"
+      xmlns:tmd="clr-namespace:CommonLibTest_Wpf.Models"
+      mc:Ignorable="d" 
+      d:DataContext="{d:DesignInstance tmd:TestModelList001}"
+      d:DesignHeight="450" d:DesignWidth="800"
+      Title="Grid001">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="30"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal">
+            <Button Click="Button_Click" Padding="5">添加随机项</Button>
+            <Button Click="Button_Click_1" Padding="5">添加随机项(10个)</Button>
+        </StackPanel>
+        
+        <DataGrid Grid.Row="1" ItemsSource="{Binding .}" d:ItemsSource="{d:SampleData ItemCount=30}" AutoGenerateColumns="False">
+            <DataGrid.Columns>
+                <DataGridTemplateColumn Header="ID">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Id}"></TextBlock>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="B" Binding="{Binding B, Mode=TwoWay}"></DataGridTextColumn>
+                <DataGridTextColumn Header="StrA" Binding="{Binding StrA, Mode=TwoWay}"></DataGridTextColumn>
+                <DataGridTextColumn Header="StrB" Binding="{Binding StrB, Mode=TwoWay}"></DataGridTextColumn>
+                <DataGridTextColumn Header="StrC" Binding="{Binding StrC, Mode=TwoWay}"></DataGridTextColumn>
+                <DataGridTextColumn Header="StrD" Binding="{Binding StrD, Mode=TwoWay}"></DataGridTextColumn>
+                <DataGridTextColumn Header="StrE" Binding="{Binding StrE, Mode=TwoWay}"></DataGridTextColumn>
+                <DataGridTextColumn Header="StrF 1" Binding="{Binding StrF, Mode=TwoWay}"></DataGridTextColumn>
+                <DataGridTextColumn Header="StrF 2" Binding="{Binding StrF, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"></DataGridTextColumn>
+                <DataGridTemplateColumn Header="StrF编辑" MinWidth="80">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBox Text="{Binding StrF, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"></TextBox>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="按钮列">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Click="Button_Click_2" Tag="{Binding}">日志! </Button>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+            
+        </DataGrid>
+    </Grid>
+</Page>
