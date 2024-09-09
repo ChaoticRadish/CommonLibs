@@ -1,6 +1,8 @@
 ﻿using Common_Util.Attributes.General;
+using Microsoft.VisualBasic.FileIO;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -67,6 +69,44 @@ namespace Common_Util
             }
         }
 
+        /// <summary>
+        /// 遍历输入的枚举类型中的每一个枚举值
+        /// </summary>
+        /// <remarks>
+        /// 如果枚举类型包含了多个同数值的枚举值, 遍历过程中可能会出现重复! 
+        /// </remarks>
+        /// <typeparam name="TEnum"></typeparam>
+        /// <returns></returns>
+        public static IEnumerable<TEnum> All<TEnum>() where TEnum : Enum
+        {
+            foreach (var enumObj in Enum.GetValues(typeof(TEnum)))
+            {
+                yield return (TEnum)enumObj;
+            }
+        }
+        /// <summary>
+        /// 遍历输入的枚举类型中的每一个枚举值对应的 <see cref="FieldInfo"/>
+        /// </summary>
+        /// <typeparam name="TEnum"></typeparam>
+        /// <returns></returns>
+        public static IEnumerable<FieldInfo> AllFields<TEnum>() where TEnum : Enum
+        {
+            Type type = typeof(TEnum);
+            var fields = type.GetFields(BindingFlags.Public | BindingFlags.Static);
+            foreach (var field in fields)
+            {
+                yield return field;
+            }
+        }
+        /// <summary>
+        /// 遍历输入的枚举类型中的每一个枚举值对应的名字
+        /// </summary>
+        /// <typeparam name="TEnum"></typeparam>
+        /// <returns></returns>
+        public static IEnumerable<string> AllNames<TEnum>() where TEnum : Enum
+        {
+            return AllFields<TEnum>().Select(i => i.Name);
+        }
         /// <summary>
         /// 遍历输入的枚举类型中的每一个枚举值
         /// </summary>
@@ -249,6 +289,30 @@ namespace Common_Util
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// 尝试获取目标枚举类型中, 名字与输入字符串完全匹配的项
+        /// </summary>
+        /// <remarks>
+        /// 如果存在与找到的匹配项数值相同的枚举值, 可能会返回数值相等的其他项! 
+        /// </remarks>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="str"></param>
+        /// <param name="enum"></param>
+        /// <returns></returns>
+        public static bool TryGetMatchName<TEnum>(string str, [NotNullWhen(true)] out TEnum? @enum) where TEnum : Enum
+        {
+            foreach (var enumField in AllFields<TEnum>()) 
+            {
+                if (enumField.Name.Equals(str))
+                {
+                    @enum = (TEnum)enumField.GetValue(null)!;
+                    return true;
+                }
+            }
+            @enum = default;
+            return false;
         }
     }
 }
