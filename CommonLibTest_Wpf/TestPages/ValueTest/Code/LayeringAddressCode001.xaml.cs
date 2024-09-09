@@ -207,6 +207,7 @@ namespace CommonLibTest_Wpf.TestPages.ValueTest.Code
                 if (!code.Value.IsRange)
                 {
                     Logger.Operation.Warning($"无法添加迷你分支到节点: {code}, 因为该节点节点值不是范围节点");
+                    return;
                 }
 
                 Logger.Operation.Info($"尝试添加迷你分支到节点: {code}");
