@@ -19,7 +19,7 @@ namespace CommonLibTest_Console
             AllocConsole();
 #endif
 
-            TestBase test = new CSharp.Enum002();
+            TestBase test = new IO.TempFile002();
             
             test.Run();
             test.Finish();
