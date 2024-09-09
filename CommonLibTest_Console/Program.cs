@@ -19,7 +19,7 @@ namespace CommonLibTest_Console
             AllocConsole();
 #endif
 
-            TestBase test = new DataStruct.ObservableCollection001();
+            TestBase test = new CSharp.Enum002();
             
             test.Run();
             test.Finish();
