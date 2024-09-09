@@ -56,5 +56,27 @@ namespace Common_Util.Extensions
         {
             return i > checkValue ? i : null;
         }
+
+        /// <summary>
+        /// 取得从 0 依次 +1, 直到等于 <paramref name="i"/>-1 的遍历器
+        /// </summary>
+        /// <param name="i">如果小于或等于0, 遍历器将是空的</param>
+        /// <returns></returns>
+        public static IEnumerable<int> ForUntil(this int i)
+        {
+            for (int index = 0; index < i; index++)
+                yield return index;
+        }
+        /// <summary>
+        /// 取得从 0 依次 +<paramref name="step"/>, 直到等于 <paramref name="i"/>-1 的遍历器
+        /// </summary>
+        /// <param name="i">如果小于或等于0, 遍历器将是空的</param>
+        /// <param name="step">步长</param>
+        /// <returns></returns>
+        public static IEnumerable<int> ForUntil(this int i, int step)
+        {
+            for (int index = 0; index < i; index += step)
+                yield return index;
+        }
     }
 }
