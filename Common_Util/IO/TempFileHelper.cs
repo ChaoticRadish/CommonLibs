@@ -1,16 +1,51 @@
-﻿using Common_Util.Log;
+﻿using Common_Util.Interfaces.IO;
+using Common_Util.Log;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static Common_Util.IO.TempFileHelper;
 
 namespace Common_Util.IO
 {
-    public class TempFileHelper
+    public static class TempFileHelper
     {
+        #region Manager
+        /// <summary>
+        /// 获取一个基于 <see cref="TempFileHelper.NewTempFile"/> 的临时文件管理器
+        /// </summary>
+        /// <remarks>
+        /// 调用该管理器创建的临时文件将在释放管理器时被释放
+        /// </remarks>
+        public static ITempFileManager GetDefaultManager()
+        {
+            return new tempFileManager_HelperImpl();
+        }
+        private class tempFileManager_HelperImpl : ITempFileManager<TempFile>
+        {
+            private List<int> ids = [];
+
+            public TempFile NewOne()
+            {
+                var output = NewTempFile();
+                int id = output.Id;
+                ids.Add(id);
+                return output;
+            }
+            public void Dispose()
+            {
+                _ = ReleaseTempFileAsync(ids);
+            }
+
+            ITempFile ITempFileManager.NewOne()
+            {
+                return NewOne();
+            }
+        }
+
+        #endregion
+
 
         #region 设定
 
@@ -27,7 +62,7 @@ namespace Common_Util.IO
 
         #endregion
 
-        public struct TempFile : IDisposable
+        public struct TempFile : ITempFile, IDisposable
         {
             public int Id { get; set; }
 
@@ -160,7 +195,7 @@ namespace Common_Util.IO
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        protected static void ReleaseTempFile(int id)
+        private static void ReleaseTempFile(int id)
         {
             if (tempFiles.TryRemove(id, out var exist))
             {
@@ -174,9 +209,24 @@ namespace Common_Util.IO
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        protected static Task ReleaseTempFileAsync(int id)
+        private static Task ReleaseTempFileAsync(int id)
         {
             return Task.Run(() => ReleaseTempFile(id));
+        }
+        /// <summary>
+        /// 批量释放临时文件, 将关闭文件流, 并将其删除
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <returns></returns>
+        private static Task ReleaseTempFileAsync(IEnumerable<int> ids)
+        {
+            return Task.Run(() =>
+            {
+                foreach (var id in ids)
+                {
+                    ReleaseTempFile(id);
+                }
+            });
         }
         #endregion
 
