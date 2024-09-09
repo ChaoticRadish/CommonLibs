@@ -41,28 +41,24 @@ namespace Common_Util.Data.Structure.Tree.Extensions
             IEqualityComparer<TLayer>? comparer = null)
             where TCode : ILayeringAddressCode<TLayer>
         {
-            OperationResultEx result;
-
-            comparer ??= EqualityComparer<TLayer>.Default;
-
-            TCode rootCode;
-            if (tree.Root == null)
-            {
-                rootCode = createRangeFunc([]);
-                tree.CreateRootNode(rootCode);
-            }
-            else
-            {
-                rootCode = tree.Root.NodeValue;
-            }
-            if (!rootCode.IsRange)
-            {
-                return result = new Exception("树的节点值不是范围编码! ");
-            }
-
-            return Add(tree.Root!, code, createItemFunc, createRangeFunc, comparer);
+            return IMultiTreeExtensions.Add(tree, code, createItemFunc, createRangeFunc, comparer);
         }
 
+        /// <summary>
+        /// 向节点值类型为 <see cref="ILayeringAddressCode{TLayer}"/> 的 <see cref="ObservableMultiTreeNode{TValue}"/> 中指定路径 (由传入的编码值决定) 上添加传入的值
+        /// <para>此方法要求传入节点必须是一个范围编码</para>
+        /// </summary>
+        /// <typeparam name="TLayer"></typeparam>
+        /// <typeparam name="TCode"></typeparam>
+        /// <param name="node">将要插入新节点的节点 (或者其某代父节点)</param>
+        /// <param name="code"></param>
+        /// <param name="createItemFunc"></param>
+        /// <param name="createRangeFunc"></param>
+        /// <param name="comparer"></param>
+        /// <returns>
+        /// <para>Failure => 因传入值不在树根节点的范围内, 已有等价值, 或其他原因, 未添加传入编码到树上</para>
+        /// <para>Exception => 树本身的结构或数据等有问题, 例如: 根节点不是一个范围编码</para>
+        /// </returns>
         public static IOperationResultEx Add<TLayer, TCode>(
             this ObservableMultiTreeNode<TCode> node,
             TCode code,
@@ -71,15 +67,7 @@ namespace Common_Util.Data.Structure.Tree.Extensions
             IEqualityComparer<TLayer>? comparer = null)
             where TCode : ILayeringAddressCode<TLayer>
         {
-            return _addFromCode(
-                node, code, 
-                createItemFunc, createRangeFunc, 
-                (arg) =>
-                {
-                    arg.targetCollection.Add(arg.newNode);
-                    return (OperationResultEx)true;
-                },
-                comparer);
+            return IMultiTreeExtensions.Add(node, code, createItemFunc, createRangeFunc, comparer);
         }
 
         /// <summary>
@@ -108,32 +96,23 @@ namespace Common_Util.Data.Structure.Tree.Extensions
             IEqualityComparer<TLayer>? equalityComparer = null)
             where TCode : ILayeringAddressCode<TLayer>
         {
-            OperationResultEx result;
-
-            equalityComparer ??= EqualityComparer<TLayer>.Default;
-
-            TCode rootCode;
-            if (tree.Root == null)
-            {
-                rootCode = createRangeFunc([]);
-                tree.CreateRootNode(rootCode);
-            }
-            else
-            {
-                rootCode = tree.Root.NodeValue;
-            }
-            if (!rootCode.IsRange)
-            {
-                return result = new Exception("树的节点值不是范围编码! ");
-            }
-
-            return OrderlyAdd(tree.Root!, code, createItemFunc, createRangeFunc, desc, comparer, equalityComparer);
+            return IMultiTreeExtensions.OrderlyAdd<TLayer, TCode, ObservableMultiTreeNode<TCode>, ObservableMultiTree<TCode>>(
+                tree, code, createItemFunc, createRangeFunc, 
+                (args) => (OperationResult<ObservableMultiTreeNode<TCode>>)new ObservableMultiTreeNode<TCode>(args.parent, args.code),
+                (args) =>
+                {
+                    args.parent.Childrens.Insert(args.index, args.newNode);
+                    return (OperationResult)true;
+                },
+                desc,
+                comparer,
+                equalityComparer);
         }
         /// <summary>
-        /// 向节点值类型为 <see cref="ILayeringAddressCode{TLayer}"/> 的 <see cref="ObservableMultiTree{TValue}"/> 中指定路径 (由传入的编码值决定) 上有序得添加传入的值
+        /// 向节点值类型为 <see cref="ILayeringAddressCode{TLayer}"/> 的 <see cref="ObservableMultiTreeNode{TValue}"/> 中指定路径 (由传入的编码值决定) 上有序得添加传入的值
         /// </summary>
         /// <remarks>
-        /// 此方法要求根节点必须是一个范围编码. <br/>
+        /// 此方法要求传入节点必须是一个范围编码. <br/>
         /// 插入到子项集合中时, 会使用传入的比较器将其插入到合适的位置. <br/>(注: 插入时逐一比对, 有符合比较条件的位置就插入, 不会改变集合其他项的顺序, 所以如果原本就是无序的, 或者排序与参数相反, 可能得不到预期的结果)
         /// </remarks>
         /// <typeparam name="TLayer"></typeparam>
@@ -155,136 +134,17 @@ namespace Common_Util.Data.Structure.Tree.Extensions
             IEqualityComparer<TLayer>? equalityComparer = null)
             where TCode : ILayeringAddressCode<TLayer>
         {
-            comparer ??= Comparer<TCode>.Default;
-            return _addFromCode<TLayer, TCode>(
-                node, code,
-                createItemFunc, createRangeFunc,
-                (arg) =>
+            return IMultiTreeExtensions.OrderlyAdd<TLayer, TCode, ObservableMultiTreeNode<TCode>>(
+                node, code, createItemFunc, createRangeFunc,
+                (args) => (OperationResult<ObservableMultiTreeNode<TCode>>)new ObservableMultiTreeNode<TCode>(args.parent, args.code),
+                (args) =>
                 {
-                    int index = 0;
-                    bool endFlag = false;
-                    foreach (var item in arg.targetCollection)
-                    {
-                        switch (comparer.Compare(arg.newCode, item.NodeValue))
-                        {
-                            case < 0:   // 新值 < 当前遍历项
-                                if (!desc)
-                                {
-                                    endFlag = true;
-                                }
-                                break;
-
-                            case 0:
-                                break;
-
-                            case > 0:   // 新值 > 当前遍历项
-                                if (desc)
-                                {
-                                    endFlag = true;
-                                }
-                                break;
-                        }
-                        if (endFlag) break;
-                        index++;
-                    }
-                    arg.targetCollection.Insert(index, arg.newNode);
-
-                    return (OperationResultEx)true;
+                    args.parent.Childrens.Insert(args.index, args.newNode);
+                    return (OperationResult)true;
                 },
+                desc,
+                comparer,
                 equalityComparer);
-        }
-
-        private static IOperationResultEx _addFromCode<TLayer, TCode>(
-            this ObservableMultiTreeNode<TCode> node,
-            TCode code,
-            Func<TLayer[], TCode> createItemFunc,
-            Func<TLayer[], TCode> createRangeFunc,
-            Func<(TLayer targetLayerValue, TCode newCode, ObservableMultiTreeNode<TCode> newNode, ObservableCollection<ObservableMultiTreeNode<TCode>> targetCollection), IOperationResultEx> addToChildrenCollectionFunc, 
-            IEqualityComparer<TLayer>? comparer)
-            where TCode : ILayeringAddressCode<TLayer>
-        {
-            OperationResultEx result;
-
-            comparer ??= EqualityComparer<TLayer>.Default;
-
-            TCode rootCode = node.NodeValue;
-            if (!rootCode.IsRange)
-            {
-                return result = new Exception("传入节点的节点值不是范围编码! ");
-            }
-
-            TLayer[] codeRange = code.IsRange ? code.LayerValues : code.LayerValues[..^1];
-
-            TLayer[] rootCrossing;
-            if (rootCode.LayerCount > 0)
-            {
-                rootCrossing = rootCode.Crossing(codeRange, comparer);
-            }
-            else
-            {
-                rootCrossing = [];
-            }
-
-            if (rootCrossing.Length < rootCode.LayerCount)
-            {
-                return result = "传入编码属于根节点之前的其他分支路径";
-            }
-
-            var currentNode = node;
-            for (int i = rootCrossing.Length; i < codeRange.Length; i++)
-            {
-                TLayer target = codeRange[i];
-                var existNode = currentNode.Childrens.FirstOrDefault(child => child.NodeValue.IsRange && comparer.Equals(target, child.NodeValue.LayerValues[i]));
-                if (existNode != null)
-                {
-                    if (code.IsRange && i == code.LayerCount - 1)
-                    {
-                        return result = "已存在等价节点! ";
-                    }
-                    else
-                    {
-                        currentNode = existNode;
-                    }
-                }
-                else
-                {
-                    TLayer[] newPath = LayeringAddressCodeHelper.CreatePath(currentNode.NodeValue.LayerValues, target);
-                    TCode rangeCode = createRangeFunc(newPath);
-                    ObservableMultiTreeNode<TCode> newNode = new(currentNode, rangeCode);
-                    // currentNode.Childrens.Add(newNode);
-                    var addResult = addToChildrenCollectionFunc((target, rangeCode, newNode, currentNode.Childrens));
-                    if (addResult.IsFailure)
-                    {
-                        return result = OperationResultEx.Failure(addResult);
-                    }
-                    currentNode = newNode;
-                }
-            }
-
-            if (!code.IsRange)
-            {
-                TLayer target = code.LayerValues[^1];
-                var existNode = currentNode.Childrens.FirstOrDefault(child => !child.NodeValue.IsRange && comparer.Equals(target, child.NodeValue.LayerValues[^1]));
-                if (existNode != null)
-                {
-                    return result = "已存在等价节点! ";
-                }
-                else
-                {
-                    TLayer[] newPath = LayeringAddressCodeHelper.CreatePath(currentNode.NodeValue.LayerValues, target);
-                    TCode newCode = createItemFunc(newPath);
-                    ObservableMultiTreeNode<TCode> newNode = new(currentNode, newCode);
-                    var addResult = addToChildrenCollectionFunc((target, newCode, newNode, currentNode.Childrens));
-                    if (addResult.IsFailure)
-                    {
-                        return result = OperationResultEx.Failure(addResult);
-                    }
-                    //currentNode.Childrens.Add(newNode);
-                }
-
-            }
-
-            return result = true;
         }
 
         #endregion

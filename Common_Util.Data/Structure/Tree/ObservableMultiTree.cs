@@ -7,6 +7,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,7 +20,9 @@ namespace Common_Util.Data.Structure.Tree
     /// </summary>
     /// <typeparam name="TValue"></typeparam>
     public class ObservableMultiTree<TValue> 
-        : IMultiTree<TValue>, 
+        : IAddableMultiTree<TValue>, 
+        ICanCreateRootNodeFrom<TValue>,
+        IHasRootNodeAs<ObservableMultiTreeNode<TValue>>,
         IEnumerable<TValue>,
         IUnorderedCollectionChanged<ObservableMultiTreeNode<TValue>>,
         ISuspendUpdate,
@@ -28,8 +31,10 @@ namespace Common_Util.Data.Structure.Tree
         public ObservableMultiTreeNode<TValue>? Root { get; private set; }
 
         IMultiTreeNode<TValue>? IMultiTree<TValue>.Root => Root;
+        IAddableMultiTreeNode<TValue>? IAddableMultiTree<TValue>.Root => Root;
 
         #region 子项
+        [MemberNotNull(nameof(Root))]
         public void CreateRootNode(TValue nodeValue)
         {
             if (Root != null)
@@ -209,7 +214,7 @@ namespace Common_Util.Data.Structure.Tree
         #endregion
     }
 
-    public class ObservableMultiTreeNode<TValue> : IMultiTreeNode<TValue>, IUnorderedCollectionChanged<ObservableMultiTreeNode<TValue>>, ISortable<TValue>
+    public class ObservableMultiTreeNode<TValue> : IAddableMultiTreeNode<TValue>, IUnorderedCollectionChanged<ObservableMultiTreeNode<TValue>>, ISortable<TValue>
     {
 
         public ObservableMultiTreeNode(ObservableMultiTreeNode<TValue>? parent, TValue nodeValue)
@@ -231,6 +236,7 @@ namespace Common_Util.Data.Structure.Tree
         public ObservableCollection<ObservableMultiTreeNode<TValue>> Childrens { get; private set; } = [];
 
         IEnumerable<IMultiTreeNode<TValue>> IMultiTreeNode<TValue>.Childrens => Childrens;
+        IEnumerable<IAddableMultiTreeNode<TValue>> IAddableMultiTreeNode<TValue>.Childrens => Childrens;
 
         #endregion
 
@@ -351,6 +357,23 @@ namespace Common_Util.Data.Structure.Tree
         public void Sort(IComparer<TValue> comparer, bool desc)
         {
             Childrens.Sort(n => n.NodeValue, comparer, desc);
+        }
+        /// <summary>
+        /// 使用传入值实例化新节点后, 添加到当前节点的子节点集合中
+        /// </summary>
+        /// <param name="item"></param>
+        public void Add(TValue item)
+        {
+            TryAdd(item, out _);
+        }
+
+        public bool TryAdd(TValue item, [NotNullWhen(true)] out IAddableMultiTreeNode<TValue>? node)
+        {
+            var _node = new ObservableMultiTreeNode<TValue>(this, item);
+            Childrens.Add(_node);
+
+            node = _node;
+            return true;
         }
         #endregion
 
