@@ -80,7 +80,7 @@ namespace Common_Util.Data.Structure.Value
 
         public TLayer[] LayerValues
         {
-            get => layerValues;
+            get => layerValues ?? [];   // 确保返回空集合
             set
             {
                 layerValues = value;
@@ -194,7 +194,7 @@ namespace Common_Util.Data.Structure.Value
 
         public TLayer[] LayerValues 
         { 
-            get => layerValues ; 
+            get => layerValues ?? [];   // 确保返回空集合
             set 
             { 
                 layerValues = value; 
@@ -397,7 +397,7 @@ namespace Common_Util.Data.Structure.Value
 
         public string[] LayerValues
         {
-            get => layerValues;
+            get => layerValues ?? [];   // 确保返回空集合
             set
             {
                 layerValues = value;
