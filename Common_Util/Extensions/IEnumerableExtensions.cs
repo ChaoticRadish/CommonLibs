@@ -19,6 +19,21 @@ namespace Common_Util.Extensions
         {
             foreach (T t in array) t?.Dispose();
         }
+        /// <summary>
+        /// 调用集合内的所有实现 <see cref="IDisposable"/> 项的 <see cref="IDisposable.Dispose"/> 方法, 释放所有资源
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="array"></param>
+        public static void TryDisposeAll<T>(this IEnumerable<T> array)
+        {
+            foreach (T t in array)
+            {
+                if (t is IDisposable disposable)
+                {
+                    disposable.Dispose();
+                }
+            }
+        }
 
         /// <summary>
         /// 将输入的数组, 转换为byte[]
