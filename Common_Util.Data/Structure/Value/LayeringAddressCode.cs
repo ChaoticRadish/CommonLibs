@@ -562,6 +562,21 @@ namespace Common_Util.Data.Structure.Value
 
 
         #endregion
+
+        #region 静态方法
+        /// <summary>
+        /// 创建项编码
+        /// </summary>
+        /// <param name="layerValues"></param>
+        /// <returns></returns>
+        public static LayeringAddressCode CreateItem(string[] layerValues) => new(false, layerValues);
+        /// <summary>
+        /// 创建范围编码
+        /// </summary>
+        /// <param name="layerValues"></param>
+        /// <returns></returns>
+        public static LayeringAddressCode CreateRange(string[] layerValues) => new(true, layerValues);
+        #endregion
     }
 
 
