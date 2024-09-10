@@ -204,7 +204,7 @@ namespace Common_Util.Data.Structure.Tree.Extensions
                     OperationResult<IAddableMultiTreeNode<TCode>> result;
                     if (args.currentNode.TryAdd(args.newCode, out var newNode))
                     {
-                        return result = true;
+                        return result = OperationResult<IAddableMultiTreeNode<TCode>>.Success(newNode);
                     }
                     else
                     {
