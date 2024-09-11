@@ -214,7 +214,6 @@ namespace Common_Util.Data.Structure.Tree.Extensions
 
         /// <summary>
         /// 寻找节点值与传入编码等价的节点
-        /// <para>此方法要求根节点必须是一个范围编码</para>
         /// </summary>
         /// <typeparam name="TLayer"></typeparam>
         /// <typeparam name="TCode"></typeparam>
@@ -226,93 +225,17 @@ namespace Common_Util.Data.Structure.Tree.Extensions
         /// <para>- Data != null => 找到了对应的节点</para>
         /// <para>Failure:</para>
         /// <para>- 普通失败 => 未找到对应的节点</para>
-        /// <para>- 出现异常</para>
+        /// <para>- 出现异常, 比如树不拥有根节点</para>
         /// </returns>
         public static IOperationResultEx<ObservableMultiTreeNode<TCode>> Find<TLayer, TCode>(
             this ObservableMultiTree<TCode> tree, ILayeringAddressCode<TLayer> code,
             IEqualityComparer<TLayer>? comparer = null)
             where TCode : ILayeringAddressCode<TLayer>
         {
-            OperationResultEx<ObservableMultiTreeNode<TCode>> result;
-
-            comparer ??= EqualityComparer<TLayer>.Default;
-
-            TCode rootCode;
-            if (tree.Root == null)
-            {
-                return result = new Exception($"传入树没有根节点! ");
-            }
-            else
-            {
-                rootCode = tree.Root.NodeValue;
-            }
-            if (!rootCode.IsRange)
-            {
-                return result = new Exception("树的节点值不是范围编码! ");
-            }
-
-            TLayer[] codeRange = code.IsRange ? code.LayerValues : code.LayerValues[..^1];
-
-            TLayer[] rootCrossing;
-            if (rootCode.LayerCount > 0)
-            {
-                rootCrossing = rootCode.Crossing(codeRange, comparer);
-            }
-            else
-            {
-                rootCrossing = [];
-            }
-
-            if (rootCrossing.Length < rootCode.LayerCount)
-            {
-                return result = "传入编码属于根节点之前的其他分支路径";
-            }
-
-            var currentNode = tree.Root!;
-            for (int i = rootCrossing.Length; i < codeRange.Length; i++)
-            {
-                TLayer target = codeRange[i];
-                var existNode = currentNode.Childrens.FirstOrDefault(child => child.NodeValue.IsRange && comparer.Equals(target, child.NodeValue.LayerValues[i]));
-                if (existNode != null)
-                {
-                    if (code.IsRange && i == code.LayerCount - 1)
-                    {
-                        return result = existNode;
-                    }
-                    else
-                    {
-                        currentNode = existNode;
-                    }
-                }
-                else
-                {
-                    string rangeStr = Common_Util.String.StringHelper.Concat(
-                        currentNode.NodeValue.LayerValues.Select(value => value?.ToString() ?? string.Empty).ToArray(),
-                        ".");
-                    return result = $"查找过程止步于 {rangeStr}";
-                }
-            }
-
-            if (code.IsRange)
-            {
-                return result = currentNode;
-            }
-            else
-            {
-                TLayer target = code.LayerValues[^1];
-                var existNode = currentNode.Childrens.FirstOrDefault(child => !child.NodeValue.IsRange && comparer.Equals(target, child.NodeValue.LayerValues[^1]));
-                if (existNode != null)
-                {
-                    return result = existNode;
-                }
-                else
-                {
-                    string rangeStr = Common_Util.String.StringHelper.Concat(
-                        currentNode.NodeValue.LayerValues.Select(value => value?.ToString() ?? string.Empty).ToArray(),
-                        ".");
-                    return result = $"范围 {rangeStr} 中未找到 {target?.ToString() ?? string.Empty}";
-                }
-            }
+            return IMultiTreeExtensions.FindNode<
+                TLayer, TCode,
+                ObservableMultiTreeNode<TCode>, 
+                ObservableMultiTree<TCode>>(tree, code, comparer);
         }
 
         /// <summary>
