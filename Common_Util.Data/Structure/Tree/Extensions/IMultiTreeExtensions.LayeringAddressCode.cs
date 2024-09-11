@@ -428,6 +428,149 @@ namespace Common_Util.Data.Structure.Tree.Extensions
 
         #endregion
 
+        #region 查找
+
+        /// <summary>
+        /// 寻找节点值与传入编码等价的节点
+        /// </summary>
+        /// <typeparam name="TLayer"></typeparam>
+        /// <typeparam name="TCode"></typeparam>
+        /// <typeparam name="TNode"></typeparam>
+        /// <typeparam name="TTree"></typeparam>
+        /// <param name="tree"></param>
+        /// <param name="code">准备寻找的节点值</param>
+        /// <param name="comparer"></param>
+        /// <returns>
+        /// <para>Success:</para>
+        /// <para>- Data != null => 找到了对应的节点</para>
+        /// <para>Failure:</para>
+        /// <para>- 普通失败 => 未找到对应的节点</para>
+        /// <para>- 出现异常, 比如树不拥有根节点</para>
+        /// </returns>
+        public static IOperationResultEx<TNode> FindNode<TLayer, TCode, TNode, TTree>(
+            this TTree tree, ILayeringAddressCode<TLayer> code,
+            IEqualityComparer<TLayer>? comparer = null)
+            where TCode : ILayeringAddressCode<TLayer>
+            where TNode : IMultiTreeNode<TCode>
+            where TTree : IMultiTree<TCode>, IHasRootNodeAs<TNode>
+        {
+            OperationResultEx<TNode> result;
+
+            comparer ??= EqualityComparer<TLayer>.Default;
+
+            TNode? rootNode = ((IHasRootNodeAs<TNode>)tree).Root;
+
+            TCode rootCode;
+            if (rootNode == null)
+            {
+                return result = new Exception($"传入树没有根节点! ");
+            }
+            else
+            {
+                rootCode = rootNode.NodeValue;
+            }
+            if (!rootCode.IsRange)
+            {
+                if (!code.IsRange && rootCode.PathEquals(code, comparer))
+                {
+                    return result = rootNode;
+                }
+                else
+                {
+                    return result = "树的根节点值不是范围编码, 且不等价于想要查找的编码";
+                }
+            }
+
+            TLayer[] codeRange = code.IsRange ? code.LayerValues : code.LayerValues[..^1];
+
+            TLayer[] rootCrossing;
+            if (rootCode.LayerCount > 0)
+            {
+                rootCrossing = rootCode.Crossing(codeRange, comparer);
+            }
+            else
+            {
+                rootCrossing = [];
+            }
+
+            if (rootCrossing.Length < rootCode.LayerCount)
+            {
+                return result = "传入编码属于根节点之前的其他分支路径";
+            }
+
+
+            IMultiTreeNode<TCode> currentNode = rootNode;
+            for (int i = rootCrossing.Length; i < codeRange.Length; i++)
+            {
+                TLayer target = codeRange[i];
+                var existNode = currentNode.Childrens.FirstOrDefault(child => child.NodeValue.IsRange && comparer.Equals(target, child.NodeValue.LayerValues[i]));
+                if (existNode != null)
+                {
+                    if (code.IsRange && i == code.LayerCount - 1)
+                    {
+                        return findResultFrom<TLayer, TCode, TNode>(existNode);
+                    }
+                    else
+                    {
+                        currentNode = existNode;
+                    }
+                }
+                else
+                {
+                    string rangeStr = Common_Util.String.StringHelper.Concat(
+                        currentNode.NodeValue.LayerValues.Select(value => value?.ToString() ?? string.Empty).ToArray(),
+                        ".");
+                    return result = $"查找过程止步于 {rangeStr}";
+                }
+            }
+
+            if (code.IsRange)
+            {
+                return findResultFrom<TLayer, TCode, TNode>(currentNode);
+            }
+            else
+            {
+                TLayer target = code.LayerValues[^1];
+                var existNode = currentNode.Childrens.FirstOrDefault(child => !child.NodeValue.IsRange && comparer.Equals(target, child.NodeValue.LayerValues[^1]));
+                if (existNode != null)
+                {
+                    return findResultFrom<TLayer, TCode, TNode>(existNode);
+                }
+                else
+                {
+                    string rangeStr = Common_Util.String.StringHelper.Concat(
+                        currentNode.NodeValue.LayerValues.Select(value => value?.ToString() ?? string.Empty).ToArray(),
+                        ".");
+                    return result = $"范围 {rangeStr} 中未找到 {target?.ToString() ?? string.Empty}";
+                }
+            }
+        }
+
+        /// <summary>
+        /// 由传入的节点创建一个查找结果, 如果类型与预期类型匹配, 则返回成功, 反之返回失败. 
+        /// </summary>
+        /// <typeparam name="TLayer"></typeparam>
+        /// <typeparam name="TCode"></typeparam>
+        /// <typeparam name="TNode"></typeparam>
+        /// <param name="node"></param>
+        /// <returns></returns>
+        private static IOperationResultEx<TNode> findResultFrom<TLayer, TCode, TNode>(IMultiTreeNode<TCode> node)
+            where TCode : ILayeringAddressCode<TLayer>
+            where TNode : IMultiTreeNode<TCode>
+        {
+            OperationResultEx<TNode> result;
+            if (node is TNode output)
+            {
+                return result = output;
+            }
+            else
+            {
+                return result = $"找到的节点类型 ({node.GetType().Name}) 与预期的节点类型 ({typeof(TNode).Name}) 不匹配! ";
+            }
+        }
+
+        #endregion
+
         #region 常用私有代码段
         /// <summary>
         /// 检查是否存在根节点, 以及根节点值是否有效值 (即是否范围编码), 如果没有根节点, 则根据是否可以使用编码值创建根节点, 来创建拥有完全范围编码的根节点或返回失败
