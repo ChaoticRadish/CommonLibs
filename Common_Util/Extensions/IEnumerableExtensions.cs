@@ -47,7 +47,31 @@ namespace Common_Util.Extensions
         #endregion
 
 
+        #region T : FileInfo
+        /// <summary>
+        /// 过滤以获取文件扩展名与输入的任意一项匹配的 <see cref="FileInfo"/>
+        /// </summary>
+        /// <remarks>
+        /// 比较时将忽略大小写
+        /// </remarks>
+        /// <param name="files"></param>
+        /// <param name="matchItems">匹配项的集合, 需要输入想要的扩展名 (不需要在前方加 '.', 如果有, 将会被移除), 例如: "txt"</param>
+        /// <returns></returns>
+        public static IEnumerable<FileInfo> MatchSuffix(this IEnumerable<FileInfo> files, params string[] matchItems)
+        {
+            var _mItems = matchItems.Select(i => '.' + i.TrimStart('.')).Distinct().ToArray();
+            if (_mItems.Length == 0) yield break;
 
+            foreach (FileInfo file in files)
+            {
+                if (_mItems.Any(i => i.Equals(file.Extension, StringComparison.CurrentCultureIgnoreCase)))
+                {
+                    yield return file;
+                }
+            }
+        } 
+
+        #endregion
 
     }
 }
