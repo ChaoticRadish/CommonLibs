@@ -19,7 +19,7 @@ namespace CommonLibTest_Console
             AllocConsole();
 #endif
 
-            TestBase test = new DataStruct.Tree003();
+            TestBase test = new IO.Directory001();
             
             test.Run();
             test.Finish();
