@@ -80,11 +80,16 @@ namespace Common_Util.IO
                         currentDir = (DirectoryInfo)currentEnumerator.Current;
                         currentEnumerator = currentDir.GetDirectories().GetEnumerator();
                         stack.Push(currentEnumerator);
+                        leave = false;
                     }
                     else
                     {
-                        currentEnumerator = stack.Pop();
-                        leave = true;
+                        stack.Pop();
+                        if (stack.Count > 0)
+                        {
+                            currentEnumerator = stack.Peek();
+                            leave = true;
+                        }
                     }
                 }
             }
