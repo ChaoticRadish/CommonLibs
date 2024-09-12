@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Common_Util.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -408,6 +409,49 @@ namespace Common_Util.Data.Struct
                     SuccessInfo = result.SuccessInfo,
                 };
             }
+        }
+        #endregion
+
+        #region 结果文本
+        /// <summary>
+        /// 转换操作结果为简述文本的通用方法
+        /// </summary>
+        /// <param name="result"></param>
+        /// <param name="operationDesc">该操作结果对应操作的描述</param>
+        /// <param name="splitParts">分割不同部分的字符串, 比如当结果类型是 <see cref="IOperationResultEx"/> 时, 需要使用此值, 将异常与成功或失败信息分割开</param>
+        /// <returns></returns>
+        public static string GetBrief(this IOperationResult result, string? operationDesc = null, string splitParts = "\n")
+        {
+            StringBuilder sb = new StringBuilder();
+            if (operationDesc.IsNotEmpty())
+            {
+                sb.Append(operationDesc).Append(splitParts);
+            }
+            if (result.IsSuccess)
+            {
+                sb.Append("<成功>");
+                if (result.SuccessInfo.IsNotEmpty())
+                {
+                    sb.Append(' ').Append(result.SuccessInfo);
+                }
+            }
+            else
+            {
+                sb.Append("<失败>");
+                if (result.FailureReason.IsNotEmpty())
+                {
+                    sb.Append(' ').Append(result.FailureReason);
+                }
+            }
+            if (result is IOperationResultEx resultEx)
+            {
+                if (resultEx.HasException)
+                {
+                    var ex = resultEx.Exception;
+                    sb.Append(splitParts).Append("异常: ").Append(ex.GetType().Name).Append(' ').Append(ex.Message);
+                }
+            }
+            return sb.ToString();
         }
         #endregion
 
