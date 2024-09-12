@@ -14,6 +14,16 @@ namespace Common_Util.Data.Structure.Tree
         : IAddableMultiTree<TValue>,
         IHasRootNodeAs<SimpleMultiTreeNode<TValue>>
     {
+        public SimpleMultiTree() { }    
+        /// <summary>
+        /// 实例化树对象, 并实例化节点值为 <paramref name="rootValue"/> 的节点作为根节点
+        /// </summary>
+        /// <param name="rootValue"></param>
+        public SimpleMultiTree(TValue rootValue)
+        {
+            Root = new(rootValue);
+        }
+
         public SimpleMultiTreeNode<TValue>? Root { get; set; }
 
         IMultiTreeNode<TValue>? IMultiTree<TValue>.Root => Root;
