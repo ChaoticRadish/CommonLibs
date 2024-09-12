@@ -60,6 +60,7 @@ namespace Common_Util.IO
                 Stack<IEnumerator> stack = new Stack<IEnumerator>();
 
                 bool leave = false; // 离开下层
+                DirectoryInfo currentDir = dir;
                 IEnumerator currentEnumerator = dir.GetDirectories().GetEnumerator();
                 stack.Push(currentEnumerator);
 
@@ -68,7 +69,7 @@ namespace Common_Util.IO
                 {
                     if (!leave)
                     {
-                        foreach (FileInfo file in dir.GetFiles())
+                        foreach (FileInfo file in currentDir.GetFiles())
                         {
                             yield return file;
                         }
@@ -76,7 +77,7 @@ namespace Common_Util.IO
 
                     if (currentEnumerator.MoveNext()) 
                     {
-                        DirectoryInfo currentDir = (DirectoryInfo)currentEnumerator.Current;
+                        currentDir = (DirectoryInfo)currentEnumerator.Current;
                         currentEnumerator = currentDir.GetDirectories().GetEnumerator();
                         stack.Push(currentEnumerator);
                     }
