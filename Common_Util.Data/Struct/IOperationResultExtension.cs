@@ -1,4 +1,5 @@
-﻿using Common_Util.Extensions;
+﻿using Common_Util.Exceptions.General;
+using Common_Util.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -423,6 +424,8 @@ namespace Common_Util.Data.Struct
         public static string GetBrief(this IOperationResult result, string? operationDesc = null, string splitParts = "\n")
         {
             StringBuilder sb = new StringBuilder();
+
+
             if (operationDesc.IsNotEmpty())
             {
                 sb.Append(operationDesc).Append(splitParts);
@@ -441,6 +444,22 @@ namespace Common_Util.Data.Struct
                 if (result.FailureReason.IsNotEmpty())
                 {
                     sb.Append(' ').Append(result.FailureReason);
+                }
+
+            }
+            Type resultType = result.GetType();
+            if (TypeHelper.ExistInterfaceIsDefinitionFrom(resultType, typeof(IOperationResult<>), out Type? matchInterface))
+            {
+                var dataType = matchInterface.GetGenericArguments()[0] ?? throw new ImpossibleForkException();
+                var property = resultType.GetProperty(nameof(IOperationResult<object>.Data)) ?? throw new ImpossibleForkException();
+                var data = property.GetValue(result, null);
+                if (data == null)
+                {
+                    sb.Append(splitParts).Append('[').Append(dataType.Name).Append(' ').Append("无数据!").Append(']');
+                }
+                else
+                {
+                    sb.Append(splitParts).Append('[').Append(dataType.Name).Append(' ').Append(data.ToString()?.Brief(30)).Append(']');
                 }
             }
             if (result is IOperationResultEx resultEx)
