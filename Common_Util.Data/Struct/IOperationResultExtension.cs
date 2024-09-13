@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Common_Util.Exceptions.General;
+using Common_Util.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -235,6 +237,241 @@ namespace Common_Util.Data.Struct
 
 
 
+        #endregion
+
+        #region 带数据结果重新包装
+        /// <summary>
+        /// 将成功操作结果包含的数据替换为另一个数据, 得到新的操作结果. 如果传入操作结果为失败, 其数据将固定为 <see langword="null"/>
+        /// </summary>
+        /// <remarks>
+        /// 当前实现下, 会返回 <see cref="OperationResult{T2}"/>
+        /// </remarks>
+        /// <typeparam name="T1"></typeparam>
+        /// <typeparam name="T2"></typeparam>
+        /// <param name="result"></param>
+        /// <param name="selectFunc">选取方法, 或者说转换方法</param>
+        /// <returns></returns>
+        public static IOperationResult<T2> Select<T1, T2>(this IOperationResult<T1> result, Func<T1?, T2?> selectFunc)
+        {
+            if (result.IsSuccess)
+            {
+                return new OperationResult<T2>()
+                {
+                    Data = selectFunc(result.Data),
+                    FailureReason = result.FailureReason,
+                    IsSuccess = result.IsSuccess,
+                    SuccessInfo = result.SuccessInfo,
+                };
+            }
+            else
+            {
+                return new OperationResult<T2>()
+                {
+                    Data = default,
+                    FailureReason = result.FailureReason,
+                    IsSuccess = result.IsSuccess,
+                    SuccessInfo = result.SuccessInfo,
+                };
+            }
+        }
+        /// <summary>
+        /// 将成功操作结果包含的数据替换为另一个数据, 得到新的操作结果. 获取新数据的过程可能失败. 如果传入操作结果为失败, 或者获取数据的操作为失败, 其数据将固定为 <see langword="null"/>
+        /// </summary>
+        /// <remarks>
+        /// 当前实现下, 会返回 <see cref="OperationResult{T2}"/>
+        /// </remarks>
+        /// <typeparam name="T1"></typeparam>
+        /// <typeparam name="T2"></typeparam>
+        /// <param name="result"></param>
+        /// <param name="selectFunc">选取方法, 或者说转换方法</param>
+        /// <returns></returns>
+        public static IOperationResult<T2> SelectMaybeFailure<T1, T2>(this IOperationResult<T1> result, Func<T1?, OperationResult<T2>> selectFunc)
+        {
+            if (result.IsSuccess)
+            {
+                var selectResult = selectFunc(result.Data);
+                if (selectResult)
+                {
+                    return new OperationResult<T2>()
+                    {
+                        Data = selectResult.Data,
+                        FailureReason = null,
+                        IsSuccess = true,
+                        SuccessInfo = result.SuccessInfo ?? selectResult.SuccessInfo,
+                    };
+                }
+                else
+                {
+                    return new OperationResult<T2>()
+                    {
+                        Data = default,
+                        FailureReason = selectResult.FailureReason,
+                        IsSuccess = false,
+                        SuccessInfo = null,
+                    };
+                }
+            }
+            else
+            {
+                return new OperationResult<T2>()
+                {
+                    Data = default,
+                    FailureReason = result.FailureReason,
+                    IsSuccess = result.IsSuccess,
+                    SuccessInfo = result.SuccessInfo,
+                };
+            }
+        }
+
+        /// <summary>
+        /// 将可携带异常的成功操作结果包含的数据替换为另一个数据, 得到新的操作结果,. 如果传入操作结果为失败, 其数据将固定为 <see langword="null"/>
+        /// </summary>
+        /// <remarks>
+        /// 当前实现下, 会返回 <see cref="OperationResultEx{T2}"/>
+        /// </remarks>
+        /// <typeparam name="T1"></typeparam>
+        /// <typeparam name="T2"></typeparam>
+        /// <param name="result"></param>
+        /// <param name="selectFunc">选取方法, 或者说转换方法</param>
+        /// <returns></returns>
+        public static IOperationResultEx<T2> SelectEx<T1, T2>(this IOperationResultEx<T1> result, Func<T1?, T2?> selectFunc)
+        {
+            if (result.IsSuccess)
+            {
+                return new OperationResultEx<T2>()
+                {
+                    Data = selectFunc(result.Data),
+                    Exception = result.Exception,
+                    FailureReason = result.FailureReason,
+                    IsSuccess = result.IsSuccess,
+                    SuccessInfo = result.SuccessInfo,
+                };
+            }
+            else
+            {
+                return new OperationResultEx<T2>()
+                {
+                    Data = default,
+                    Exception = result.Exception,
+                    FailureReason = result.FailureReason,
+                    IsSuccess = result.IsSuccess,
+                    SuccessInfo = result.SuccessInfo,
+                };
+            }
+        }
+
+        /// <summary>
+        /// 将可携带异常的成功操作结果包含的数据替换为另一个数据, 得到新的操作结果. 获取新数据的过程可能失败. 如果传入操作结果为失败, 或者获取数据的操作为失败, 其数据将固定为 <see langword="null"/>
+        /// </summary>
+        /// <remarks>
+        /// 当前实现下, 会返回 <see cref="OperationResultEx{T2}"/>
+        /// </remarks>
+        /// <typeparam name="T1"></typeparam>
+        /// <typeparam name="T2"></typeparam>
+        /// <param name="result"></param>
+        /// <param name="selectFunc">选取方法, 或者说转换方法</param>
+        /// <returns></returns>
+        public static IOperationResultEx<T2> SelectMaybeFailureEx<T1, T2>(this IOperationResultEx<T1> result, Func<T1?, OperationResultEx<T2>> selectFunc)
+        {
+            if (result.IsSuccess)
+            {
+                var selectResult = selectFunc(result.Data);
+                if (selectResult)
+                {
+                    return new OperationResultEx<T2>()
+                    {
+                        Data = selectResult.Data,
+                        Exception = null,
+                        FailureReason = null,
+                        IsSuccess = true,
+                        SuccessInfo = result.SuccessInfo ?? selectResult.SuccessInfo,
+                    };
+                }
+                else
+                {
+                    return new OperationResultEx<T2>()
+                    {
+                        Data = default,
+                        Exception = selectResult.Exception,
+                        FailureReason = selectResult.FailureReason,
+                        IsSuccess = false,
+                        SuccessInfo = null,
+                    };
+                }
+            }
+            else
+            {
+                return new OperationResultEx<T2>()
+                {
+                    Data = default,
+                    Exception = result.Exception,
+                    FailureReason = result.FailureReason,
+                    IsSuccess = result.IsSuccess,
+                    SuccessInfo = result.SuccessInfo,
+                };
+            }
+        }
+        #endregion
+
+        #region 结果文本
+        /// <summary>
+        /// 转换操作结果为简述文本的通用方法
+        /// </summary>
+        /// <param name="result"></param>
+        /// <param name="operationDesc">该操作结果对应操作的描述</param>
+        /// <param name="splitParts">分割不同部分的字符串, 比如当结果类型是 <see cref="IOperationResultEx"/> 时, 需要使用此值, 将异常与成功或失败信息分割开</param>
+        /// <returns></returns>
+        public static string GetBrief(this IOperationResult result, string? operationDesc = null, string splitParts = "\n")
+        {
+            StringBuilder sb = new StringBuilder();
+
+
+            if (operationDesc.IsNotEmpty())
+            {
+                sb.Append(operationDesc).Append(splitParts);
+            }
+            if (result.IsSuccess)
+            {
+                sb.Append("<成功>");
+                if (result.SuccessInfo.IsNotEmpty())
+                {
+                    sb.Append(' ').Append(result.SuccessInfo);
+                }
+            }
+            else
+            {
+                sb.Append("<失败>");
+                if (result.FailureReason.IsNotEmpty())
+                {
+                    sb.Append(' ').Append(result.FailureReason);
+                }
+
+            }
+            Type resultType = result.GetType();
+            if (TypeHelper.ExistInterfaceIsDefinitionFrom(resultType, typeof(IOperationResult<>), out Type? matchInterface))
+            {
+                var dataType = matchInterface.GetGenericArguments()[0] ?? throw new ImpossibleForkException();
+                var property = resultType.GetProperty(nameof(IOperationResult<object>.Data)) ?? throw new ImpossibleForkException();
+                var data = property.GetValue(result, null);
+                if (data == null)
+                {
+                    sb.Append(splitParts).Append('[').Append(dataType.Name).Append(' ').Append("无数据!").Append(']');
+                }
+                else
+                {
+                    sb.Append(splitParts).Append('[').Append(dataType.Name).Append(' ').Append(data.ToString()?.Brief(30)).Append(']');
+                }
+            }
+            if (result is IOperationResultEx resultEx)
+            {
+                if (resultEx.HasException)
+                {
+                    var ex = resultEx.Exception;
+                    sb.Append(splitParts).Append("异常: ").Append(ex.GetType().Name).Append(' ').Append(ex.Message);
+                }
+            }
+            return sb.ToString();
+        }
         #endregion
 
         /// <summary>

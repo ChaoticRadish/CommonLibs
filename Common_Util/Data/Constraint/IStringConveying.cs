@@ -18,6 +18,9 @@ namespace Common_Util.Data.Constraint
         /// <summary>
         /// 将本实例转换为字符串, 转换后的字符串可以使用 <see cref="StringConveyingHelper.FromString"/> 生成与本实例等价的另一个实例
         /// </summary>
+        /// <remarks>
+        /// 此方法与 <see cref="object.ToString"/> 的区别在于, 后者取得的字符串可能无法转换回当前对象, 前者要求必须能够转换为等价的实例! 
+        /// </remarks>
         /// <returns></returns>
         string ConvertToString();
 

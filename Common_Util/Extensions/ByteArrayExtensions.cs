@@ -14,6 +14,7 @@ namespace Common_Util.Extensions
     public static class ByteArrayExtensions
     {
         #region 对象转换
+
         /// <summary>
         /// 将byte[]转换为T类型的数组
         /// </summary>

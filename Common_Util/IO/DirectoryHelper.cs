@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -39,6 +40,66 @@ namespace Common_Util.IO
                 subDir.Delete(recursive: true);
             }
 
+        }
+
+        /// <summary>
+        /// 遍历输入文件夹路径下的所有文件
+        /// </summary>
+        /// <param name="dirPath"></param>
+        /// <param name="traverseAllSubfolders">指定是否遍历所有子文件夹</param>
+        /// <returns></returns>
+        public static IEnumerable<FileInfo> TraversalFiles(string dirPath, bool traverseAllSubfolders)
+        {
+            DirectoryInfo dir = new DirectoryInfo(dirPath);
+            if (!dir.Exists)
+            {
+                yield break;
+            }
+            if (traverseAllSubfolders)
+            {
+                Stack<IEnumerator> stack = new Stack<IEnumerator>();
+
+                bool leave = false; // 离开下层
+                DirectoryInfo currentDir = dir;
+                IEnumerator currentEnumerator = dir.GetDirectories().GetEnumerator();
+                stack.Push(currentEnumerator);
+
+
+                while (stack.Count > 0)
+                {
+                    if (!leave)
+                    {
+                        foreach (FileInfo file in currentDir.GetFiles())
+                        {
+                            yield return file;
+                        }
+                    }
+
+                    if (currentEnumerator.MoveNext()) 
+                    {
+                        currentDir = (DirectoryInfo)currentEnumerator.Current;
+                        currentEnumerator = currentDir.GetDirectories().GetEnumerator();
+                        stack.Push(currentEnumerator);
+                        leave = false;
+                    }
+                    else
+                    {
+                        stack.Pop();
+                        if (stack.Count > 0)
+                        {
+                            currentEnumerator = stack.Peek();
+                            leave = true;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                foreach (FileInfo file in dir.GetFiles())
+                {
+                    yield return file;
+                }
+            }
         }
     }
 }
