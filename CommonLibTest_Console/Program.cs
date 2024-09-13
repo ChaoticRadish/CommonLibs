@@ -19,7 +19,7 @@ namespace CommonLibTest_Console
             AllocConsole();
 #endif
 
-            TestBase test = new IO.Directory001();
+            TestBase test = new Operation.Result004();
             
             test.Run();
             test.Finish();
