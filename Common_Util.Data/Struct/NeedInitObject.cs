@@ -72,6 +72,7 @@ namespace Common_Util.Data.Struct
             }
             set
             {
+                if (Inited) throw new InvalidOperationException("已具有初始值, 无法再次赋值! ");
                 if (value == null) throw new InvalidOperationException("此类型的值不接受空值! ");
                 this.value = value;
                 Inited = true;
