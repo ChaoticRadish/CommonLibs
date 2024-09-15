@@ -5,10 +5,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
+using static System.Collections.Specialized.BitVector32;
 
 namespace CommonLibTest_Console
 {
@@ -310,6 +312,39 @@ namespace CommonLibTest_Console
             });
             RunTest(action, testInfo);
         }
+
+        /// <summary>
+        /// 以通用逻辑, 运行当前测试类型中, 具有 <see cref="TestMethodAttribute"/> 标记的所有方法
+        /// </summary>
+        protected void RunTestMark()
+        {
+            Type type = GetType();
+            var methods = type.GetMethods(
+                System.Reflection.BindingFlags.Public
+                | System.Reflection.BindingFlags.NonPublic
+                | System.Reflection.BindingFlags.Static
+                | System.Reflection.BindingFlags.Instance);
+            foreach (var method in methods)
+            {
+                if (method.ExistCustomAttribute<TestMethodAttribute>(out var attr))
+                {
+                    Action action = () =>
+                    {   
+                        if (method.IsStatic)
+                        {
+                            method.Invoke(null, null);  
+                        }
+                        else
+                        {
+                            method.Invoke(this, null);
+                        }
+                    };
+                    RunTest(action, attr.TestInfo);
+                }
+            }
+
+        }
+
         /// <summary>
         /// 以通用的逻辑, 运行传入方法
         /// </summary>
