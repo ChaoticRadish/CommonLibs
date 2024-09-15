@@ -1,4 +1,5 @@
-﻿using Common_Util.Exceptions.General;
+﻿using Common_Util.Data.Exceptions;
+using Common_Util.Exceptions.General;
 using Common_Util.Extensions;
 using System;
 using System.Collections.Generic;
@@ -88,10 +89,11 @@ namespace Common_Util.Data.Struct
             }
             else
             {
-                throw new Exception(_exMessage_noSuccess_noFailure);
+                throw new ImpossibleForkException(_exMessage_noSuccess_noFailure);
             }
             return output;
         }
+
 
 
 
@@ -126,7 +128,8 @@ namespace Common_Util.Data.Struct
         /// 根据操作结果的成功与否, 执行对应的方法
         /// </summary>
         /// <param name="result"></param>
-        /// <param name="successAction"></param>
+        /// <param name="successAction">操作成功, 且附带了非空数据</param>
+        /// <param name="successButNullAction">操作成功, 但附带了 <see langword="null"/> 数据</param>
         /// <param name="failureAction"></param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TResult Match<T, TResult>(this IOperationResult<T> result, Func<T, TResult> successAction, Func<TResult> successButNullAction, Func<TResult> failureAction)
@@ -149,10 +152,44 @@ namespace Common_Util.Data.Struct
             }
             else
             {
-                throw new Exception(_exMessage_noSuccess_noFailure);
+                throw new ImpossibleForkException(_exMessage_noSuccess_noFailure);
             }
             return output;
         }
+
+        /// <summary>
+        /// 根据操作结果的成功与否, 执行对应的方法
+        /// </summary>
+        /// <param name="result"></param>
+        /// <param name="successAction">操作成功, 且附带了非空数据</param>
+        /// <param name="successButNullAction">操作成功, 但附带了 <see langword="null"/> 数据</param>
+        /// <param name="failureAction"></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static TResult Match<T, TResult>(this IOperationResult<T> result, Func<T, TResult> successAction, Func<TResult> successButNullAction, Func<IOperationResult<T>, TResult> failureAction)
+        {
+            TResult output;
+            if (result.IsSuccess)
+            {
+                if (result.Data != null)
+                {
+                    output = successAction(result.Data);
+                }
+                else
+                {
+                    output = successButNullAction();
+                }
+            }
+            else if (result.IsFailure)
+            {
+                output = failureAction(result);
+            }
+            else
+            {
+                throw new ImpossibleForkException(_exMessage_noSuccess_noFailure);
+            }
+            return output;
+        }
+
 
 
 
@@ -236,6 +273,39 @@ namespace Common_Util.Data.Struct
 
 
 
+        /// <summary>
+        /// 取得操作结果的数据, 否则抛出异常
+        /// </summary>
+        /// <remarks>
+        /// 当操作成功, <see cref="IOperationResult{T}.Data"/> 却为 <see langword="null"/> 时, 也将抛出异常
+        /// </remarks>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="result"></param>
+        /// <returns></returns>
+        /// <exception cref="OperationFailureException"></exception>
+        /// <exception cref="ImpossibleForkException"></exception>
+        public static T GetDataElseThrow<T>(this IOperationResult<T> result)
+        {
+            if (result.IsFailure) 
+            {
+                throw new OperationFailureException(result);
+            }
+            else if (result.IsSuccess)
+            {
+                if (result.Data == null)
+                {
+                    throw new ImpossibleForkException("操作结果是成功的, 当时其数据却为 null! ");
+                }
+                else
+                {
+                    return result.Data;
+                }
+            }
+            else 
+            {
+                throw new ImpossibleForkException("操作结果不成功, 也不失败! ");
+            }
+        }
 
         #endregion
 
