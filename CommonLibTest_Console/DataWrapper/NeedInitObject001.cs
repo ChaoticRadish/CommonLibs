@@ -60,5 +60,50 @@ namespace CommonLibTest_Console.DataWrapper
 
             WritePair(wrapper.Value);
         }
+        [TestMethod(nameof(test7))]
+        private void test7()
+        {
+            var item = new TestClass();
+
+            WritePair(item);
+
+            Type type = typeof(TestClass);
+            var property = type.GetProperty(nameof(TestClass.TestA))!;
+            NeedInitObject.SetValueToProperty(item, property, "1q23123");
+
+            WritePair(item);
+
+            NeedInitObject.SetValueToProperty(item, property, "qqq");
+
+            WritePair(item);
+        }
+        [TestMethod(nameof(test8))]
+        private void test8()
+        {
+            var item = new TestClass();
+
+            WritePair(item);
+
+            Type type = typeof(TestClass);
+            var property = type.GetProperty(nameof(TestClass.TestA))!;
+            NeedInitObject.SetValueToProperty(item, property, "1q23123");
+
+            WritePair(item);
+
+            NeedInitObject.SetValueToProperty(item, property, 123456);
+
+            WritePair(item);
+        }
+
+        class TestClass
+        {
+            public NeedInitObject<string> TestA { get; } = new();
+
+
+            public override string ToString()
+            {
+                return $"TestClass {TestA}";
+            }
+        }
     }
 }
