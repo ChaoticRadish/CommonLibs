@@ -32,10 +32,22 @@ namespace Common_Util.Data.Struct
     }
 
     /// <summary>
+    /// 接口: 一个需要赋 <typeparamref name="T"/> 类型初始值的对象
+    /// </summary>
+    public interface INeedInitObject<T> : INeedInitObject
+    {
+        /// <summary>
+        /// <see langword="get"/> => 如果未赋初始值, 将抛出异常; <see langword="set"/> => 如果已经有初始值, 将抛出异常
+        /// </summary>
+        new T Value { get; set; }
+
+    }
+
+    /// <summary>
     /// 用于包装一个需要赋初始值的对象的包装器, 线程不安全! 
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public sealed class NeedInitObject<T> : INeedInitObject
+    public sealed class NeedInitObject<T> : INeedInitObject, INeedInitObject<T>
     {
         /// <summary>
         /// 实例化一个未有初值的包装器
