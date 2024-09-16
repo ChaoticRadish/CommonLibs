@@ -185,5 +185,32 @@ namespace Common_Util.Extensions
 
             return flag;
         }
+
+        /// <summary>
+        /// 尝试获取索引为 <paramref name="index"/> 的泛型参数, 如果失败则抛出异常
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="index">泛型参数索引</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public static Type GetGenericArgument(this Type type, int index = 0)
+        {
+            ArgumentOutOfRangeException.ThrowIfNegative(index);
+
+            if (type.IsGenericType)
+            {
+                var gArgs = type.GetGenericArguments();
+                if (gArgs.Length == 0) throw new InvalidOperationException("取得空泛型参数数组! ");
+
+                ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(index, gArgs.Length);
+
+                return gArgs[index];
+            }
+            else
+            {
+                throw new InvalidOperationException("传入类型不是泛型类型! ");
+            }
+        }
     }
 }
