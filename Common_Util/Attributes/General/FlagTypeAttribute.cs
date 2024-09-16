@@ -12,6 +12,11 @@ namespace Common_Util.Attributes.General
     [AttributeUsage(AttributeTargets.All)]
     public class FlagTypeAttribute : System.Attribute
     {
+        public FlagTypeAttribute(Type targetType)
+        {
+            TargetType = targetType;
+        }
+
         /// <summary>
         /// 标志的指定类型
         /// </summary>
