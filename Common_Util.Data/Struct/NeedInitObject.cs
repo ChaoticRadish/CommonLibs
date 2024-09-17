@@ -80,7 +80,7 @@ namespace Common_Util.Data.Struct
             get
             {
                 if (Inited) return value ?? throw new ImpossibleForkException("已经赋值, 但拥有的值却是 null! ");
-                else throw new InvalidOperationException("未赋值! ");
+                else throw new InvalidOperationException($"未赋值! 目标类型: {typeof(T)}");
             }
             set
             {
