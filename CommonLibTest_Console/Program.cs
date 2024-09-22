@@ -19,7 +19,7 @@ namespace CommonLibTest_Console
             AllocConsole();
 #endif
 
-            TestBase test = new DataWrapper.NeedInitObject002();
+            TestBase test = new DataWrapper.Loadable001();
             
             test.Run();
             test.Finish();
