@@ -46,6 +46,78 @@ namespace Common_Util.Data.Struct
     /// <summary>
     /// 用于包装一个需要赋初始值的对象的包装器, 线程不安全! 
     /// </summary>
+    /// <remarks>
+    /// 此类型与 <see cref="NeedInitObject{T}"/> 的区别仅有前者是 <see langword="struct"/>, 后者是类型 <see langword="class"/>
+    /// </remarks>
+    /// <typeparam name="T"></typeparam>
+    public struct NeedInitObjectImmutable<T> : INeedInitObject, INeedInitObject<T>
+    {
+        /// <summary>
+        /// 实例化一个未有初值的包装器
+        /// </summary>
+        public NeedInitObjectImmutable()
+        {
+            Inited = false;
+        }
+        /// <summary>
+        /// 实例化一个已有初值的包装器
+        /// </summary>
+        /// <param name="initValue"></param>
+        public NeedInitObjectImmutable(T initValue)
+        {
+            Inited = true;
+            value = initValue;
+        }
+
+        public bool Inited { get; private set; }
+        public readonly bool HasValue => value != null;
+
+        #region 数据
+
+        object INeedInitObject.Value { get => Value!; set => Value = (T)value; }
+        /// <summary>
+        /// <see langword="get"/> => 如果未赋初始值, 将抛出异常; <see langword="set"/> => 如果已经有初始值, 将抛出异常
+        /// </summary>
+        public T Value
+        {
+            readonly get
+            {
+                if (Inited) return value ?? throw new ImpossibleForkException("已经赋值, 但拥有的值却是 null! ");
+                else throw new InvalidOperationException("未赋值! ");
+            }
+            set
+            {
+                if (Inited) throw new InvalidOperationException("已具有初始值, 无法再次赋值! ");
+                if (value == null) throw new InvalidOperationException("此类型的值不接受空值! ");
+                this.value = value;
+                Inited = true;
+            }
+        }
+        private T? value;
+        #endregion
+
+
+        #region 隐式转换
+        public static implicit operator NeedInitObjectImmutable<T>(T initValue)
+        {
+            return new(initValue);
+        }
+        public static implicit operator T(NeedInitObjectImmutable<T> wrapper)
+        {
+            return wrapper.Value;
+        }
+        #endregion
+
+        public readonly override string ToString()
+        {
+            return $"NeedInitObjectImmutable<{typeof(T).Name}>_{(Inited ? "Inited" : "WaitingValue")}_[{value?.ToString() ?? "null"}]";
+        }
+
+    }
+
+    /// <summary>
+    /// 用于包装一个需要赋初始值的对象的包装器, 线程不安全! 
+    /// </summary>
     /// <typeparam name="T"></typeparam>
     public sealed class NeedInitObject<T> : INeedInitObject, INeedInitObject<T>
     {
