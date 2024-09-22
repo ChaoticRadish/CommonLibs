@@ -77,17 +77,33 @@ namespace CommonLibTest_Console.CSharp
         [TestMethod]
         void test4()
         {
-            if (typeof(Test).TryFindPublicStaticProperty("Test1", out string? str1))
+            if (typeof(Test).TryFindPublicStaticPropertyAndGet("Test1", out string? str1))
             {
                 WriteLine($"找到 Test1: {str1}");
             }
-            if (typeof(Test).TryFindPublicStaticProperty("Test2", out string? str2))
+            if (typeof(Test).TryFindPublicStaticPropertyAndGet("Test2", out string? str2))
             {
                 WriteLine($"找到 Test2: {str2}");
             }
-            if (typeof(Test).TryFindPublicStaticProperty("Test3", out string? str3))
+            if (typeof(Test).TryFindPublicStaticPropertyAndGet("Test3", out string? str3))
             {
                 WriteLine($"找到 Test3: {str3}");
+            }
+        }
+        [TestMethod]
+        void test5()
+        {
+            if (typeof(Test).TryFindPublicStaticProperty("Test1", typeof(string), out var property1))
+            {
+                WriteLine($"找到 Test1: {property1}");
+            }
+            if (typeof(Test).TryFindPublicStaticProperty("Test2", typeof(string), out var property2))
+            {
+                WriteLine($"找到 Test2: {property2}");
+            }
+            if (typeof(Test).TryFindPublicStaticProperty("Test3", typeof(string), out var property3))
+            {
+                WriteLine($"找到 Test3: {property3}");
             }
         }
 
