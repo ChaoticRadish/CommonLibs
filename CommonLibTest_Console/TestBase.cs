@@ -308,7 +308,10 @@ namespace CommonLibTest_Console
             string testInfo = methodName;
             method.ExistCustomAttribute<TestMethodAttribute>((attr) =>
             {
-                testInfo = attr.TestInfo;
+                if (attr.TestInfo.IsNotEmpty())
+                {
+                    testInfo = attr.TestInfo;
+                }
             });
             RunTest(action, testInfo);
         }
@@ -339,7 +342,7 @@ namespace CommonLibTest_Console
                             method.Invoke(this, null);
                         }
                     };
-                    RunTest(action, attr.TestInfo);
+                    RunTest(action, attr.TestInfo.WhenEmptyDefault(method.Name));
                 }
             }
 
@@ -432,8 +435,8 @@ namespace CommonLibTest_Console
     }
 
     [AttributeUsage(AttributeTargets.Method)]
-    public class TestMethodAttribute(string testInfo) : Attribute
+    public class TestMethodAttribute(string? testInfo = null) : Attribute
     {
-        public string TestInfo { get; } = testInfo;
+        public string TestInfo { get; } = testInfo ?? string.Empty;
     }
 }
