@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -111,6 +112,123 @@ namespace Common_Util.Extensions
         }
         #endregion
 
+        #region 查找静态属性或方法等
+        /// <summary>
+        /// 查找类型为 <typeparamref name="TTarget"/> 的静态公共属性并获取其值
+        /// </summary>
+        /// <typeparam name="TTarget"></typeparam>
+        /// <param name="type"></param>
+        /// <param name="name">想要查找的属性名</param>
+        /// <param name="value">静态属性的值</param>
+        /// <returns></returns>
+        public static bool TryFindPublicStaticProperty<TTarget>(this Type type, string name, [NotNullWhen(true)] out TTarget? value)
+        {
+            PropertyInfo? property = type.GetProperty(name, BindingFlags.Public | BindingFlags.Static);
+            if (property == null)
+            {
+                value = default;
+                return false;
+            }
+            if (property.PropertyType != typeof(TTarget))
+            {
+                value = default;
+                return false;
+            }
+            var obj = property.GetValue(null);
+            if (obj is TTarget target)
+            {
+                value = target;
+                return true;
+            }
+            else
+            {
+                value = default;
+                return false;
+            }
+        }
+        /// <summary>
+        /// 查找返回类型为 <paramref name="returnType"/> 的无参非泛型静态公共方法
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="name">想要查找的方法名</param>
+        /// <param name="returnType">期望的返回值类型</param>
+        /// <param name="method"></param>
+        /// <returns></returns>
+        public static bool TryFindPublicStaticMethod(this Type type, string name, Type returnType, [NotNullWhen(true)] out MethodInfo? method)
+        {
+            method = type.GetMethod(name, BindingFlags.Public | BindingFlags.Static);
+            if (method == null)
+            {
+                return false;
+            }
+            else if (method.ReturnType != returnType)
+            {
+                method = null;
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// 查找没有返回值的无参非泛型静态公共方法, 并调用它
+        /// </summary>
+        /// <typeparam name="TReturn"></typeparam>
+        /// <param name="type"></param>
+        /// <param name="name">想要查找的方法名</param>
+        /// <returns>调用成功时, 返回 <see langword="true"/></returns>
+        public static bool TryFindPublicStaticMethodAndInvoke(this Type type, string name)
+        {
+            MethodInfo? method = type.GetMethod(name, BindingFlags.Public | BindingFlags.Static);
+            if (method == null)
+            {
+                return false;
+            }
+            else if (method.ReturnType != typeof(void))
+            {
+                return false;
+            }
+            method.Invoke(null, null);
+            return true;
+        }
+
+        /// <summary>
+        /// 查找返回类型为 <typeparamref name="TReturn"/> 的无参非泛型静态公共方法, 并调用它, 获取其返回值
+        /// </summary>
+        /// <typeparam name="TReturn"></typeparam>
+        /// <param name="type"></param>
+        /// <param name="name">想要查找的方法名</param>
+        /// <param name="returnValue">方法返回值</param>
+        /// <returns>成功调用目标方法, 且取得预期类型的返回值时, 返回 <see langword="true"/></returns>
+        public static bool TryFindPublicStaticMethodAndInvoke<TReturn>(this Type type, string name, [NotNullWhen(true)] out TReturn? returnValue)
+        {
+            MethodInfo? method = type.GetMethod(name, BindingFlags.Public | BindingFlags.Static);
+            if (method == null)
+            {
+                returnValue = default;
+                return false;
+            }
+            if (method.ReturnType != typeof(TReturn))
+            {
+                returnValue = default;
+                return false;
+            }
+            var obj = method.Invoke(null, null);
+            if (obj is TReturn target)
+            {
+                returnValue = target;
+                return true;
+            }
+            else
+            {
+                returnValue = default;
+                return false;
+            }
+        }
+        #endregion
+
         /// <summary>
         /// 检查输入类型是否包含无参公共构造方法
         /// </summary>
@@ -212,5 +330,7 @@ namespace Common_Util.Extensions
                 throw new InvalidOperationException("传入类型不是泛型类型! ");
             }
         }
+
+
     }
 }
