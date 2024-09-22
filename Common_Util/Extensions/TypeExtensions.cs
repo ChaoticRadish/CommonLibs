@@ -114,6 +114,28 @@ namespace Common_Util.Extensions
 
         #region 查找静态属性或方法等
         /// <summary>
+        /// 查找类型为 <typeparamref name="TTarget"/> 的静态公共属性
+        /// </summary>
+        /// <typeparam name="TTarget"></typeparam>
+        /// <param name="type"></param>
+        /// <param name="name">想要查找的属性名</param>
+        /// <param name="propertyType">期望的属性类型</param>
+        /// <returns></returns>
+        public static bool TryFindPublicStaticProperty(this Type type, string name, Type propertyType, [NotNullWhen(true)] out PropertyInfo? property)
+        {
+            property = type.GetProperty(name, BindingFlags.Public | BindingFlags.Static);
+            if (property == null)
+            {
+                return false;
+            }
+            if (property.PropertyType != propertyType)
+            {
+                property = null;
+                return false;
+            }
+            return true;
+        }
+        /// <summary>
         /// 查找类型为 <typeparamref name="TTarget"/> 的静态公共属性并获取其值
         /// </summary>
         /// <typeparam name="TTarget"></typeparam>
@@ -121,7 +143,7 @@ namespace Common_Util.Extensions
         /// <param name="name">想要查找的属性名</param>
         /// <param name="value">静态属性的值</param>
         /// <returns></returns>
-        public static bool TryFindPublicStaticProperty<TTarget>(this Type type, string name, [NotNullWhen(true)] out TTarget? value)
+        public static bool TryFindPublicStaticPropertyAndGet<TTarget>(this Type type, string name, [NotNullWhen(true)] out TTarget? value)
         {
             PropertyInfo? property = type.GetProperty(name, BindingFlags.Public | BindingFlags.Static);
             if (property == null)
