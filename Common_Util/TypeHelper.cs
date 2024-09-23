@@ -355,11 +355,11 @@ namespace Common_Util
         /// <returns></returns>
         public static bool HasSameConstraints(Type gParam1, Type gParam2)
         {
-            if (!gParam1.IsGenericTypeParameter)
+            if (!gParam1.IsGenericParameter)
             {
                 throw new ArgumentException("传入参数非泛型形参", nameof(gParam1));
             }
-            if (!gParam2.IsGenericTypeParameter)
+            if (!gParam2.IsGenericParameter)
             {
                 throw new ArgumentException("传入参数非泛型形参", nameof(gParam2));
             }
