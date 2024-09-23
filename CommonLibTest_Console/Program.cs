@@ -19,7 +19,7 @@ namespace CommonLibTest_Console
             AllocConsole();
 #endif
 
-            TestBase test = new CSharp.Reflection003();
+            TestBase test = new CSharp.Reflection004();
             
             test.Run();
             test.Finish();
