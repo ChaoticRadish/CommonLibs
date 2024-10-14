@@ -107,6 +107,24 @@ namespace Common_Util.Extensions
 
         #endregion
 
+        #region 遍历
+        /// <summary>
+        /// 取得顺序遍历传入列表的遍历器, 同时附带遍历索引
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="list"></param>
+        /// <param name="startIndex">起始索引</param>
+        /// <returns></returns>
+        public static IEnumerable<(int index, T obj)> WithIndex<T>(this IList<T> list, int startIndex = 0)
+        {
+            foreach (var item in list)
+            {
+                yield return (startIndex, item);
+                startIndex++;
+            }
+        }
+        #endregion
+
         /// <summary>
         /// 将新项添加到列表尾部
         /// </summary>
