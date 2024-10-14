@@ -10,6 +10,18 @@ namespace Common_Util.Extensions
     public static class ObjectExtensions
     {
         /// <summary>
+        /// 取得描述传入对象是否为空的字符串
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <param name="notNullStr"></param>
+        /// <param name="nullStr"></param>
+        /// <returns></returns>
+        public static string GetIsNullString(this object? obj, string notNullStr, string nullStr = "")
+        {
+            return obj == null ? nullStr : notNullStr;
+        }
+
+        /// <summary>
         /// 取得对象的完整信息
         /// </summary>
         /// <param name="obj"></param>
