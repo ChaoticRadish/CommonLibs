@@ -10,7 +10,6 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
-using static System.Collections.Specialized.BitVector32;
 
 namespace CommonLibTest_Console
 {
@@ -426,10 +425,15 @@ namespace CommonLibTest_Console
                 HeadSameLine = false,
             }
         };
+        public LogStringBuilderConfig LogBuilderConfig { get => logBuilder.Config; }
+        public bool ILoggerOutEmptyLine { get; set; } = true;
         public void Log(LogData log)
         {
             WriteLine(logBuilder.Build(log));
-            WriteLine();
+            if (ILoggerOutEmptyLine)
+            {
+                WriteLine();
+            }
         }
         #endregion
     }
