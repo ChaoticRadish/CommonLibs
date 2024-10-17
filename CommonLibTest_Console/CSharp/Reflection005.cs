@@ -1,4 +1,5 @@
-﻿using Common_Util.Extensions;
+﻿using Common_Util;
+using Common_Util.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,6 +20,14 @@ namespace CommonLibTest_Console.CSharp
             var m5 = GetType().GetMethod(nameof(M5))!.GetParameters();
             var m6 = GetType().GetMethod(nameof(M6))!.GetParameters();
             var m7 = GetType().GetMethod(nameof(M7))!.GetParameters();
+            var m8 = GetType().GetMethod(nameof(M8))!.GetParameters();
+            var m9 = GetType().GetMethod(nameof(M9))!.GetParameters();
+            var m10 = GetType().GetMethod(nameof(M10))!.GetParameters();
+            var m11 = GetType().GetMethod(nameof(M11))!.GetParameters();
+            var m12 = GetType().GetMethod(nameof(M12))!.GetParameters();
+            var m13 = GetType().GetMethod(nameof(M13))!.GetParameters();
+            var m14 = GetType().GetMethod(nameof(M14))!.GetParameters();
+            var m15 = GetType().GetMethod(nameof(M15))!.GetParameters();
 
             // WritePair(m1.FullInfoString());
             // WritePair(m2.FullInfoString());
@@ -30,14 +39,27 @@ namespace CommonLibTest_Console.CSharp
             WritePair(m1.SequenceEqual(m6));
             WritePair(m5.SequenceEqual(m6));
             WritePair(m5.SequenceEqual(m7));
+            WritePair(m8.SequenceEqual(m9));
+            WritePair(m10.SequenceEqual(m11));
+            WritePair(m10.SequenceEqual(m12));
+            WritePair(m13.SequenceEqual(m14));
+            WritePair(m14.SequenceEqual(m15));
 
             var ec = EqualityComparer<ParameterInfo>.Create(
                 (a, b) => 
                 {
                     if (a != null && b != null)
                     {
-                        if (a.ParameterType != b.ParameterType || a.IsOut != b.IsOut) return false;
-                        return true;
+                        if (a.IsOut != b.IsOut) return false;
+                        if (a.ParameterType.IsGenericParameter != b.ParameterType.IsGenericParameter) return false;
+                        if (a.ParameterType.IsGenericParameter)
+                        {
+                            return ReflectionHelper.GenericParameterHasSameConstraints(a.ParameterType, b.ParameterType);
+                        }
+                        else
+                        {
+                            return a.ParameterType == b.ParameterType;
+                        }
                     }
                     else
                     {
@@ -53,6 +75,11 @@ namespace CommonLibTest_Console.CSharp
             WritePair(m1.SequenceEqual(m6, ec));
             WritePair(m5.SequenceEqual(m6, ec));
             WritePair(m5.SequenceEqual(m7, ec));
+            WritePair(m8.SequenceEqual(m9, ec));
+            WritePair(m10.SequenceEqual(m11, ec));
+            WritePair(m10.SequenceEqual(m12, ec));
+            WritePair(m13.SequenceEqual(m14, ec));
+            WritePair(m14.SequenceEqual(m15, ec));
         }
 
         public void M1(string str, int i) { }
@@ -62,5 +89,22 @@ namespace CommonLibTest_Console.CSharp
         public void M5(string str, ref int i) { }
         public void M6(string str, out int i) { i = 0; }
         public void M7(string str, ref int i) { }
+        public void M8<T>(string str, T i) { }
+        public void M9<T>(string str, T i) { }
+        public void M10<T>(string str, T i) where T : struct { }
+        public void M11<T>(string str, T i) where T : struct { }
+        public void M12<T>(string str, T i) where T : class { }
+        public void M13<T1, T2>(string str, Dictionary<T2, T1> i) 
+            where T1 : notnull, new()
+            where T2 : struct
+        { }
+        public void M14<T1, T2>(string str, Dictionary<T1, T2> i)
+            where T1 : notnull, new()
+            where T2 : struct
+        { }
+        public void M15<T1, T2>(string str, Dictionary<T1, string> i)
+            where T1 : notnull, new()
+            where T2 : struct
+        { }
     }
 }
