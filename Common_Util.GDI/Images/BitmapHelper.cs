@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -381,6 +382,31 @@ namespace Common_Util.GDI.Images
             catch
             {
                 return null;
+            }
+        }
+        /// <summary>
+        /// 尝试通过 <paramref name="bytes"/> 创建图片对象
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <param name="image"></param>
+        /// <param name="ex">创建过程中发生的异常</param>
+        /// <returns></returns>
+        public static bool TryCreateImageFrom(byte[] bytes, [NotNullWhen(true)] out System.Drawing.Image? image, [NotNullWhen(false)] out Exception? ex)
+        {
+            try
+            {
+                using MemoryStream memoryStream = new MemoryStream(bytes);
+                Image output = Image.FromStream(memoryStream);
+                // output.Tag = memoryStream;
+                image = output;
+                ex = null;
+                return true;
+            }
+            catch (Exception _ex)
+            {
+                image = null;
+                ex = _ex;
+                return false;
             }
         }
         /// <summary>
