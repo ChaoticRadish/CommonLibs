@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Common_Util.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -80,5 +81,34 @@ namespace Common_Util
             }
             return true;
         }
+
+
+        #region 泛型参数
+
+        /// <summary>
+        /// 判断传入的两个直接使用泛型类型参数作为参数类型的形参是否具有相同的约束条件
+        /// </summary>
+        /// <param name="gParam1"></param>
+        /// <param name="gParam2"></param>
+        /// <returns></returns>
+        public static bool GenericParameterHasSameConstraints(Type gParam1, Type gParam2)
+        {
+            if (!gParam1.IsGenericParameter)
+            {
+                throw new ArgumentException("传入参数不是直接使用类型参数作为参数类型的形参", nameof(gParam1));
+            }
+            if (!gParam2.IsGenericParameter)
+            {
+                throw new ArgumentException("传入参数不是直接使用类型参数作为参数类型的形参", nameof(gParam2));
+            }
+            if (gParam1 == gParam2) return true;
+
+            var constraints1 = gParam1.GetGenericParameterConstraints();
+            var constraints2 = gParam2.GetGenericParameterConstraints();
+
+            return constraints1.DisorderEquals(constraints2);
+        }
+
+        #endregion
     }
 }
