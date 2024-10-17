@@ -109,6 +109,52 @@ namespace Common_Util
             return constraints1.DisorderEquals(constraints2);
         }
 
+        /// <summary>
+        /// 以先根次序遍历类型中所有的类型参数
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="includeSelf">遍历时是否包含自身</param>
+        /// <returns></returns>
+        public static IEnumerable<Type> PreorderGenericParameterTree(Type type, bool includeSelf = true)
+        {
+            Stack<(Type type, IEnumerator<Type> gParmas)> stack = new();
+            bool back = false;   // 是否正在向下一级移动
+            (Type type, IEnumerator<Type> gParmas) current = (type, ((IEnumerable<Type>)type.GetGenericArguments()).GetEnumerator());
+            stack.Push(current);
+            while (stack.Count != 0) 
+            {
+                if (!back)
+                {
+                    if (stack.Count == 1 && !includeSelf) 
+                    { 
+                        // 遍历不包含传入的类型自身
+                    }
+                    else
+                    {
+                        yield return current.type;
+                    }
+
+                }
+
+                if (current.gParmas.MoveNext())
+                {
+                    var next = current.gParmas.Current;
+                    current = (next, ((IEnumerable<Type>)next.GetGenericArguments()).GetEnumerator());
+                    stack.Push(current);
+                    back = false;
+                }
+                else
+                {
+                    stack.Pop();
+                    if (stack.Count == 0)
+                    {
+                        break;
+                    }
+                    current = stack.Peek();
+                    back = true;
+                }
+            }
+        }
         #endregion
     }
 }
