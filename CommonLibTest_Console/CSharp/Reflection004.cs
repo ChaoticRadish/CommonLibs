@@ -20,7 +20,7 @@ namespace CommonLibTest_Console.CSharp
         {
             var t1 = typeof(Test1<,>);
             var b = typeof(Test1<,>).GetGenericArgument(1);
-            WritePair(TypeHelper.HasSameConstraints(t1, b));
+            WritePair(ReflectionHelper.GenericParameterHasSameConstraints(t1, b));
         }
 
         [TestMethod]
@@ -28,7 +28,7 @@ namespace CommonLibTest_Console.CSharp
         {
             var a = typeof(Test1<,>).GetGenericArgument(0);
             var b = typeof(Test1<,>).GetGenericArgument(1);
-            WritePair(TypeHelper.HasSameConstraints(a, b));
+            WritePair(ReflectionHelper.GenericParameterHasSameConstraints(a, b));
         }
 
         [TestMethod]
@@ -36,7 +36,7 @@ namespace CommonLibTest_Console.CSharp
         {
             var t1a = typeof(Test1<,>).GetGenericArgument(0);
             var t2a = typeof(Test2<,>).GetGenericArgument(0);
-            WritePair(TypeHelper.HasSameConstraints(t1a, t2a));
+            WritePair(ReflectionHelper.GenericParameterHasSameConstraints(t1a, t2a));
         }
 
         [TestMethod]
@@ -44,7 +44,7 @@ namespace CommonLibTest_Console.CSharp
         {
             var t1a = typeof(Test1<,>).GetGenericArgument(0);
             var t3a = typeof(Test3<,>).GetGenericArgument(0);
-            WritePair(TypeHelper.HasSameConstraints(t1a, t3a));
+            WritePair(ReflectionHelper.GenericParameterHasSameConstraints(t1a, t3a));
         }
 
 
