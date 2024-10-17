@@ -345,32 +345,6 @@ namespace Common_Util
 
         #endregion
 
-        #region 泛型参数约束条件
-
-        /// <summary>
-        /// 判断传入的两个泛型形参是否具有相同的约束条件
-        /// </summary>
-        /// <param name="gParam1"></param>
-        /// <param name="gParam2"></param>
-        /// <returns></returns>
-        public static bool HasSameConstraints(Type gParam1, Type gParam2)
-        {
-            if (!gParam1.IsGenericParameter)
-            {
-                throw new ArgumentException("传入参数非泛型形参", nameof(gParam1));
-            }
-            if (!gParam2.IsGenericParameter)
-            {
-                throw new ArgumentException("传入参数非泛型形参", nameof(gParam2));
-            }
-            if (gParam1 == gParam2) return true;
-
-            var constraints1 = gParam1.GetGenericParameterConstraints();
-            var constraints2 = gParam2.GetGenericParameterConstraints();
-
-            return constraints1.DisorderEquals(constraints2);
-        }
-
-        #endregion
+        
     }
 }
