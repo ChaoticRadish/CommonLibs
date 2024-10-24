@@ -19,7 +19,7 @@ namespace CommonLibTest_Console
             AllocConsole();
 #endif
 
-            TestBase test = new Internet.Udp001();
+            TestBase test = new TimeManage.WaitSomeTime001();
             
             test.Run();
             test.Finish();
