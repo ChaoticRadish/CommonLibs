@@ -12,6 +12,31 @@ namespace Common_Util.Time
     /// </summary>
     public class TimeClock : IClock
     {
+        #region StopWatch
+        /// <summary>
+        /// 码表
+        /// </summary>
+        private readonly Stopwatch? _stopwatch;
+
+        /// <summary>
+        /// 获取以每秒计时周期数表示的计时器频率. 
+        /// </summary>
+        /// <remarks>
+        /// 具体值为 <see cref="Stopwatch.Frequency"/>, 该频率取决于安装的硬件和操作系统，因此该值Frequency在系统运行时保持不变。
+        /// </remarks>
+        public static long Frequency { get => Stopwatch.Frequency; }
+        /// <summary>
+        /// 指示计时器是否基于高分辨率性能计数器
+        /// </summary>
+        /// <remarks>
+        /// 具体值为 <see cref="Stopwatch.IsHighResolution"/>, 取决于系统硬件和操作系统。<br/>
+        /// <see langword="true"/> => 基于高分辨率性能计数器 <br/>
+        /// <see langword="false"/> => 基于系统计时器 <br/>
+        /// </remarks>
+        public static bool IsHighResolution { get => Stopwatch.IsHighResolution; }
+
+        #endregion
+
         /// <summary>
         /// 计时器的状态
         /// </summary>
@@ -63,21 +88,17 @@ namespace Common_Util.Time
             ManualCountdown,
         }
         /// <summary>
-        /// 模式
+        /// 模式, 仅允许在构造函数中设置
         /// </summary>
-        public TimerMode Mode { get; private set; }
+        public TimerMode Mode { get; private init; }
 
-        /// <summary>
-        /// 码表
-        /// </summary>
-        private readonly Stopwatch _stopwatch;
         /// <summary>
         /// 内部计时
         /// </summary>
         private float _timer = 0;
 
         /// <summary>
-        /// 实例化一个时间自增模式(计算系统时间)的计时器
+        /// 实例化一个时间自增模式 (计算系统时间, 即 <see cref="TimerMode.Normal"/>) 的计时器
         /// </summary>
         public TimeClock() : this(TimerMode.Normal)
         {
@@ -85,11 +106,15 @@ namespace Common_Util.Time
         }
         public TimeClock(TimerMode mode)
         {
-            _stopwatch = new Stopwatch();
             Mode = mode;
+            if (mode == TimerMode.Normal)
+            {
+                _stopwatch = new Stopwatch();
+            }
         }
 
         private double _lastUpdate;
+        private double _lastMilliSecondUpdate;
 
         /// <summary>
         /// 停下时的值 (如果运行中, 则返回当前值)
@@ -144,16 +169,19 @@ namespace Common_Util.Time
             switch (Mode)
             {
                 case TimerMode.Normal:
-                    _stopwatch.Start();
+                    _stopwatch!.Start();
                     _lastUpdate = 0;
+                    _lastMilliSecondUpdate = 0;
                     break;
                 case TimerMode.Manual:
                     _timer = 0;
                     _lastUpdate = 0;
+                    _lastMilliSecondUpdate = 0;
                     break;
                 case TimerMode.ManualCountdown:
                     _timer = autoStopTime;
                     _lastUpdate = autoStopTime;
+                    _lastMilliSecondUpdate = autoStopTime * 1000;
                     break;
             }
 
@@ -170,7 +198,7 @@ namespace Common_Util.Time
             switch (Mode)
             {
                 case TimerMode.Normal:
-                    _stopwatch.Stop();
+                    _stopwatch!.Stop();
                     break;
                 case TimerMode.Manual:
                     break;
@@ -189,7 +217,7 @@ namespace Common_Util.Time
             switch (Mode)
             {
                 case TimerMode.Normal:
-                    _stopwatch.Start();
+                    _stopwatch!.Start();
                     break;
                 case TimerMode.Manual:
                     break;
@@ -212,7 +240,7 @@ namespace Common_Util.Time
             switch (Mode)
             {
                 case TimerMode.Normal:
-                    _stopwatch.Stop();
+                    _stopwatch!.Stop();
                     break;
                 case TimerMode.Manual:
                     break;
@@ -240,7 +268,7 @@ namespace Common_Util.Time
             switch (Mode)
             {
                 case TimerMode.Normal:
-                    _stopwatch.Restart();
+                    _stopwatch!.Restart();
                     break;
                 case TimerMode.Manual:
                     _timer = 0;
@@ -289,7 +317,7 @@ namespace Common_Util.Time
         /// <summary>
         /// 手动模式下自动停止事件
         /// </summary>
-        public event AutoStopDelegate AutoStopEvent;
+        public event AutoStopDelegate? AutoStopEvent;
 
         /// <summary>
         /// 返回上一次调用到现在(第一次调用时是开始到现在)的时间间隔 单位: 秒
@@ -301,6 +329,7 @@ namespace Common_Util.Time
             // 间隔时间
             double updateTime = now - _lastUpdate;
             _lastUpdate = now;
+            _lastMilliSecondUpdate = _lastUpdate * 1000;
             return updateTime;
         }
         /// <summary>
@@ -351,14 +380,14 @@ namespace Common_Util.Time
         /// <summary>
         /// 返回上一次调用到现在(第一次调用时是开始到现在)的时间间隔 单位: 毫秒
         /// </summary>
-        /// <returns></returns>
         public double UpdateMilliSecond()
         {
-            double now = ElapseTime;
+            double now = ElapseMilliSecondTime;
             //间隔时间
-            double updateTime = now - _lastUpdate;
-            _lastUpdate = now;
-            return updateTime * 1000;
+            double updateTime = now - _lastMilliSecondUpdate;
+            _lastMilliSecondUpdate = now;
+            _lastUpdate = _lastMilliSecondUpdate * 0.001;
+            return updateTime;
         }
 
         /// <summary>
@@ -388,12 +417,32 @@ namespace Common_Util.Time
                 switch (Mode)
                 {
                     case TimerMode.Normal:
-                        return _stopwatch.ElapsedMilliseconds * 0.001;
+                        return _stopwatch!.ElapsedTicks * 0.0000001;
                     case TimerMode.Manual:
                     case TimerMode.ManualCountdown:
                         return _timer;
+                    default:
+                        throw new InvalidOperationException("无效的模式配置: " + Mode);
                 }
-                return _stopwatch.ElapsedMilliseconds * 0.001;
+            }
+        }
+        /// <summary>
+        /// 获取当前实例运行到现在的总时间 (毫秒)
+        /// </summary>
+        public double ElapseMilliSecondTime
+        {
+            get
+            {
+                switch (Mode)
+                {
+                    case TimerMode.Normal:
+                        return _stopwatch!.ElapsedTicks * 0.0001;
+                    case TimerMode.Manual:
+                    case TimerMode.ManualCountdown:
+                        return _timer * 1000;
+                    default:
+                        throw new InvalidOperationException("无效的模式配置: " + Mode);
+                }
             }
         }
 
