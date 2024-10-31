@@ -19,7 +19,7 @@ namespace CommonLibTest_Console
             AllocConsole();
 #endif
 
-            TestBase test = new TimeManage.WaitSomeTime002();
+            TestBase test = new DataStruct.CyclePointer001();
             
             test.Run();
             test.Finish();
