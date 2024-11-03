@@ -134,6 +134,41 @@ namespace Common_Util.Extensions
             return true;
         }
 
+        /// <summary>
+        /// 遍历两个可枚举的对象, 直到都结束. 其中一方结束后, 如果另一方未结束, 会取得 <see langword="null"/> 值
+        /// </summary>
+        /// <remarks>如果传入了不可为空的类型, 取得的值将会是 <see langword="default"/></remarks>
+        /// <typeparam name="T1"></typeparam>
+        /// <typeparam name="T2"></typeparam>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public static IEnumerable<(T1?, T2?)> UntilAllAway<T1, T2>(this (IEnumerable<T1>, IEnumerable<T2>) obj)
+        {
+            IEnumerator<T1> e1 = obj.Item1.GetEnumerator();
+            IEnumerator<T2> e2 = obj.Item2.GetEnumerator();
+            bool e1End = false;
+            bool e2End = false;
+            do
+            {
+                T1? t1 = default;
+                T2? t2 = default;
+                if (!e1End && e1.MoveNext())
+                {
+                    t1 = e1.Current;
+                }
+                else { e1End = true; }
+                if (!e2End && e2.MoveNext())
+                {
+                    t2 = e2.Current;
+                }
+                else { e2End = true; }
+
+                if (e1End && e2End) yield break;
+                else yield return (t1, t2);
+
+            } while (!e1End || !e2End);
+        }
+
         #endregion
 
 
