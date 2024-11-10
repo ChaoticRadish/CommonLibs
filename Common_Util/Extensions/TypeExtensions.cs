@@ -352,9 +352,9 @@ namespace Common_Util.Extensions
                 throw new InvalidOperationException("传入类型不是泛型类型! ");
             }
         }
-        
+
         /// <summary>
-        /// 尝试获取 <paramref name="genericParam"/> 在类型 <paramref name="type"/> 中的索引
+        /// 尝试获取 <paramref name="genericParam"/> 在类型 <paramref name="type"/> 的泛型形参列表中的索引
         /// </summary>
         /// <param name="type"></param>
         /// <param name="genericParam">准备查找的泛型形参, 如果传入值不是泛型形参, 将抛出异常</param>
@@ -371,7 +371,7 @@ namespace Common_Util.Extensions
                 return -1;
             }
             Type typeDefinition = type.IsGenericTypeDefinition ? type : type.GetGenericTypeDefinition();
-            Type[] gParams = type.GetGenericArguments();
+            Type[] gParams = typeDefinition.GetGenericArguments();
             int index = 0;
             foreach (Type param in gParams)
             {
