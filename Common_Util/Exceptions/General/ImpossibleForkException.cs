@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -23,5 +25,17 @@ namespace Common_Util.Exceptions.General
         /// </summary>
         /// <param name="message"></param>
         public ImpossibleForkException(string message) : base($"{fixedString}{message}") { }
+
+        /// <summary>
+        /// 传入的 <paramref name="obj"/> 在调用的此刻不可能为空, 如果它现在是空的, 则抛出异常
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <param name="paramName"></param>
+        /// <exception cref="ImpossibleForkException"></exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void ImpossibleNull([NotNull]object? obj, [CallerArgumentExpression(nameof(obj))] string paramName = "")
+        {
+            if (obj == null) throw new ImpossibleForkException($"传入对象 {paramName} 在此刻不可能为空, 然而却是空的! ");
+        }
     }
 }
