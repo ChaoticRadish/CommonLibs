@@ -1,4 +1,5 @@
-﻿using Common_Util.Extensions;
+﻿using Common_Util.Exceptions.General;
+using Common_Util.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -82,6 +83,109 @@ namespace Common_Util
             return true;
         }
 
+        #region 等价比较
+        /// <summary>
+        /// 比较传入的两个可能包含泛型形参的类型是否等价
+        /// </summary>
+        /// <remarks>
+        /// 传入的两个类型都为 <see langword="null"/> 时, 会视为等价 (相等), 返回 <see langword="true"/>
+        /// </remarks>
+        /// <param name="t1"></param>
+        /// <param name="t2"></param>
+        /// <param name="normalTypeEquivalentCompareFunc">
+        /// 比较两个相同位置的普通类型是否等价, 其中第一个参数来自于 <paramref name="t1"/>, 第二个来自于 <paramref name="t2"/> <br/>
+        /// 当此参数为 <see langword="null"/> 时, 使用 <see cref="Type.Equals(Type?)"/> 比较是否相同, 仅相同时等价
+        /// </param>
+        /// <param name="gTypeDefinitionEquivalentCompareFunc">
+        /// 比较两个相同位置的泛型类型的泛型定义是否等价, 其中第一个参数来自于 <paramref name="t1"/>, 第二个来自于 <paramref name="t2"/> <br/>
+        /// 当此参数为 <see langword="null"/> 时, 使用 <see cref="Type.Equals(Type?)"/> 比较是否相同, 仅相同时等价
+        /// </param>
+        /// <param name="gParamEquivalentCompareFunc">
+        /// 比较两个相同位置的泛型形参是否等价, 其中第一个参数来自于 <paramref name="t1"/>, 第二个来自于 <paramref name="t2"/> <br/>
+        /// 当此参数为 <see langword="null"/> 时, 使用 <see cref="GenericParameterHasSameConstraints(Type, Type)"/> 比较是否具有相同的约束条件, 约束条件相同则相同
+        /// </param>
+        /// <returns></returns>
+        public static bool IsEquivalent(Type? t1, Type? t2, 
+            Func<Type, Type, bool>? normalTypeEquivalentCompareFunc = null,
+            Func<Type, Type, bool>? gTypeDefinitionEquivalentCompareFunc = null,
+            Func<Type, Type, bool>? gParamEquivalentCompareFunc = null)
+        {
+            if (t1 == null && t2 == null) return true;  // 均为 null, 等价
+            if (t1 == null ^ t2 == null) return false;  // 只有一个为 null, 不等价
+
+            var enumerable1 = PreorderGenericParameterTree(t1!, true);
+            var enumerable2 = PreorderGenericParameterTree(t2!, true);
+            if (enumerable1.Count() != enumerable2.Count()) return false;   // 可遍历数量不同, 结构必然不等价
+
+            normalTypeEquivalentCompareFunc ??= defaultNormalTypeEquivalentCompareFunc;
+            gTypeDefinitionEquivalentCompareFunc ??= defaultGenericTypeDefinitionEquivalentCompareFunc;
+            gParamEquivalentCompareFunc ??= GenericParameterHasSameConstraints;
+
+
+            Type[] t1GArgs, t2GArgs;    // 泛型参数列表的临时对象
+            Type t1Definition, t2Definition;    // 泛型定义的临时对象
+            foreach ((Type? temp1, Type? temp2) in (enumerable1, enumerable2).UntilAllAway())
+            {
+                ImpossibleForkException.ImpossibleNull(temp1);
+                ImpossibleForkException.ImpossibleNull(temp2);
+
+                if (temp1.IsGenericType && temp2.IsGenericType)
+                {
+                    t1GArgs = temp1.GetGenericArguments();
+                    t2GArgs = temp2.GetGenericArguments();
+                    if (t1GArgs.Length != t2GArgs.Length) return false; // 数量不等, 结构必然不等价
+                    t1Definition = temp1.GetGenericTypeDefinition();
+                    t2Definition = temp2.GetGenericTypeDefinition();
+                    if (!gTypeDefinitionEquivalentCompareFunc!(t1Definition, t2Definition))
+                    {
+                        // 两个类型的泛型定义不等价
+                        return false;
+                    }
+                }
+                else if (!temp1.IsGenericType && !temp2.IsGenericType)
+                {
+                    if (temp1.IsGenericParameter && temp2.IsGenericParameter)
+                    {
+                        if (!gParamEquivalentCompareFunc!(temp1, temp2))
+                        {
+                            // 两个泛型形参不等价
+                            return false;
+                        }
+                    }
+                    else if (!temp1.IsGenericParameter && !temp2.IsGenericParameter)
+                    {
+                        if (!normalTypeEquivalentCompareFunc!(temp1, temp2))
+                        {
+                            // 两个普通类型不等价
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        // 一个是泛型形参, 一个不是, 必然不等价
+                        return false;
+                    }
+                }
+                else
+                {
+                    // 一个是普通类型, 一个是泛型类型, 必然不等价
+                    return false;
+                }
+            }
+            // 经过检查, 没有出现不等价
+            return true;
+        }
+
+        private static bool defaultNormalTypeEquivalentCompareFunc(Type t1, Type t2)
+        {
+            return t1.Equals(t2);
+        }
+        private static bool defaultGenericTypeDefinitionEquivalentCompareFunc(Type t1, Type t2)
+        {
+            return t1.Equals(t2);
+        }
+
+        #endregion
 
         #region 泛型参数
 
@@ -95,11 +199,11 @@ namespace Common_Util
         {
             if (!gParam1.IsGenericParameter)
             {
-                throw new ArgumentException("传入参数不是直接使用类型参数作为参数类型的形参", nameof(gParam1));
+                throw new ArgumentException($"传入参数 {gParam1} 不是泛型形参", nameof(gParam1));
             }
             if (!gParam2.IsGenericParameter)
             {
-                throw new ArgumentException("传入参数不是直接使用类型参数作为参数类型的形参", nameof(gParam2));
+                throw new ArgumentException($"传入参数 {gParam2} 不是泛型形参", nameof(gParam2));
             }
             if (gParam1 == gParam2) return true;
 
@@ -155,6 +259,7 @@ namespace Common_Util
                 }
             }
         }
+
         #endregion
     }
 }
