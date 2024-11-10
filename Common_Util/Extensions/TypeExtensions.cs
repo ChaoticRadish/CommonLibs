@@ -333,7 +333,7 @@ namespace Common_Util.Extensions
         /// <param name="index">泛型参数索引</param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
-        [MethodImpl(MethodImplOptions.NoInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Type GetGenericArgument(this Type type, int index = 0)
         {
             ArgumentOutOfRangeException.ThrowIfNegative(index);
@@ -359,7 +359,7 @@ namespace Common_Util.Extensions
         /// <param name="type"></param>
         /// <param name="genericParam">准备查找的泛型形参, 如果传入值不是泛型形参, 将抛出异常</param>
         /// <returns>如果未能在类型的泛型中找到目标泛型形参, 则返回 -1 </returns>
-        [MethodImpl(MethodImplOptions.NoInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int GenericParamIndexOf(this Type type, Type genericParam)
         {
             if (!genericParam.IsGenericParameter)
