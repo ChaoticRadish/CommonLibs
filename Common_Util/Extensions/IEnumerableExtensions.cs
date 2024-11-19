@@ -169,6 +169,26 @@ namespace Common_Util.Extensions
             } while (!e1End || !e2End);
         }
 
+        /// <summary>
+        /// 遍历两个可枚举的对象, 直到任意一方结束. 
+        /// </summary>
+        /// <typeparam name="T1"></typeparam>
+        /// <typeparam name="T2"></typeparam>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public static IEnumerable<(T1, T2)> UntilAnyAway<T1, T2>(this (IEnumerable<T1>, IEnumerable<T2>) obj)
+        {
+            IEnumerator<T1> e1 = obj.Item1.GetEnumerator();
+            IEnumerator<T2> e2 = obj.Item2.GetEnumerator();
+            while (true)
+            {
+                if (e1.MoveNext() && e2.MoveNext())
+                {
+                    yield return (e1.Current, e2.Current);
+                }
+                else yield break;
+            }
+        }
         #endregion
 
 
