@@ -194,8 +194,14 @@ namespace Common_Util
         /// </summary>
         /// <param name="gParam1"></param>
         /// <param name="gParam2"></param>
+        /// <param name="customConstraintsCompaper">
+        /// 自定义约束条件的比较方法, 第一个参数对应 <paramref name="gParam1"/> 的约束条件, 第二个参数对应 <paramref name="gParam2"/> 的约束条件. <br/>
+        /// 如果为 <see langword="null"/>, 采用 <see cref="IEnumerableExtensions.DisorderEquals{T}(IEnumerable{T}, IEnumerable{T}, IEqualityComparer{T}?)"/> 比较是否无序相等
+        /// </param>
         /// <returns></returns>
-        public static bool GenericParameterHasSameConstraints(Type gParam1, Type gParam2)
+        public static bool GenericParameterHasSameConstraints(
+            Type gParam1, Type gParam2, 
+            Func<Type[], Type[], bool>? customConstraintsCompaper = null)
         {
             if (!gParam1.IsGenericParameter)
             {
@@ -210,7 +216,10 @@ namespace Common_Util
             var constraints1 = gParam1.GetGenericParameterConstraints();
             var constraints2 = gParam2.GetGenericParameterConstraints();
 
-            return constraints1.DisorderEquals(constraints2);
+            return customConstraintsCompaper == null ? 
+                constraints1.DisorderEquals(constraints2)
+                : 
+                customConstraintsCompaper(constraints1, constraints2);
         }
 
         /// <summary>
