@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -189,6 +190,20 @@ namespace Common_Util
 
         #region 泛型参数
 
+        /// <summary>
+        /// 判断传入的两个直接使用泛型类型参数作为参数类型的形参是否具有相同的约束条件
+        /// </summary>
+        /// <remarks>
+        /// 相当于调用重载 <see cref="GenericParameterHasSameConstraints(Type, Type, Func{Type[], Type[], bool}?)"/> 时, 不传入自定义约束条件比较方法
+        /// </remarks>
+        /// <param name="gParam1"></param>
+        /// <param name="gParam2"></param>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]  
+        public static bool GenericParameterHasSameConstraints(Type gParam1, Type gParam2)
+        {
+            return GenericParameterHasSameConstraints(gParam1, gParam2, null);
+        }
         /// <summary>
         /// 判断传入的两个直接使用泛型类型参数作为参数类型的形参是否具有相同的约束条件
         /// </summary>
