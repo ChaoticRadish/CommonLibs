@@ -10,41 +10,6 @@ namespace Common_Util.Extensions
     public static class IEnumerableExtensions
     {
 
-        #region 遍历
-        /// <summary>
-        /// 取得顺序遍历传入集合的遍历器, 同时附带遍历索引
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="enumerable"></param>
-        /// <param name="startIndex">起始索引</param>
-        /// <returns></returns>
-        public static IEnumerable<(int index, T obj)> WithIndex<T>(this IEnumerable<T> enumerable, int startIndex = 0)
-        {
-            foreach (var item in enumerable)
-            {
-                yield return (startIndex, item);
-                startIndex++;
-            }
-        }
-        /// <summary>
-        /// 遍历传入集合的遍历器, 对其中的每一项都执行指定的操作. 
-        /// </summary>
-        /// <remarks>
-        /// 此方法用于链式调用时, 中途需要执行集合项某个方法的场景
-        /// </remarks>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="enumerable"></param>
-        /// <param name="action"></param>
-        /// <returns></returns>
-        public static IEnumerable<T> Invoke<T>(this IEnumerable<T> enumerable, Action<T> action) 
-        { 
-            foreach (var item in enumerable)
-            {
-                action(item);
-                yield return item;
-            }
-        }
-        #endregion
 
         #region T : any
         /// <summary>
@@ -166,8 +131,41 @@ namespace Common_Util.Extensions
                 }
             }
 
-            return true;
+        #region 遍历
+        /// <summary>
+        /// 取得顺序遍历传入集合的遍历器, 同时附带遍历索引
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="enumerable"></param>
+        /// <param name="startIndex">起始索引</param>
+        /// <returns></returns>
+        public static IEnumerable<(int index, T obj)> WithIndex<T>(this IEnumerable<T> enumerable, int startIndex = 0)
+        {
+            foreach (var item in enumerable)
+            {
+                yield return (startIndex, item);
+                startIndex++;
+            }
         }
+        /// <summary>
+        /// 遍历传入集合的遍历器, 对其中的每一项都执行指定的操作. 
+        /// </summary>
+        /// <remarks>
+        /// 此方法用于链式调用时, 中途需要执行集合项某个方法的场景
+        /// </remarks>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="enumerable"></param>
+        /// <param name="action"></param>
+        /// <returns></returns>
+        public static IEnumerable<T> Invoke<T>(this IEnumerable<T> enumerable, Action<T> action)
+        {
+            foreach (var item in enumerable)
+            {
+                action(item);
+                yield return item;
+            }
+        }
+
 
         /// <summary>
         /// 遍历两个可枚举的对象, 直到都结束. 其中一方结束后, 如果另一方未结束, 会取得 <see langword="null"/> 值
@@ -205,6 +203,53 @@ namespace Common_Util.Extensions
         }
 
         /// <summary>
+        /// 遍历两个可枚举的对象, 同时附带从 0 起的索引值, 直到都结束. 其中一方结束后, 如果另一方未结束, 会取得 -1 与 <see langword="null"/> 值
+        /// </summary>
+        /// <remarks>如果传入了不可为空的类型, 取得的值将会是 <see langword="default"/></remarks>
+        /// <typeparam name="T1"></typeparam>
+        /// <typeparam name="T2"></typeparam>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public static IEnumerable<((int, T1?), (int, T2?))> UntilAllAwayWithIndex<T1, T2>(this (IEnumerable<T1>, IEnumerable<T2>) obj)
+        {
+            IEnumerator<T1> e1 = obj.Item1.GetEnumerator();
+            IEnumerator<T2> e2 = obj.Item2.GetEnumerator();
+            bool e1End = false;
+            int index1 = 0;
+            bool e2End = false;
+            int index2 = 0;
+            do
+            {
+                T1? t1 = default;
+                T2? t2 = default;
+                if (!e1End && e1.MoveNext())
+                {
+                    t1 = e1.Current;
+                    index1++;
+                }
+                else
+                {
+                    e1End = true;
+                    index1 = -1;
+                }
+                if (!e2End && e2.MoveNext())
+                {
+                    t2 = e2.Current;
+                    index2++;
+                }
+                else 
+                {
+                    e2End = true;
+                    index2 = -1;
+                }
+
+                if (e1End && e2End) yield break;
+                else yield return ((index1, t1), (index2, t2));
+
+            } while (!e1End || !e2End);
+        }
+
+        /// <summary>
         /// 遍历两个可枚举的对象, 直到任意一方结束. 
         /// </summary>
         /// <typeparam name="T1"></typeparam>
@@ -224,6 +269,10 @@ namespace Common_Util.Extensions
                 else yield break;
             }
         }
+
+
+        #endregion
+
         #endregion
 
 
