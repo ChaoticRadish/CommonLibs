@@ -10,6 +10,41 @@ namespace Common_Util.Extensions
     public static class IEnumerableExtensions
     {
 
+        #region 遍历
+        /// <summary>
+        /// 取得顺序遍历传入集合的遍历器, 同时附带遍历索引
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="enumerable"></param>
+        /// <param name="startIndex">起始索引</param>
+        /// <returns></returns>
+        public static IEnumerable<(int index, T obj)> WithIndex<T>(this IEnumerable<T> enumerable, int startIndex = 0)
+        {
+            foreach (var item in enumerable)
+            {
+                yield return (startIndex, item);
+                startIndex++;
+            }
+        }
+        /// <summary>
+        /// 遍历传入集合的遍历器, 对其中的每一项都执行指定的操作. 
+        /// </summary>
+        /// <remarks>
+        /// 此方法用于链式调用时, 中途需要执行集合项某个方法的场景
+        /// </remarks>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="enumerable"></param>
+        /// <param name="action"></param>
+        /// <returns></returns>
+        public static IEnumerable<T> Invoke<T>(this IEnumerable<T> enumerable, Action<T> action) 
+        { 
+            foreach (var item in enumerable)
+            {
+                action(item);
+                yield return item;
+            }
+        }
+        #endregion
 
         #region T : any
         /// <summary>
