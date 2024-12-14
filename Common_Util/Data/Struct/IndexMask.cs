@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -12,7 +13,10 @@ namespace Common_Util.Data.Struct
     /// <summary>
     /// 索引值遮罩, 固定长度, 相当于一个 <see cref="bool"/>[]
     /// </summary>
-    public struct IndexMask : IEnumerable<bool>, ICloneable
+    /// <remarks>
+    /// 此结构体允许修改值, 在用于字典, 或其他需要其 HashCode 的场景时, 需注意不要修改到它的值! 
+    /// </remarks>
+    public struct IndexMask : IEnumerable<bool>, ICloneable, IEquatable<IndexMask>  
     {
         #region 常量/静态值
         /// <summary>
@@ -244,6 +248,7 @@ namespace Common_Util.Data.Struct
         /// <summary>
         /// 获取或设置遮罩在索引 <paramref name="index"/> 位置的值
         /// </summary>
+        /// <remarks>注: <see langword="set"/> 操作时, 数组引用不会变更, 但是数组元素会被更改, HashCode 也会产生变更! </remarks>
         /// <param name="index"></param>
         /// <returns></returns>
         public readonly bool this[int index]
@@ -265,11 +270,10 @@ namespace Common_Util.Data.Struct
             }
         }
 
-        #region 修改值的操作
         /// <summary>
         /// 将当前数据所有位上的值取反
         /// </summary>
-        /// <remarks>注: 数组引用不会变更, 但是数组元素会被更改</remarks>
+        /// <remarks>注: 数组引用不会变更, 但是数组元素会被更改, HashCode 也会产生变更! </remarks>
         public readonly void Reverse()
         {
             for (int i = 0; i < bytes.Length - 1; i++)
@@ -286,7 +290,6 @@ namespace Common_Util.Data.Struct
                 bytes[^1] = (byte)(~bytes[^1]); // 这种情况说明取了 8 位
             }
         }
-        #endregion
 
         #endregion
 
@@ -495,6 +498,7 @@ namespace Common_Util.Data.Struct
         {
             return Clone();
         }
+
         #endregion
 
 
@@ -917,6 +921,60 @@ namespace Common_Util.Data.Struct
             return output;
         }
 
+        #endregion
+
+        #region 等值比较
+        /// <summary>
+        /// 比较此遮罩是否与另一个遮罩相等
+        /// </summary>
+        /// <remarks>
+        /// 需要符合: 1. 长度相等, 2. 各个位上的值相等
+        /// </remarks>
+        /// <param name="other"></param>
+        /// <returns></returns>
+        public readonly bool Equals(IndexMask other)
+        {
+            if (length != other.length) return false;
+            for (int i = 0; i < bytes.Length - 1; i++)
+            {
+                if (bytes[i] != other.bytes[i]) return false;
+            }
+            int endByteBitCount = length & 0b_111;
+            if (endByteBitCount > 0)
+            {
+                return ((bytes[^1] ^ other.bytes[^1]) & endByteBitCount) == 0;
+            }
+            else
+            {
+                return bytes[^1] == other.bytes[^1];
+            }
+        }
+        public readonly override bool Equals([NotNullWhen(true)] object? obj)
+        {
+            if (obj is IndexMask other)
+            {
+                return Equals(other);
+            }
+            return base.Equals(obj);
+        }
+        public readonly override int GetHashCode()
+        {
+            return HashCode.Combine(length, bytes.Length,
+                bytes.Length >= 1 ? bytes[0] : 0,
+                bytes.Length >= 2 ? bytes[1] : 0,
+                bytes.Length >= 3 ? bytes[2] : 0,
+                bytes.Length >= 4 ? bytes[3] : 0);
+        }
+
+        public static bool operator ==(IndexMask left, IndexMask right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(IndexMask left, IndexMask right)
+        {
+            return !(left == right);
+        }
         #endregion
     }
 }
