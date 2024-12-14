@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Common_Util.Extensions
 {
-    public static class IEnumerableExtensions
+    public static partial class IEnumerableExtensions
     {
 
 
