@@ -210,7 +210,7 @@ namespace Common_Util.Extensions
         /// <typeparam name="T2"></typeparam>
         /// <param name="obj"></param>
         /// <returns></returns>
-        public static IEnumerable<((int, T1?), (int, T2?))> UntilAllAwayWithIndex<T1, T2>(this (IEnumerable<T1>, IEnumerable<T2>) obj)
+        public static IEnumerable<((int Index, T1? Value), (int Index, T2? Value))> UntilAllAwayWithIndex<T1, T2>(this (IEnumerable<T1>, IEnumerable<T2>) obj)
         {
             IEnumerator<T1> e1 = obj.Item1.GetEnumerator();
             IEnumerator<T2> e2 = obj.Item2.GetEnumerator();
