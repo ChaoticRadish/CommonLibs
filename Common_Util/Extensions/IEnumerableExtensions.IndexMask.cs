@@ -24,22 +24,22 @@ namespace Common_Util.Extensions
         public static IEnumerable<T> Filtering<T>(this IEnumerable<T> values, IndexMask mask, bool filtering = true, bool overMask = true)
         {
             bool mValue;
-            foreach (var (v, m) in (values, mask.All(false).Select(b => (bool?)b)).UntilAllAway())
+            foreach (var ((i1, v), (i2, m)) in (values, mask.All(false).Select(b => (bool?)b)).UntilAllAwayWithIndex())
             {
-                if (v == null) yield break;
-                if (m == null)
+                if (i1 < 0) yield break;
+                if (i2 < 0)
                 {
                     if (filtering == overMask) yield break;
                     else mValue = overMask;
                 }
                 else
                 {
-                    mValue = m.Value;
+                    mValue = m!.Value;
                 }
 
                 if (mValue != filtering)
                 {
-                    yield return v;
+                    yield return v!;
                 }
                 
             }
@@ -61,25 +61,25 @@ namespace Common_Util.Extensions
         public static IEnumerable<T> Replace<T>(this IEnumerable<T> values, IndexMask mask, Func<T, T> replaceFunc, bool filtering = true, bool overMask = true)
         {
             bool mValue;
-            foreach (var (v, m) in (values, mask.All(false).Select(b => (bool?)b)).UntilAllAway())
+            foreach (var ((i1, v), (i2, m)) in (values, mask.All(false).Select(b => (bool?)b)).UntilAllAwayWithIndex())
             {
-                if (v == null) yield break;
-                if (m == null)
+                if (i1 < 0) yield break;
+                if (i2 < 0)
                 {
                     mValue = overMask;
                 }
                 else
                 {
-                    mValue = m.Value;
+                    mValue = m!.Value;
                 }
 
                 if (mValue != filtering)
                 {
-                    yield return replaceFunc.Invoke(v);
+                    yield return replaceFunc.Invoke(v!);
                 }
                 else
                 {
-                    yield return v;
+                    yield return v!;
                 }
 
             }
@@ -101,16 +101,16 @@ namespace Common_Util.Extensions
         public static IEnumerable<T> Replace<T>(this IEnumerable<T> values, IndexMask mask, T replaceValue, bool filtering = true, bool overMask = true)
         {
             bool mValue;
-            foreach (var (v, m) in (values, mask.All(false).Select(b => (bool?)b)).UntilAllAway())
+            foreach (var ((i1, v), (i2, m)) in (values, mask.All(false).Select(b => (bool?)b)).UntilAllAwayWithIndex())
             {
-                if (v == null) yield break;
-                if (m == null)
+                if (i1 < 0) yield break;
+                if (i2 < 0)
                 {
                     mValue = overMask;
                 }
                 else
                 {
-                    mValue = m.Value;
+                    mValue = m!.Value;
                 }
 
                 if (mValue != filtering)
@@ -119,7 +119,7 @@ namespace Common_Util.Extensions
                 }
                 else
                 {
-                    yield return v;
+                    yield return v!;
                 }
 
             }
