@@ -154,7 +154,7 @@ namespace Common_Util.Extensions
             else
             {
                 var temp = getNewValue();
-                if (dic.TryAdd(key, getNewValue()))
+                if (dic.TryAdd(key, temp))
                 {
                     value = temp;
                     return true;
