@@ -317,5 +317,68 @@ namespace Common_Util.Extensions
             }
         }
 
+
+
+        #region 取值
+        /// <summary>
+        /// 尝试从数组中取得索引为 <paramref name="index"/> 的元素
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="list"></param>
+        /// <param name="index">目标索引</param>
+        /// <param name="item">找到的元素</param>
+        /// <returns></returns>
+        public static bool TryGet<T>(this T[] list, int index, [MaybeNullWhen(false)] out T item)
+        {
+            if (list == null || list.Length == 0 || index < 0 || index >= list.Length)
+            {
+                item = default;
+                return false;
+            }
+            else
+            {
+                item = list[index];
+                return true;
+            }
+        }
+        /// <summary>
+        /// 从数组中取得索引为 <paramref name="index"/> 的元素, 如果获取失败, 使用 <see langword="default"/> 取得默认值并返回
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="list"></param>
+        /// <param name="index"></param>
+        /// <returns>当 <typeparamref name="T"/> 是可空类型时, 可能返回 <see langword="null"/></returns>
+        [return:MaybeNull]
+        public static T GetOrDefault<T>(this T[] list, int index)
+        {
+            if (TryGet(list, index, out var item))
+            {
+                return item;
+            }
+            else
+            {
+                return default;
+            }
+        }
+        /// <summary>
+        /// 从数组中取得索引为 <paramref name="index"/> 的元素, 如果获取失败, 返回 <paramref name="defaultValue"/>
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="list"></param>
+        /// <param name="index"></param>
+        /// <param name="defaultValue"></param>
+        /// <returns></returns>
+        public static T GetOrDefault<T>(this T[] list, int index, T defaultValue)
+        {
+            if (TryGet(list, index, out var item))
+            {
+                return item;
+            }
+            else
+            {
+                return defaultValue;
+            }
+        }
+        #endregion
     }
 }
