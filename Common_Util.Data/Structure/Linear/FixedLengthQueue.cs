@@ -13,18 +13,24 @@ namespace Common_Util.Data.Structure.Linear
     public class FixedLengthQueue<T> : Queue<T>
     {
         #region 属性
+        /// <summary>
+        /// 队列容量
+        /// </summary>
         public int Capacity { get; private set; }
         #endregion
-
+        /// <summary>
+        /// 当前队列的最后一个项
+        /// </summary>
         public T? Last { get; private set; }
 
         /// <summary>
         /// 实例化
         /// </summary>
-        /// <param name="capacity">容量</param>
+        /// <param name="capacity">容量, 需要非负数</param>
         public FixedLengthQueue(int capacity) : base()
         {
-            Capacity = System.Math.Abs(capacity);
+            ArgumentOutOfRangeException.ThrowIfLessThan(capacity, 0);
+            Capacity = capacity;
         }
 
         /// <summary>
