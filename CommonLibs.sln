@@ -33,6 +33,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommonLibTest_Console", "Co
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommonLibTest_Wpf", "CommonLibTest_Wpf\CommonLibTest_Wpf.csproj", "{5236E1C4-E6C9-4B7B-8641-C89179C26C18}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonLibTest_Winform", "CommonLibTest_Winform\CommonLibTest_Winform.csproj", "{1788BEA5-94AA-4480-B803-57CEBD5B2353}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -91,6 +93,10 @@ Global
 		{5236E1C4-E6C9-4B7B-8641-C89179C26C18}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5236E1C4-E6C9-4B7B-8641-C89179C26C18}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5236E1C4-E6C9-4B7B-8641-C89179C26C18}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1788BEA5-94AA-4480-B803-57CEBD5B2353}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1788BEA5-94AA-4480-B803-57CEBD5B2353}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1788BEA5-94AA-4480-B803-57CEBD5B2353}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1788BEA5-94AA-4480-B803-57CEBD5B2353}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -109,6 +115,7 @@ Global
 		{04AAD3BC-D9D9-4A37-B5BF-B01196DFEFAE} = {78F3DC99-D5CF-4A7A-9BE6-810158BE2B2D}
 		{7D3515AE-7535-434D-9143-C8122F1061DA} = {C097F254-0EBB-4FCD-84B2-7BF08A52CD9F}
 		{5236E1C4-E6C9-4B7B-8641-C89179C26C18} = {C097F254-0EBB-4FCD-84B2-7BF08A52CD9F}
+		{1788BEA5-94AA-4480-B803-57CEBD5B2353} = {C097F254-0EBB-4FCD-84B2-7BF08A52CD9F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9A94B4BB-B651-42DD-A853-F94A0A76D38F}
