@@ -28,7 +28,11 @@ namespace Common_Util.Data.Structure.Linear
         #endregion
 
         #region 实例化
-        private CycleContainer(T[] array) { Datas = array; }
+        private CycleContainer(T[] array) 
+        {
+            Datas = array;
+            CurrentIndex = Datas.Length - 1;
+        }
 
         /// <summary>
         /// 使用 <paramref name="values"/> 实例化容器, 容量为其长度, 初始值为取到的值
