@@ -84,6 +84,13 @@ namespace CommonLibTest_Console.DataStruct
             WritePair(c1.ToArray().FullInfoString());
             WritePair(arr.FullInfoString());
 
+            c1.Clear();
+            WritePair(c1.ToArray().FullInfoString());
+            WritePair(arr.FullInfoString());
+
+            c1.Clear("芜湖");
+            WritePair(c1.ToArray().FullInfoString());
+            WritePair(arr.FullInfoString());
         }
     }
 }
