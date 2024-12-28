@@ -77,12 +77,20 @@ namespace Common_Winform.Controls.FeatureGroup
             {
                 totalCount = value;
                 UpdatePageButtons();
+                if (CurrentIndex > TotalPage)
+                {
+                    SetShowingCurrentIndex(TotalPage);
+                }
+                else if (currentIndex < 1)
+                {
+                    SetShowingCurrentIndex(1);
+                }
             }
         }
         private int totalCount = 100;
 
         /// <summary>
-        /// 当前页码
+        /// 当前页码, 赋值时就会触发
         /// </summary>
         [Category("CVII_自定义_参数"), DisplayName("当前页码")]
         public int CurrentIndex
@@ -90,6 +98,7 @@ namespace Common_Winform.Controls.FeatureGroup
             get => currentIndex;
             set
             {
+                int old = currentIndex;
                 currentIndex = value;
                 if (currentIndex <= 0)
                 {
@@ -103,7 +112,21 @@ namespace Common_Winform.Controls.FeatureGroup
 
                 UpdatePageButtons();
 
-                OnPageIndexChanged?.Invoke(currentIndex, pageSize);
+                try
+                {
+                    if (!settingShowingCurrentIndex)
+                    {
+                        OnPageIndexChanged?.Invoke(currentIndex, pageSize);
+                    }
+                    UpdatePageInputUi(currentIndex);
+                }
+                catch
+                {
+                    currentIndex = old;
+                    UpdatePageInputUi(currentIndex);
+
+                    throw;
+                }
             }
         }
         private int currentIndex;
@@ -191,7 +214,10 @@ namespace Common_Winform.Controls.FeatureGroup
 
         private void PageInput_ValueChanged(Common_Winform.Controls.ValueBox.IntegerBox inputBox, int oldValue, int newValue)
         {
-            CurrentIndex = newValue;
+            if (!updatingPageInputUi)
+            {
+                CurrentIndex = newValue;
+            }
         }
         #endregion
 
@@ -347,5 +373,30 @@ namespace Common_Winform.Controls.FeatureGroup
         }
         #endregion
 
+        #region UI 更新
+        /// <summary>
+        /// 仅更新页码输入框显示的数值
+        /// </summary>
+        /// <param name="value"></param>
+        private void UpdatePageInputUi(int value)
+        {
+            updatingPageInputUi = true;
+            PageInput.Value = value;
+            updatingPageInputUi = false;
+        }
+        private bool updatingPageInputUi = false;
+
+        /// <summary>
+        /// 仅更新当前显示的当前页码, 而不触发 <see cref="OnPageIndexChanged"/> 事件
+        /// </summary>
+        /// <param name="value"></param>
+        public void SetShowingCurrentIndex(int value)
+        {
+            settingShowingCurrentIndex = true;
+            CurrentIndex = value;
+            settingShowingCurrentIndex = false;
+        }
+        private bool settingShowingCurrentIndex = false;
+        #endregion
     }
 }
