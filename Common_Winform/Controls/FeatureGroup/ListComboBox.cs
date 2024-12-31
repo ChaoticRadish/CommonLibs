@@ -25,7 +25,7 @@ namespace Common_Winform.Controls.FeatureGroup
         /// <param name="funcCaller"></param>
         /// <param name="func"></param>
         /// <returns></returns>
-        public new ListComboBox SetSelectItemsFunc(Func<List<ItemData>> func)
+        public override ListComboBox SetSelectItemsFunc(Func<List<ItemData>> func)
         {
             base.SetSelectItemsFunc(func);
             return this;
@@ -35,7 +35,7 @@ namespace Common_Winform.Controls.FeatureGroup
         /// </summary>
         /// <param name="func"></param>
         /// <returns></returns>
-        public new BaseListComboBox SetSelectItemsFunc(Func<List<KeyValuePair<object, string>>> func)
+        public override BaseListComboBox SetSelectItemsFunc(Func<List<KeyValuePair<object, string>>> func)
         {
             base.SetSelectItemsFunc(func);
             return this;
@@ -45,7 +45,7 @@ namespace Common_Winform.Controls.FeatureGroup
         /// </summary>
         /// <param name="items">可选项列表</param>
         /// <returns></returns>
-        public new BaseListComboBox SetSelectItems(List<ItemData> items)
+        public override BaseListComboBox SetSelectItems(List<ItemData> items)
         {
             base.SetSelectItems(items);
             return this;
@@ -55,7 +55,7 @@ namespace Common_Winform.Controls.FeatureGroup
         /// </summary>
         /// <param name="items">可选项列表</param>
         /// <returns></returns>
-        public new BaseListComboBox SetSelectItems(List<KeyValuePair<object, string>> items)
+        public override BaseListComboBox SetSelectItems(List<KeyValuePair<object, string>> items)
         {
             base.SetSelectItems(items);
             return this;
