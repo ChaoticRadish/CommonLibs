@@ -33,7 +33,7 @@ namespace Common_Util.Data.Structure.Tree
     /// 简易多叉树的节点
     /// </summary>
     /// <typeparam name="TValue"></typeparam>
-    public class SimpleMultiTreeNode<TValue> : IAddableMultiTreeNode<TValue>
+    public class SimpleMultiTreeNode<TValue> : IAddableMultiTreeNode<TValue, SimpleMultiTreeNode<TValue>>
     {
         public SimpleMultiTreeNode(TValue nodeValue) 
         {
@@ -48,6 +48,8 @@ namespace Common_Util.Data.Structure.Tree
 
         IEnumerable<IMultiTreeNode<TValue>> IMultiTreeNode<TValue>.Childrens => Childrens ?? [];
         IEnumerable<IAddableMultiTreeNode<TValue>> IAddableMultiTreeNode<TValue>.Childrens => Childrens ?? [];
+        IEnumerable<SimpleMultiTreeNode<TValue>> IAddableMultiTreeNode<TValue, SimpleMultiTreeNode<TValue>>.Childrens => Childrens ?? [];
+        IEnumerable<SimpleMultiTreeNode<TValue>> IMultiTreeNode<TValue, SimpleMultiTreeNode<TValue>>.Childrens => Childrens ?? [];
 
         #region 操作
         /// <summary>
@@ -56,10 +58,15 @@ namespace Common_Util.Data.Structure.Tree
         /// <param name="item"></param>
         public void Add(TValue item)
         {
-            TryAdd(item, out _);
+            ((IAddableMultiTreeNode<TValue, SimpleMultiTreeNode<TValue>>)this).TryAdd(item, out _);
         }
 
         public bool TryAdd(TValue item, [NotNullWhen(true)] out IAddableMultiTreeNode<TValue>? node)
+        {
+            return ((IAddableMultiTreeNode<TValue, SimpleMultiTreeNode<TValue>>)this).TryAdd(item, out node);
+        }
+
+        public bool TryAdd(TValue item, [NotNullWhen(true)] out SimpleMultiTreeNode<TValue>? node)
         {
             if (Childrens == null)
             {

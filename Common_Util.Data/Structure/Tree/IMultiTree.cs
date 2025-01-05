@@ -24,7 +24,7 @@ namespace Common_Util.Data.Structure.Tree
     /// 多叉树节点
     /// </summary>
     /// <typeparam name="TValue"></typeparam>
-    public interface IMultiTreeNode<TValue> 
+    public interface IMultiTreeNode<TValue>
     {
         /// <summary>
         /// 节点数据
@@ -34,7 +34,19 @@ namespace Common_Util.Data.Structure.Tree
         /// <summary>
         /// 所有直接的子节点 (不包含孙子节点或更下层的节点)
         /// </summary>
-        public IEnumerable<IMultiTreeNode<TValue>> Childrens { get; } 
+        public IEnumerable<IMultiTreeNode<TValue>> Childrens { get; }
+    }
+    /// <summary>
+    /// 多叉树节点
+    /// </summary>
+    /// <typeparam name="TValue"></typeparam>
+    public interface IMultiTreeNode<TValue, TNode> : IMultiTreeNode<TValue>
+        where TNode : IMultiTreeNode<TValue, TNode>
+    {
+        /// <summary>
+        /// 所有直接的子节点 (不包含孙子节点或更下层的节点)
+        /// </summary>
+        public new IEnumerable<TNode> Childrens { get; }
     }
 
     /// <summary>
@@ -68,6 +80,25 @@ namespace Common_Util.Data.Structure.Tree
         public new IEnumerable<IAddableMultiTreeNode<TValue>> Childrens { get; }
     }
 
+    /// <summary>
+    /// 可添加子项的树节点, 其子节点类型也与其自身相同
+    /// </summary>
+    /// <typeparam name="TValue"></typeparam>
+    public interface IAddableMultiTreeNode<TValue, TNode> : IMultiTreeNode<TValue>, IMultiTreeNode<TValue, TNode>, IAddable<TValue>, IAddableMultiTreeNode<TValue>
+        where TNode : IAddableMultiTreeNode<TValue, TNode>
+    {
+        /// <summary>
+        /// 尝试创建一个节点值为 <paramref name="item"/> 的新子节点并添加到当前节点的子节点集合中
+        /// </summary>
+        /// <param name="item"></param>
+        /// <param name="node">如果添加成功, 将 <see langword="out"/> 新创建的子节点</param>
+        /// <returns></returns>
+        bool TryAdd(TValue item, [NotNullWhen(true)] out TNode? node);
+        /// <summary>
+        /// 所有直接的子节点 (不包含孙子节点或更下层的节点)
+        /// </summary>
+        public new IEnumerable<TNode> Childrens { get; }
+    }
 
 
 }
