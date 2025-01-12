@@ -16,9 +16,9 @@ namespace Common_Winform.Extensions
         /// <param name="dgv"></param>
         /// <param name="menu">指定的菜单</param>
         /// <param name="onlySelectOneRow">是否仅选中一行</param>
-        /// <param name="doSomeAfterShowMenu">在显示菜单之前做点什么</param>
+        /// <param name="doSomeAfterShowMenu">右键点击某一单元格后, 在显示菜单之前做点什么</param>
         /// <param name="applyToNoCellArea">右键菜单应用于非单元格区域</param>
-        /// <param name="doSthAfterShowMenuOnNoCell">右键非单元格区域时做点什么</param>
+        /// <param name="doSthAfterShowMenuOnNoCell">右键非单元格区域后, 在显示菜单之前做点什么</param>
         /// <param name="setRowItemToTag">将行Item设置到右键菜单的Tag上</param>
         public static void SetRightButtonMenu<TRowDate>(
             this DataGridView dgv, ContextMenuStrip menu,
@@ -36,8 +36,15 @@ namespace Common_Winform.Extensions
                         if (c == null)
                         {// 非单元格区域
                             doSthAfterShowMenuOnNoCell?.Invoke();
-                            Form form = dgv.FindForm();
-                            menu.Show(form, form.PointToClient(Control.MousePosition));
+                            Form? form = dgv.FindForm();
+                            if (form == null)
+                            {
+                                menu.Show(Control.MousePosition);
+                            }
+                            else
+                            {
+                                menu.Show(form, form.PointToClient(Control.MousePosition));
+                            }
                         }
                     }
                 };
@@ -72,16 +79,30 @@ namespace Common_Winform.Extensions
                                 // 只有右键点击单元格, 切单元格类型与输入泛型参数相同, 才将其设置到菜单的Tag上
                                 menu.Tag = data;
                             }
-                            Form form = dgv.FindForm();
-                            menu.Show(form, form.PointToClient(Control.MousePosition));
+                            Form? form = dgv.FindForm();
+                            if (form == null)
+                            {
+                                menu.Show(Control.MousePosition);
+                            }
+                            else
+                            {
+                                menu.Show(form, form.PointToClient(Control.MousePosition));
+                            }
                             return;
                         }
                     }
                     else if (applyToNoCellArea)
                     {// 非单元格区域
                         doSthAfterShowMenuOnNoCell?.Invoke();
-                        Form form = dgv.FindForm();
-                        menu.Show(form, form.PointToClient(Control.MousePosition));
+                        Form? form = dgv.FindForm();
+                        if (form == null)
+                        {
+                            menu.Show(Control.MousePosition);
+                        }
+                        else
+                        {
+                            menu.Show(form, form.PointToClient(Control.MousePosition));
+                        }
                     }
                     if (setRowItemToTag)
                     {
