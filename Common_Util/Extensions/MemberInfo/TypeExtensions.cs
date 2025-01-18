@@ -74,7 +74,17 @@ namespace Common_Util.Extensions
 
         #region 可空类型的相关方法
         /// <summary>
-        /// 判断传入类型是否可空类型
+        /// 判断传入类型是否可以是 <see langword="null"/> 值
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public static bool CanBeNull(this Type type)
+        {
+            return !type.IsValueType || NullableTarget(type) != null;
+        }
+
+        /// <summary>
+        /// 判断传入类型是否可空类型 <see cref="Nullable{T}"/>
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
@@ -87,18 +97,18 @@ namespace Common_Util.Extensions
         /// 判断传入类型是否为可空类型
         /// </summary>
         /// <param name="type"></param>
-        /// <param name="targetType">如果是可空类型, 此值为目标类型</param>
+        /// <param name="targetType">如果 <paramref name="type"/> 是 <see cref="Nullable{T}"/>, 此值为目标类型</param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsNullable(this Type type, out Type? targetType)
+        public static bool IsNullable(this Type type, [NotNullWhen(true)] out Type? targetType)
         {
             return (targetType = NullableTarget(type)) != null;
         }
         /// <summary>
-        /// 取得可空类型的目标类型
+        /// 取得可空类型 <see cref="Nullable{T}"/> 的目标类型
         /// </summary>
         /// <param name="type"></param>
-        /// <returns>null => 不是可空类型</returns>
+        /// <returns><see langword="null"/> => 不是可空类型</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Type? NullableTarget(this Type type)
         {
