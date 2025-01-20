@@ -20,6 +20,8 @@ namespace Common_Util.Data.Struct
         public bool HasException { readonly get => Exception != null; set => throw new NotSupportedException(); }
         public Exception? Exception { get; set; }
 
+        #region 转换方法
+
         public override readonly string ToString()
         {
             StringBuilder builder = new StringBuilder();
@@ -62,6 +64,28 @@ namespace Common_Util.Data.Struct
             }
             return builder.ToString();
         }
+
+        /// <summary>
+        /// 转换为 <see cref="OperationResult"/>
+        /// </summary>
+        /// <returns></returns>
+        public readonly OperationResult ToOpertionResult()
+        {
+            if (Success)
+            {
+                return (true, SuccessInfo);
+            }
+            else if (FailureReason.IsNotEmpty()) 
+            {
+                return (false, FailureReason);
+            }
+            else
+            {
+                return (false, "发生异常: " + Exception?.Message);
+            }
+        } 
+
+        #endregion
 
         #region 静态方法
         /// <summary>
