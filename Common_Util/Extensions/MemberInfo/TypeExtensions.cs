@@ -261,6 +261,39 @@ namespace Common_Util.Extensions
         }
         #endregion
 
+        #region 获取属性
+        /// <summary>
+        /// 获取类型拥有的属性的扩展版本, 如果 <paramref name="type"/> 是一个接口, 还会查找所继承的接口的属性, 会跳过重复的接口, 但是不会跳过重名的接口
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="bindingFlags"></param>
+        /// <returns></returns>
+        public static PropertyInfo[] GetPropertiesEx(this Type type, BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.Instance)
+        {
+            if (type.IsInterface)
+            {
+                List<PropertyInfo> list = new List<PropertyInfo>();
+                List<Type> types = new List<Type>();
+                getPropertiesEx(type, bindingFlags, list, types);
+                return list.ToArray();
+            }
+            else
+            {
+                return type.GetProperties(bindingFlags);
+            }
+        }
+        private static void getPropertiesEx(Type type, BindingFlags bindingFlags, List<PropertyInfo> container, List<Type> types)
+        {
+            if (types.Contains(type)) return;
+            container.AddRange(type.GetProperties(bindingFlags));
+            foreach (Type @interface in type.GetInterfaces())
+            {
+                getPropertiesEx(@interface, bindingFlags, container, types);
+            }
+            types.Add(type);
+        }
+        #endregion
+
         /// <summary>
         /// 检查输入类型是否包含无参公共构造方法
         /// </summary>
