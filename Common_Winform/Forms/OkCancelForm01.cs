@@ -79,8 +79,8 @@ namespace Common_Winform.Forms
         private void SetBody(Control body)
         {
             显示容器.Controls.Add(body);
-            body.Dock = DockStyle.None;
-            body.Anchor = AnchorStyles.Left | AnchorStyles.Top;
+            // body.Dock = DockStyle.None;
+            // body.Anchor = AnchorStyles.Left | AnchorStyles.Top;
             body.Visible = false;
             body.Show();
         }
