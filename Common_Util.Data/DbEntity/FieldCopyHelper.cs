@@ -47,10 +47,10 @@ namespace Common_Util.Data.DbEntity
                 List<Expression> setValueExprs = [];
 
                 Dictionary<string, PropertyInfo> sourcePropertyDic
-                    = key.ts.GetProperties()
+                    = key.ts.GetPropertiesEx()
                     .ToDictionary(p => p.Name, p => p);
                 IEnumerable<PropertyInfo> targetProperties
-                    = key.tt.GetProperties()
+                    = key.tt.GetPropertiesEx()
                     .Where(p => p.CanWrite && p.ExistCustomAttribute<System.ComponentModel.DataAnnotations.Schema.ColumnAttribute>());
 
                 foreach (PropertyInfo tP in targetProperties)
