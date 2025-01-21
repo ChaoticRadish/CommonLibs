@@ -275,21 +275,36 @@ namespace Common_Util.Extensions
             }
         }
         /// <summary>
-        /// 遍历传入集合的遍历器, 对其中的每一项都执行指定的操作. 
+        /// 对 <paramref name="enumerable"/> 中的每一项都执行指定的操作. 
         /// </summary>
         /// <remarks>
-        /// 此方法用于链式调用时, 中途需要执行集合项某个方法的场景
+        /// 此方法用于链式调用时, 中途需要执行集合项某个方法的场景 <br/>
+        /// 由于 <see cref="IEnumerable{T}"/> 是延迟执行的, 如果需要立即全部执行, 需要调用 <see cref="Finish{T}(IEnumerable{T})"/> 或其他遍历操作以完成执行
         /// </remarks>
         /// <typeparam name="T"></typeparam>
         /// <param name="enumerable"></param>
-        /// <param name="action"></param>
+        /// <param name="before">遍历过程中, <see langword="yield"/> <see langword="return"/> 之前对子项作一些操作</param>
+        /// <param name="after">遍历过程中, <see langword="yield"/> <see langword="return"/> 之后对子项作一些操作</param>
         /// <returns></returns>
-        public static IEnumerable<T> Invoke<T>(this IEnumerable<T> enumerable, Action<T> action)
+        public static IEnumerable<T> Invoke<T>(this IEnumerable<T> enumerable, Action<T>? before = null, Action<T>? after = null)
         {
             foreach (var item in enumerable)
             {
-                action(item);
+                before?.Invoke(item);
                 yield return item;
+                after?.Invoke(item);
+            }
+        }
+        /// <summary>
+        /// 遍历传入集合的遍历器, 但是什么都不做.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="enumerable"></param>
+        public static void Finish<T>(this IEnumerable<T> enumerable)
+        {
+            foreach (var item in enumerable)
+            {
+                _ = item;
             }
         }
 
