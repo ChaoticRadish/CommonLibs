@@ -42,6 +42,105 @@ namespace Common_Util.Log
 
     public static class LevelLoggerHelper
     {
+        #region 空输出器
+
+        /// <summary>
+        /// 取得一个啥都不干的日志输出器
+        /// </summary>
+        /// <returns></returns>
+        public static ILevelLogger Empty()
+        {
+            return EmptyLevelLogger.Shared;
+        }
+
+        private readonly struct EmptyLevelLogger : ILevelLogger
+        {
+            public static EmptyLevelLogger Shared = new();
+
+            public void Debug(string message)
+            {
+            }
+
+            public void Error(string message, Exception? ex = null)
+            {
+            }
+
+            public void Fatal(string message, Exception? ex = null)
+            {
+            }
+
+            public void Info(string message)
+            {
+            }
+
+            public void Warning(string message, Exception? ex = null, bool logTrack = false)
+            {
+            }
+        }
+        #endregion
+
+        #region 带锁输出器
+
+        /// <summary>
+        /// 取得一个输出到 <paramref name="stringBuilder"/> 的日志输出器
+        /// </summary>
+        /// <remarks>
+        /// 调用输出方法时, 使用 <paramref name="toStringFunc"/> 将输入内容转换为字符串后, 调用 <see cref="StringBuilder.AppendLine(string?)"/> 以记录日志内容 <br/>
+        /// 这个实现下, 输出日志是同步的, 速度会慢点
+        /// </remarks>
+        /// <param name="stringBuilder"></param>
+        /// <param name="toStringFunc"></param>
+        /// <returns></returns>
+        public static ILevelLogger WriteTo(StringBuilder stringBuilder, Func<LevelLoggerItem, string> toStringFunc)
+        {
+            return new LockLevelLogger(new((item) =>
+            {
+                stringBuilder.AppendLine(toStringFunc(item));
+            }));
+        }
+
+        private readonly struct LockLevelLogger(Action<LevelLoggerItem> outputAction) : ILevelLogger
+        {
+            private readonly Action<LevelLoggerItem> outputAction = outputAction;
+            private readonly object lockObject = new object();
+            private void Handle(LevelLoggerItem item)
+            {
+                lock (lockObject)
+                {
+                    outputAction(item);
+                }
+            }
+            private LevelLoggerItem CreateItem(string level, string msg, Exception? ex, bool track)
+            {
+                StackFrame[]? frames = null;
+                if (track)
+                {
+                    StackTrace trace = new(2, true);
+                    frames = trace.GetFrames();
+                }
+                return new(DateTime.Now, level, msg, ex, frames);
+            }
+
+            public void Debug(string message) => Handle(CreateItem(nameof(Debug), message, null, false));
+
+            public void Error(string message, Exception? ex = null) => Handle(CreateItem(nameof(Error), message, ex, true));
+
+            public void Fatal(string message, Exception? ex = null) => Handle(CreateItem(nameof(Fatal), message, ex, true));
+
+            public void Info(string message) => Handle(CreateItem(nameof(Info), message, null, false));
+
+            public void Warning(string message, Exception? ex = null, bool logTrack = false) => Handle(CreateItem(nameof(Warning), message, ex, logTrack));
+        }
+        #endregion
+
+        /// <summary>
+        /// <see cref="ILevelLogger"/> 的日志数据项
+        /// </summary>
+        /// <param name="Level"></param>
+        /// <param name="Message"></param>
+        /// <param name="Exception"></param>
+        public record LevelLoggerItem(DateTime Time, string Level, string Message, Exception? Exception, StackFrame[]? Frames); 
+
         /// <summary>
         /// 创建使用指定枚举值的日志相关扩展方法输出日志的 <see cref="ILevelLogger"/>
         /// </summary>
@@ -145,6 +244,10 @@ namespace Common_Util.Log
                 };
             }
         }
+
+
+
+
         private class LogToLogger(ILogger[] targets, LogToLoggerConfig config) : ILevelLogger
         {
             private readonly ILogger[] targets = targets;
