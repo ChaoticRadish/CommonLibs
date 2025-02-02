@@ -595,6 +595,32 @@ namespace Common_Util.Data.Struct
         }
 
         /// <summary>
+        /// 取得失败信息, 同时给它加个标题
+        /// </summary>
+        /// <remarks>
+        /// 例如: "Title: FailureInfo1! ", 用 ": " 连接标题和信息; <br/>
+        /// 或者失败信息为空字符串时返回 "Title", 省略掉后续内容
+        /// </remarks>
+        /// <param name="result"></param>
+        /// <param name="title"></param>
+        /// <param name="defaultFailureValue"><see cref="IOperationResult.FailureReason"/> 为空字符串时, 使用这个值</param>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static string FailureReasonWithTitle(
+            this IOperationResult result, string title, string? defaultFailureValue = null)
+        {
+            string? info = result.FailureReason ?? defaultFailureValue;
+            if (info.IsEmpty())
+            {
+                return title;
+            }
+            else
+            {
+                return $"{title}: {info}";
+            }
+        }
+
+        /// <summary>
         /// 尝试执行数次指定的方法, 直到成功或者达到最大尝试次数
         /// </summary>
         /// <typeparam name="T"></typeparam>

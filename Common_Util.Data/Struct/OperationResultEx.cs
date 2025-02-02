@@ -7,6 +7,11 @@ using System.Threading.Tasks;
 
 namespace Common_Util.Data.Struct
 {
+
+    /// <remarks>
+    /// 常用隐式转换: <br/>
+    /// (<see langword="bool"/>, <see langword="string?"/>) => <see cref="OperationResultEx"/>
+    /// </remarks>
     public struct OperationResultEx : IOperationResultEx
     {
         public bool IsSuccess { get; set; }
@@ -177,6 +182,10 @@ namespace Common_Util.Data.Struct
     /// <summary>
     /// 附带数据的扩展操作结果
     /// </summary>
+    /// <remarks>
+    /// 常用隐式转换: <br/>
+    /// (<see langword="bool"/>, T?, <see langword="string?"/>) => <see cref="OperationResultEx{T}"/>
+    /// </remarks>
     /// <typeparam name="T"></typeparam>
     public struct OperationResultEx<T> : IOperationResultEx<T>
     {
