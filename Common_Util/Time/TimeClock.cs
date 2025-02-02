@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -113,6 +114,8 @@ namespace Common_Util.Time
             }
         }
 
+        #region 时间状态
+
         private double _lastUpdate;
         private double _lastMilliSecondUpdate;
 
@@ -138,6 +141,9 @@ namespace Common_Util.Time
             }
         }
         private double _TimeWhenStop = -1;
+        #endregion
+
+        #region 运行状态
 
         /// <summary>
         /// 计时中 ? 
@@ -152,6 +158,10 @@ namespace Common_Util.Time
         /// 暂停中 ?
         /// </summary>
         public bool Pausing { get { return ClockState == State.Pause; } }
+
+        #endregion
+
+        #region 运行控制
 
         /// <summary>
         /// 开始运行
@@ -281,7 +291,9 @@ namespace Common_Util.Time
         }
 
 
+        #endregion
 
+        #region 设置
         /// <summary>
         /// 设置自动停止的时间 (如果time值小于零, 则关闭自动停止 (手动模式限定
         /// </summary>
@@ -304,6 +316,8 @@ namespace Common_Util.Time
                 }
             }
         }
+        #endregion
+
         /// <summary>
         /// 想要自动停止
         /// </summary>
@@ -319,6 +333,8 @@ namespace Common_Util.Time
         /// </summary>
         public event AutoStopDelegate? AutoStopEvent;
 
+        #region 获取调用时间间隔
+
         /// <summary>
         /// 返回上一次调用到现在(第一次调用时是开始到现在)的时间间隔 单位: 秒
         /// </summary>
@@ -332,6 +348,70 @@ namespace Common_Util.Time
             _lastMilliSecondUpdate = _lastUpdate * 1000;
             return updateTime;
         }
+        /// <summary>
+        /// 返回上一次调用到现在(第一次调用时是开始到现在)的时间间隔 单位: 毫秒
+        /// </summary>
+        public double UpdateMilliSecond()
+        {
+            double now = ElapseMilliSecondTime;
+            //间隔时间
+            double updateTime = now - _lastMilliSecondUpdate;
+            _lastMilliSecondUpdate = now;
+            _lastUpdate = _lastMilliSecondUpdate * 0.001;
+            return updateTime;
+        }
+
+        private double? _lastTrueStep;
+        /// <summary>
+        /// 获取与上一次返回 <see langword="true"/> 的调用的时间间隔到 <paramref name="diff"/>, 如果该值大于或等于 <paramref name="second"/>, 则返回 <see langword="true"/>
+        /// </summary>
+        /// <remarks>
+        /// 仅与 <see cref="ElapseMilliSecondTime"/> 有关, 与当前状态无关
+        /// </remarks>
+        /// <param name="second">需要大于 0</param>
+        /// <param name="trueFirst">如果是第一次调用, 是否应该返回 <see langword="true"/></param>
+        /// <param name="diff">首次调用时, 固定为 0</param>
+        /// <returns></returns>
+        public bool Step(double second, bool trueFirst, out double diff)
+        {
+            ArgumentOutOfRangeException.ThrowIfLessThan(second, 0);
+            if (_lastTrueStep == null)
+            {
+                diff = 0;
+                _lastTrueStep = ElapseMilliSecondTime;
+                return trueFirst;
+            }
+            else
+            {
+                double now = ElapseMilliSecondTime;
+                diff = (now - _lastTrueStep.Value) * 0.001;
+                if (diff > second)
+                {
+                    _lastTrueStep = now;
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 调用 <see cref="Step(double, bool, out double)"/>, 忽略其 <see langword="out"/> 参数
+        /// </summary>
+        /// <remarks>
+        /// 仅与 <see cref="ElapseMilliSecondTime"/> 有关, 与当前状态无关
+        /// </remarks>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]  
+        public bool Step(double second, bool trueFirst)
+        {
+            return Step(second, trueFirst, out _);
+        }
+        #endregion
+
+        #region 手动设置或更新时间
+
         /// <summary>
         /// 将时间更新到计时器
         /// </summary>
@@ -377,18 +457,6 @@ namespace Common_Util.Time
         {
             return Update((float)timeSpan.TotalSeconds);
         }
-        /// <summary>
-        /// 返回上一次调用到现在(第一次调用时是开始到现在)的时间间隔 单位: 毫秒
-        /// </summary>
-        public double UpdateMilliSecond()
-        {
-            double now = ElapseMilliSecondTime;
-            //间隔时间
-            double updateTime = now - _lastMilliSecondUpdate;
-            _lastMilliSecondUpdate = now;
-            _lastUpdate = _lastMilliSecondUpdate * 0.001;
-            return updateTime;
-        }
 
         /// <summary>
         /// 设置当前时间 (主动模式下有效)
@@ -406,6 +474,10 @@ namespace Common_Util.Time
             }
             _timer = time;
         }
+        #endregion
+
+
+        #region 获取总运行时间
 
         /// <summary>
         /// 获取当前实例运行到现在的总时间 (秒)
@@ -445,6 +517,7 @@ namespace Common_Util.Time
                 }
             }
         }
+        #endregion
 
         public override string ToString()
         {
