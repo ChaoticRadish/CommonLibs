@@ -186,8 +186,25 @@ namespace Common_Util.Log
         /// 创建输出日志到指定 <see cref="ILogger"/> 的 <see cref="ILevelLogger"/>
         /// </summary>
         /// <param name="logger"></param>
+        /// <param name="stackFrameDepth">如果需要输出堆栈信息, 要输出多少深度的堆栈信息, 如果是负数, 则不作限制</param>
         /// <param name="config">输出到 <see cref="ILogger"/> 时使用的配置, 分类与子分类均使用空字符串 </param>
         /// <returns></returns>
+        public static ILevelLogger LogTo(ILogger logger, int stackFrameDepth, LogToLoggerConfig? config = null)
+        {
+            config ??= LogToLoggerConfig.Default;
+            return new LogToLogger([logger], config.Value) 
+            {
+                FrameDepthLimit = stackFrameDepth,
+            };
+        }
+        public static ILevelLogger LogTo(ILogger[] loggers, int stackFrameDepth, LogToLoggerConfig? config = null)
+        {
+            config ??= LogToLoggerConfig.Default;
+            return new LogToLogger(loggers, config.Value)
+            {
+                FrameDepthLimit = stackFrameDepth,
+            };
+        }
         public static ILevelLogger LogTo(ILogger logger, LogToLoggerConfig? config = null)
         {
             config ??= LogToLoggerConfig.Default;
@@ -253,6 +270,11 @@ namespace Common_Util.Log
             private readonly ILogger[] targets = targets;
             private readonly LogToLoggerConfig config = config;
 
+            /// <summary>
+            /// 堆栈信息深度的设置
+            /// </summary>
+            public int FrameDepthLimit { get; init; } = -1;
+
             public void Debug(string message)
             {
                 var logData = createLogData(message, config.DebugLevel, null, false);
@@ -305,6 +327,10 @@ namespace Common_Util.Log
                 {
                     StackTrace trace = new(2, true);
                     frames = trace.GetFrames();
+                    if (FrameDepthLimit >= 0)
+                    {
+                        frames = frames[..Math.Min(frames.Length, FrameDepthLimit)];
+                    }
                 }
 
                 return new LogData()
