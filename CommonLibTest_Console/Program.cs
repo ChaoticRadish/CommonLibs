@@ -19,7 +19,7 @@ namespace CommonLibTest_Console
             AllocConsole();
 #endif
 
-            TestBase test = new TimeManage.WaitSomeTime001();
+            TestBase test = new TimeManage.TimeClock001();
             
             test.Run();
             test.Finish();
