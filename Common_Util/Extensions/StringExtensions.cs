@@ -31,6 +31,7 @@ namespace Common_Util.Extensions
         /// <param name="str"></param>
         /// <param name="maxLength"></param>
         /// <returns></returns>
+        [return: NotNullIfNotNull(nameof(str))]
         public static string? Limit(this string? str, int maxLength)
         {
             if (string.IsNullOrEmpty(str)) return str;
