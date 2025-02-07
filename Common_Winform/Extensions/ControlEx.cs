@@ -8,6 +8,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -330,5 +331,21 @@ namespace Common_Winform.Extensions
             public Action<TArg, OperationResultEx<TData>>? GetDataFailure { get; init; }
 
         }
+
+
+        #region 显示
+        /// <summary>
+        /// 取得当前 DPI 缩放比例
+        /// </summary>
+        /// <param name="control"></param>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]  
+        public static float CurrentDpiScale(this Control control)
+        {
+            int currentDpi = control.DeviceDpi;
+            float dpiScale = currentDpi / 96f; // 计算 DPI 缩放比例
+            return dpiScale;
+        }
+        #endregion
     }
 }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace Common_Winform.Extensions
 {
@@ -197,5 +198,33 @@ namespace Common_Winform.Extensions
             dgv.Columns.Add(dataGridViewColumn);
             return dataGridViewColumn;
         }
+
+        #region 显示
+        /// <summary>
+        /// 按当前分辨率的百分比调整列宽
+        /// </summary>
+        /// <param name="dgv"></param>
+        public static void DpiScaleChangeColumnWidth(this DataGridView dgv)
+        {
+            int currentDpi = dgv.DeviceDpi;
+            float dpiScale = currentDpi / 96f; // 计算 DPI 缩放比例
+            foreach (DataGridViewColumn column in dgv.Columns)
+            {
+                column.MinimumWidth = (int)(column.MinimumWidth * dpiScale);
+                column.Width = (int)(column.Width * dpiScale);
+            }
+        }
+        /// <summary>
+        /// 按当前分辨率的百分比调整行高
+        /// </summary>
+        /// <param name="dgv"></param>
+        public static void DpiScaleChangeRowHeight(this DataGridView dgv)
+        {
+            int currentDpi = dgv.DeviceDpi;
+            float dpiScale = currentDpi / 96f; // 计算 DPI 缩放比例
+            dgv.RowTemplate.Height = (int)(dgv.RowTemplate.Height * dpiScale);
+            dgv.RowTemplate.MinimumHeight = (int)(dgv.RowTemplate.MinimumHeight * dpiScale);
+        }
+        #endregion
     }
 }
