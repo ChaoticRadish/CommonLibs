@@ -257,7 +257,7 @@ namespace Common_Winform.Extensions
                 }
                 args.GotDataDone?.Invoke(startArg, getDataResult);
 
-                TData data = getDataResult.Data ?? throw new InvalidOperationException("获取数据取得空值! ");
+                TData data = getDataResult.Data ?? args.DefaultData ?? throw new InvalidOperationException("获取数据取得空值! ");
 
                 TArg checkArg;
                 getArgResult = c.TryAutoInvoke(args.GetArgFunc);
@@ -273,7 +273,7 @@ namespace Common_Winform.Extensions
                     }
                     else if (getDataResult)
                     {
-                        args.GetDataSuccess?.Invoke(startArg, getDataResult.Data);
+                        args.GetDataSuccess?.Invoke(startArg, data);
                     }
                     else
                     {
@@ -296,6 +296,7 @@ namespace Common_Winform.Extensions
             /// 锁定器, 如果不为空, 则将在开始执行时等待放行信号, 结束时 (无论成功或失败) 调用它的 <see cref="EventWaitHandle.Set"/>
             /// </summary>
             public AutoResetEvent? Locker { get; init; }
+
 
             /// <summary>
             /// 校对参数是否一致的比较器
@@ -329,6 +330,11 @@ namespace Common_Winform.Extensions
             /// 获取数据失败, 且参数未变更
             /// </summary>
             public Action<TArg, OperationResultEx<TData>>? GetDataFailure { get; init; }
+
+            /// <summary>
+            /// 如果获取数据后, 数据为 <see langword="null"/> 值, 则赋予此值
+            /// </summary>
+            public TData? DefaultData { get; init; }
 
         }
 
