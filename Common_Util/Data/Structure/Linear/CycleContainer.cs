@@ -74,6 +74,8 @@ namespace Common_Util.Data.Structure.Linear
 
         #endregion
 
+        #region 操作
+
         /// <summary>
         /// 推进索引位置到下一个点, 然后将 <paramref name="item"/> 赋值到对应位置
         /// </summary>
@@ -86,7 +88,7 @@ namespace Common_Util.Data.Structure.Linear
         }
 
         /// <summary>
-        /// 从当前索引的最远端开始遍历, 直到当前位置
+        /// 从当前索引的最远端开始遍历, 直到当前位置, 将遍历整个容器
         /// </summary>
         /// <returns></returns>
         public IEnumerable<T> FarToCurrent()
@@ -116,6 +118,23 @@ namespace Common_Util.Data.Structure.Linear
                 yield return Datas[(CurrentIndex + 1 + i) % Capacity];
             }
         }
+
+        /// <summary>
+        /// 使用 <paramref name="value"/> 清空容器
+        /// </summary>
+        /// <remarks>
+        /// 索引位置会被重置到内置数组首部
+        /// </remarks>
+        /// <param name="value"></param>
+        public void Clear(T value = default!)
+        {
+            CurrentIndex = 0;
+            for (int i = 0; i < Capacity; i++)
+            {
+                Datas[i] = value;
+            }
+        }
+        #endregion
 
         public IEnumerator<T> GetEnumerator()
         {

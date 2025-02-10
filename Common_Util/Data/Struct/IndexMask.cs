@@ -291,6 +291,61 @@ namespace Common_Util.Data.Struct
             }
         }
 
+        /// <summary>
+        /// 将遮罩的所有值都设置为 <paramref name="value"/>
+        /// </summary>
+        /// <param name="value"></param>
+        public readonly void Clear(bool value)
+        {
+            int bCount = Length / 8;
+
+            byte setValue = value ? ALL_TRUE_BYTE : ALL_FALSE_BYTE;
+            for (int i = 0; i < bCount; i++)
+            {
+                Datas[i] = setValue;
+            }
+            int bOver = Length % 8;
+            if (bOver > 0)
+            {
+                byte lastSetValue = value ? BitHelper.BitLittleRange[bOver] : ALL_FALSE_BYTE;
+                Datas[bCount] = lastSetValue;
+            }
+        }
+
+        #endregion
+
+        #region 判断
+        /// <summary>
+        /// 判断全部值是不是都是 <paramref name="value"/>
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public readonly bool IsAll(bool value)
+        {
+            int bCount = Length / 8;
+            
+            byte check = value ? ALL_TRUE_BYTE : ALL_FALSE_BYTE;
+            for (int i = 0; i < bCount; i++)
+            {
+                byte b = Datas[i];
+                if (b != check)
+                {
+                    return false;
+                }
+            }
+            int bOver = Length % 8;
+            if (bOver > 0)
+            {
+                byte b = Datas[bCount];
+                byte lastCheck = value ? BitHelper.BitLittleRange[bOver] : ALL_FALSE_BYTE;
+                int compareValue = b & BitHelper.BitLittleRange[bOver];
+                if (lastCheck != compareValue)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
         #endregion
 
         #region 遍历
