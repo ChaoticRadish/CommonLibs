@@ -26,6 +26,7 @@ namespace Common_Util.Exceptions.General
         /// <param name="message"></param>
         public ImpossibleForkException(string message) : base($"{fixedString}{message}") { }
 
+
         /// <summary>
         /// 传入的 <paramref name="obj"/> 在调用的此刻不可能为空, 如果它现在是空的, 则抛出异常
         /// </summary>
@@ -36,6 +37,17 @@ namespace Common_Util.Exceptions.General
         public static void ImpossibleNull([NotNull]object? obj, [CallerArgumentExpression(nameof(obj))] string paramName = "")
         {
             if (obj == null) throw new ImpossibleForkException($"传入对象 {paramName} 在此刻不可能为空, 然而却是空的! ");
+        }
+
+        /// <summary>
+        /// 创建一个 <see cref="ImpossibleForkException"/>. 用于说明传入的枚举值逻辑上不可能 (不应该) 出现, 但是却出现了, 需要检查代码逻辑是否有异常
+        /// </summary>
+        /// <typeparam name="TEnum"></typeparam>
+        /// <param name="enum"></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ImpossibleForkException Create<TEnum>(TEnum @enum) where TEnum : Enum
+        {
+            return new ImpossibleForkException($"传入枚举值 {typeof(TEnum)}.{@enum} 在此刻不可能出现");
         }
     }
 }

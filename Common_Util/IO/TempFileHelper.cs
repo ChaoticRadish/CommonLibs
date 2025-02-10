@@ -93,6 +93,14 @@ namespace Common_Util.IO
             {
                 return new(Path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
             }
+            /// <summary>
+            /// 以只读的参数打开文件流
+            /// </summary>
+            /// <returns></returns>
+            public readonly FileStream OpenRead()
+            {
+                return new(Path, FileMode.OpenOrCreate, FileAccess.Read, FileShare.Read);
+            }
         }
 
         #region ID管理

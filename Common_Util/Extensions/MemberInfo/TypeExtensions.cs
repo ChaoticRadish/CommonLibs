@@ -74,7 +74,17 @@ namespace Common_Util.Extensions
 
         #region 可空类型的相关方法
         /// <summary>
-        /// 判断传入类型是否可空类型
+        /// 判断传入类型是否可以是 <see langword="null"/> 值
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public static bool CanBeNull(this Type type)
+        {
+            return !type.IsValueType || NullableTarget(type) != null;
+        }
+
+        /// <summary>
+        /// 判断传入类型是否可空类型 <see cref="Nullable{T}"/>
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
@@ -87,18 +97,18 @@ namespace Common_Util.Extensions
         /// 判断传入类型是否为可空类型
         /// </summary>
         /// <param name="type"></param>
-        /// <param name="targetType">如果是可空类型, 此值为目标类型</param>
+        /// <param name="targetType">如果 <paramref name="type"/> 是 <see cref="Nullable{T}"/>, 此值为目标类型</param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsNullable(this Type type, out Type? targetType)
+        public static bool IsNullable(this Type type, [NotNullWhen(true)] out Type? targetType)
         {
             return (targetType = NullableTarget(type)) != null;
         }
         /// <summary>
-        /// 取得可空类型的目标类型
+        /// 取得可空类型 <see cref="Nullable{T}"/> 的目标类型
         /// </summary>
         /// <param name="type"></param>
-        /// <returns>null => 不是可空类型</returns>
+        /// <returns><see langword="null"/> => 不是可空类型</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Type? NullableTarget(this Type type)
         {
@@ -248,6 +258,39 @@ namespace Common_Util.Extensions
                 returnValue = default;
                 return false;
             }
+        }
+        #endregion
+
+        #region 获取属性
+        /// <summary>
+        /// 获取类型拥有的属性的扩展版本, 如果 <paramref name="type"/> 是一个接口, 还会查找所继承的接口的属性, 会跳过重复的接口, 但是不会跳过重名的接口
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="bindingFlags"></param>
+        /// <returns></returns>
+        public static PropertyInfo[] GetPropertiesEx(this Type type, BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.Instance)
+        {
+            if (type.IsInterface)
+            {
+                List<PropertyInfo> list = new List<PropertyInfo>();
+                List<Type> types = new List<Type>();
+                getPropertiesEx(type, bindingFlags, list, types);
+                return list.ToArray();
+            }
+            else
+            {
+                return type.GetProperties(bindingFlags);
+            }
+        }
+        private static void getPropertiesEx(Type type, BindingFlags bindingFlags, List<PropertyInfo> container, List<Type> types)
+        {
+            if (types.Contains(type)) return;
+            container.AddRange(type.GetProperties(bindingFlags));
+            foreach (Type @interface in type.GetInterfaces())
+            {
+                getPropertiesEx(@interface, bindingFlags, container, types);
+            }
+            types.Add(type);
         }
         #endregion
 

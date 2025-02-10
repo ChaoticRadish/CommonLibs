@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -70,5 +71,33 @@ namespace Common_Util.Extensions
                 throw new ArgumentException($"对象{str}不能被赋值到类型 {typeof(T).Name}");
             }
         }
+
+        #region 克隆
+
+        /// <summary>
+        /// 创建一个与传入对象类型相同的对象, 并浅拷贝 <paramref name="obj"/> 的公共属性到新实例上
+        /// </summary>
+        /// <remarks>
+        /// 使用反射实现
+        /// </remarks>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static T CloneProperty<T>(this T obj)
+        {
+            Type type = typeof(T);
+            object? instance = Activator.CreateInstance(type);
+            if (instance == null) throw new InvalidOperationException($"未能创建 {type} 类型的实例");
+            T output = (T)instance;
+            PropertyInfo[] properties = type.GetProperties();
+            foreach (PropertyInfo property in properties)
+            {
+                if (property.SetMethod == null) continue;
+                object? value = property.GetValue(obj, null);
+                if (value == null) continue;
+                property.SetValue(output, value, null);
+            }
+            return output;
+        }
+        #endregion
     }
 }
