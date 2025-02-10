@@ -31,6 +31,7 @@ namespace Common_Util.Extensions
         /// <param name="str"></param>
         /// <param name="maxLength"></param>
         /// <returns></returns>
+        [return: NotNullIfNotNull(nameof(str))]
         public static string? Limit(this string? str, int maxLength)
         {
             if (string.IsNullOrEmpty(str)) return str;
@@ -107,6 +108,16 @@ namespace Common_Util.Extensions
             return true;
         }
 
+        /// <summary>
+        /// 当 <paramref name="str"/> 是 <see langword="null"/> 时, 返回 <see cref="string.Empty"/>
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static string DefaultEmpty(this string? str)
+        {
+            return str ?? string.Empty;
+        }
         /// <summary>
         /// 当当前字符串为null或空值时, 返回指定的默认值, 否则返回原值
         /// </summary>

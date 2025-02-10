@@ -285,5 +285,26 @@ namespace Common_Util
         }
 
         #endregion
+
+        #region 赋值
+        /// <summary>
+        /// 拷贝 <paramref name="a"/> 中, 属于类型 <typeparamref name="T"/> 的公共可写属性值到 <paramref name="b"/>
+        /// </summary>
+        /// <remarks>
+        /// 使用 <see cref="Extensions.TypeExtensions.GetPropertiesEx(Type, BindingFlags)"/> 获取属性
+        /// </remarks>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        public static void CopyPropery<T>(T a, T b)
+        {
+            var ps = typeof(T).GetPropertiesEx(BindingFlags.Public | BindingFlags.Instance).Where(i => i.CanWrite);
+            foreach (var p in ps)
+            {
+                var v = p.GetValue(a);
+                p.SetValue(b, v);
+            }
+        }
+        #endregion
     }
 }
