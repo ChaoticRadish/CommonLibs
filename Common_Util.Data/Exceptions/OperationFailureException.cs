@@ -21,5 +21,17 @@ namespace Common_Util.Data.Exceptions
         }
 
         public IOperationResult Result { get; }
+
+        /// <summary>
+        /// 如果传入的操作结果是失败结果, 则抛出异常
+        /// </summary>
+        /// <param name="result"></param>
+        public static void ThrowIfFailure(IOperationResult result)
+        {
+            if (result.IsFailure)
+            {
+                throw new OperationFailureException(result);
+            }
+        }
     }
 }
