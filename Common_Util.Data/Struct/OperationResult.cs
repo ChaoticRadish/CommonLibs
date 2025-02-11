@@ -136,6 +136,15 @@ namespace Common_Util.Data.Struct
                 SuccessInfo = result.SuccessInfo,
             };
         }
+        public static implicit operator OperationResult(OperationResultEx result)
+        {
+            return new OperationResult()
+            {
+                IsSuccess = result.IsSuccess,
+                FailureReason = result.IsFailure ? result.FailureString(null) : result.FailureReason,
+                SuccessInfo = result.SuccessInfo,
+            };
+        }
         #endregion
 
     }
@@ -271,6 +280,17 @@ namespace Common_Util.Data.Struct
                 Data = result.Data,
                 IsSuccess = result.IsSuccess,
                 FailureReason = result.FailureReason,
+                SuccessInfo = result.SuccessInfo,
+            };
+        }
+        public static implicit operator OperationResult<T>(OperationResultEx<T> result)
+        {
+            string? failureReason = result.FailureString();
+            return new OperationResult<T>()
+            {
+                Data = result.Data,
+                IsSuccess = result.IsSuccess,
+                FailureReason = failureReason,
                 SuccessInfo = result.SuccessInfo,
             };
         }
