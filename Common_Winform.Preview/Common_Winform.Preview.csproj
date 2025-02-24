@@ -9,42 +9,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <COMReference Include="Acrobat">
-      <WrapperTool>tlbimp</WrapperTool>
-      <VersionMinor>0</VersionMinor>
-      <VersionMajor>1</VersionMajor>
-      <Guid>78165d71-df28-11d3-9a89-005004a56d53</Guid>
-      <Lcid>0</Lcid>
-      <Isolated>false</Isolated>
-      <EmbedInteropTypes>true</EmbedInteropTypes>
-    </COMReference>
-    <COMReference Include="AcroPDFLib">
-      <WrapperTool>tlbimp</WrapperTool>
-      <VersionMinor>0</VersionMinor>
-      <VersionMajor>1</VersionMajor>
-      <Guid>05bfd3f1-6319-4f30-b752-c7a22889bcc4</Guid>
-      <Lcid>0</Lcid>
-      <Isolated>false</Isolated>
-      <EmbedInteropTypes>true</EmbedInteropTypes>
-    </COMReference>
-    <COMReference Include="AxAcroPDFLib">
-      <WrapperTool>aximp</WrapperTool>
-      <VersionMinor>0</VersionMinor>
-      <VersionMajor>1</VersionMajor>
-      <Guid>05bfd3f1-6319-4f30-b752-c7a22889bcc4</Guid>
-      <Lcid>0</Lcid>
-      <Isolated>false</Isolated>
-    </COMReference>
-  </ItemGroup>
-
-  <ItemGroup>
     <Folder Include="Word\" />
     <Folder Include="Excel\" />
     <Folder Include="Ppt\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="CefSharp.Common" Version="131.3.50" />
   </ItemGroup>
 
   <ItemGroup>

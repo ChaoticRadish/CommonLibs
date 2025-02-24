@@ -17,6 +17,13 @@ namespace Common_Winform.Preview
         string? FileName { get; }
 
         /// <summary>
+        /// 判断传入文件名是否可以展示
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
+        bool CanShow(string fileName);
+
+        /// <summary>
         /// 展示指定 PDF 文件
         /// </summary>
         /// <param name="fileName"></param>
