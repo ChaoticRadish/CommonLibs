@@ -447,5 +447,27 @@ namespace Common_Util.String
         ];
 
         #endregion
+
+        #region 流转换
+        /// <summary>
+        /// 将 <paramref name="stream"/> 按 <paramref name="encoding"/> 字符集读取为字符集合
+        /// </summary>
+        /// <remarks>
+        /// 返回的枚举器重复使用时, 会再次读取流, 需要修改流的当前位置 (如果可以修改的话), 否则可能需要重新创建流, 或将枚举器转换为数组或列表再来操作.
+        /// </remarks>
+        /// <param name="stream"></param>
+        /// <param name="encoding">字符集, 如果是 <see langword="null"/>, 则使用 <see cref="Encoding.UTF8"/> </param>
+        /// <returns></returns>
+        public static IEnumerable<char> AsEnumerable(Stream stream, Encoding? encoding = null)
+        {
+            encoding ??= Encoding.UTF8;
+            using var reader = new StreamReader(stream, encoding, leaveOpen: true);
+            int temp;
+            while ((temp = reader.Read()) >= 0)
+            {
+                yield return (char)temp;
+            }
+        }
+        #endregion
     }
 }
