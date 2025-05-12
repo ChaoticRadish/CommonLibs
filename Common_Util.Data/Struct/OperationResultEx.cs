@@ -7,6 +7,11 @@ using System.Threading.Tasks;
 
 namespace Common_Util.Data.Struct
 {
+
+    /// <remarks>
+    /// 常用隐式转换: <br/>
+    /// (<see langword="bool"/>, <see langword="string?"/>) => <see cref="OperationResultEx"/>
+    /// </remarks>
     public struct OperationResultEx : IOperationResultEx
     {
         public bool IsSuccess { get; set; }
@@ -19,6 +24,8 @@ namespace Common_Util.Data.Struct
         /// </summary>
         public bool HasException { readonly get => Exception != null; set => throw new NotSupportedException(); }
         public Exception? Exception { get; set; }
+
+        #region 转换方法
 
         public override readonly string ToString()
         {
@@ -62,6 +69,28 @@ namespace Common_Util.Data.Struct
             }
             return builder.ToString();
         }
+
+        /// <summary>
+        /// 转换为 <see cref="OperationResult"/>
+        /// </summary>
+        /// <returns></returns>
+        public readonly OperationResult ToOpertionResult()
+        {
+            if (Success)
+            {
+                return (true, SuccessInfo);
+            }
+            else if (FailureReason.IsNotEmpty()) 
+            {
+                return (false, FailureReason);
+            }
+            else
+            {
+                return (false, "发生异常: " + Exception?.Message);
+            }
+        } 
+
+        #endregion
 
         #region 静态方法
         /// <summary>
@@ -153,6 +182,10 @@ namespace Common_Util.Data.Struct
     /// <summary>
     /// 附带数据的扩展操作结果
     /// </summary>
+    /// <remarks>
+    /// 常用隐式转换: <br/>
+    /// (<see langword="bool"/>, T?, <see langword="string?"/>) => <see cref="OperationResultEx{T}"/>
+    /// </remarks>
     /// <typeparam name="T"></typeparam>
     public struct OperationResultEx<T> : IOperationResultEx<T>
     {

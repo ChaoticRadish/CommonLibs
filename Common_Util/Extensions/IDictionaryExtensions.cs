@@ -167,6 +167,38 @@ namespace Common_Util.Extensions
             }
         }
         /// <summary>
+        /// 从字典取值, 如果不存在, 则尝试添加新值到字典
+        /// </summary>
+        /// <typeparam name="TKey"></typeparam>
+        /// <typeparam name="TValue"></typeparam>
+        /// <param name="dic"></param>
+        /// <param name="key"></param>
+        /// <param name="getNewValue">如果不存在传入键对应项, 则调用此方法得到待添加的新值</param>
+        /// <param name="value"></param>
+        /// <returns>如果从字典取到了值, 或成功添加了新值, 则返回 <see langword="true"/></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool TryGetOrAdd<TKey, TValue>(this IDictionary<TKey, TValue> dic, TKey key, Func<TKey, TValue> getNewValue, [MaybeNullWhen(false)] out TValue value)
+        {
+            if (dic.TryGetValue(key, out value))
+            {
+                return true;
+            }
+            else
+            {
+                var temp = getNewValue(key);
+                if (dic.TryAdd(key, temp))
+                {
+                    value = temp;
+                    return true;
+                }
+                else
+                {
+                    value = default;
+                    return false;
+                }
+            }
+        }
+        /// <summary>
         /// 尝试从字典中获取值, 如果字典不含输入键, 则返回默认值
         /// </summary>
         /// <typeparam name="TKey"></typeparam>

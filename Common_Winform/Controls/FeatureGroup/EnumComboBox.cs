@@ -143,5 +143,25 @@ namespace Common_Winform.Controls.FeatureGroup
 
         #endregion
 
+        public override BaseListComboBox SetSelectItemsFunc(Func<List<ItemData>> func)
+        {
+            base.SetSelectItemsFunc(func);
+            return this;
+        }
+        public override BaseListComboBox SetSelectItemsFunc(Func<List<KeyValuePair<object, string>>> func)
+        {
+            base.SetSelectItemsFunc(func);
+            return this;
+        }
+        public override BaseListComboBox SetSelectItems(List<ItemData> items)
+        {
+            base.SetSelectItems(items); 
+            return this;
+        }
+        public override BaseListComboBox SetSelectItems(List<KeyValuePair<object, string>> items)
+        {
+            base.SetSelectItems(items);
+            return this;
+        }
     }
 }

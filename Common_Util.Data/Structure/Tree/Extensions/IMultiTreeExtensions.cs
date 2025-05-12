@@ -51,30 +51,34 @@ namespace Common_Util.Data.Structure.Tree.Extensions
         public static IEnumerable<IMultiTreeNode<TValue>> PreorderNode<TValue>(this IMultiTreeNode<TValue> node)
         {
             Stack<(IMultiTreeNode<TValue>, IEnumerator<IMultiTreeNode<TValue>>)> nodeStack = new();
+
+            yield return node;
             nodeStack.Push((node, node.Childrens.GetEnumerator()));
 
-            bool push = true;
+            // bool push = true;
 
             while (nodeStack.Count != 0)
             {
                 (var currentNode, var childrenEnumerator) = nodeStack.Peek();
 
-                if (push)
-                {
-                    yield return currentNode;
-                }
+                // if (push)
+                // {
+                //     yield return currentNode;
+                // }
 
                 if (childrenEnumerator.MoveNext())
                 {
                     var nextNode = childrenEnumerator.Current;
+
+                    yield return nextNode;
                     nodeStack.Push((nextNode, nextNode.Childrens.GetEnumerator()));
-                    push = true;
+                    // push = true;
                 }
                 else
                 {
                     // 当前节点的子项枚举器已结束
                     nodeStack.Pop();
-                    push = false;
+                    // push = false;
                 }
 
 
@@ -119,37 +123,53 @@ namespace Common_Util.Data.Structure.Tree.Extensions
             int nextIndex = 0;
             const int nullNodeIndex = -1;   // 不存在的节点, 其索引用此值表示
 
+
+            yield return new NodeIndexData<TValue>()
+            {
+                Node = node,
+                ParentIndex = nullNodeIndex,
+                NodeIndex = nextIndex,
+                NodeValue = node.NodeValue,
+            };
             nodeStack.Push((node, node.Childrens.GetEnumerator(), nextIndex, nullNodeIndex));
 
-            bool push = true;
+            // bool push = true;
 
             while (nodeStack.Count != 0)
             {
                 (var currentNode, var childrenEnumerator, int nodeIndex, int parentIndex) = nodeStack.Peek();
 
-                if (push)
-                {
-                    yield return new NodeIndexData<TValue>()
-                    {
-                        Node = currentNode,
-                        ParentIndex = parentIndex,
-                        NodeIndex = nodeIndex,
-                        NodeValue = currentNode.NodeValue,
-                    };
-                    nextIndex++;
-                }
+                // if (push)
+                // {
+                //     yield return new NodeIndexData<TValue>()
+                //     {
+                //         Node = currentNode,
+                //         ParentIndex = parentIndex,
+                //         NodeIndex = nodeIndex,
+                //         NodeValue = currentNode.NodeValue,
+                //     };
+                //     nextIndex++;
+                // }
 
                 if (childrenEnumerator.MoveNext())
                 {
                     var nextNode = childrenEnumerator.Current;
+
+                    yield return new NodeIndexData<TValue>()
+                    {
+                        Node = nextNode,
+                        ParentIndex = nodeIndex,
+                        NodeIndex = nextIndex,
+                        NodeValue = nextNode.NodeValue,
+                    };
                     nodeStack.Push((nextNode, nextNode.Childrens.GetEnumerator(), nextIndex, nodeIndex));
-                    push = true;
+                    // push = true;
                 }
                 else
                 {
                     // 当前节点的子项枚举器已结束
                     nodeStack.Pop();
-                    push = false;
+                    // push = false;
                 }
 
 

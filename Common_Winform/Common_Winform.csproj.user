@@ -50,6 +50,9 @@
     <Compile Update="Forms\AskOkCancelForm01.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Update="Forms\DynamicDialogForm01.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Update="Forms\ExceptionShowerForm01.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -57,6 +60,9 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Update="Forms\MainFormTemplate01.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Forms\OkCancelForm01.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Update="Forms\WaitingInfoForm01.cs">

@@ -17,6 +17,7 @@ namespace Common_Util
         /// </summary>
         /// <param name="enumObj"></param>
         /// <returns></returns>
+        [return: NotNullIfNotNull(nameof(enumObj))]
         public static string? GetDesc(this Enum enumObj)
         {
             if (enumObj == null) return null;

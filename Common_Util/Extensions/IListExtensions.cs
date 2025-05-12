@@ -380,5 +380,33 @@ namespace Common_Util.Extensions
             }
         }
         #endregion
+
+        #region 移动
+        /// <summary>
+        /// 添加或移动传入项 <paramref name="item"/> 到列表的首位
+        /// </summary>
+        /// <remarks>
+        /// 如果传入项已存在, 则移动, 如果不存在, 则添加
+        /// </remarks>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="list"></param>
+        /// <param name="item"></param>
+        public static void AddOrMoveToHead<T>(this IList<T> list, T item)
+        {
+            int index = list.IndexOf(item);
+            if (index < 0)
+            {
+                list.Insert(0, item);
+            }
+            else
+            {
+                for (int i = 0; i < index; i++)
+                {
+                    list[i + 1] = list[i];
+                }
+                list[0] = item;
+            }
+        }
+        #endregion
     }
 }

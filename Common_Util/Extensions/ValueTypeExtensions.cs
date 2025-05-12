@@ -43,5 +43,30 @@ namespace Common_Util.Extensions
         {
             return b ? trueStr : falseStr;
         }
+
+        #region 遍历
+        /// <summary>
+        /// 将 <paramref name="total"/> 分为最大长度不超过 <paramref name="segmentMaxLength"/> 的 n 个片段
+        /// </summary>
+        /// <param name="total">被分段的总量, 如果小于或等于 0, 则会返回空的遍历器</param>
+        /// <param name="segmentMaxLength">必须大于 0 </param>
+        /// <returns>返回遍历这些片段起始索引和长度的遍历器</returns>
+        public static IEnumerable<(long start, long length)> Segment(this long total, long segmentMaxLength)
+        {
+            ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(segmentMaxLength, 0);
+            if (total <= 0) yield break;
+
+            long count = total / segmentMaxLength;
+            long over = total % segmentMaxLength;
+            if (over > 0) count += 1;
+            for (long i = 0; i < count; i++)
+            {
+                long start = i * segmentMaxLength;
+                long length = (i < count - 1) ? segmentMaxLength : (total - start);
+                yield return (start, length);
+            }
+
+        }
+        #endregion
     }
 }

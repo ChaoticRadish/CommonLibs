@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -14,7 +15,7 @@ namespace Common_Util.Extensions
         /// </summary>
         /// <param name="array"></param>
         /// <returns></returns>
-        public static bool IsEmpty(this Array? array) 
+        public static bool IsEmpty([NotNullWhen(false)] this Array? array) 
         {
             return array == null || array.Length == 0;
         }

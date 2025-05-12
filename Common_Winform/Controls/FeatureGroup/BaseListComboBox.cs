@@ -81,7 +81,7 @@ namespace Common_Winform.Controls.FeatureGroup
         /// <param name="funcCaller"></param>
         /// <param name="func"></param>
         /// <returns></returns>
-        internal BaseListComboBox SetSelectItemsFunc(Func<List<ItemData>> func)
+        public virtual BaseListComboBox SetSelectItemsFunc(Func<List<ItemData>> func)
         {
             GetSelectItemsFunc = func;
             return this;
@@ -91,7 +91,7 @@ namespace Common_Winform.Controls.FeatureGroup
         /// </summary>
         /// <param name="func"></param>
         /// <returns></returns>
-        internal BaseListComboBox SetSelectItemsFunc(Func<List<KeyValuePair<object, string>>> func)
+        public virtual BaseListComboBox SetSelectItemsFunc(Func<List<KeyValuePair<object, string>>> func)
         {
             GetSelectItemsKeyValuePairFunc = func;
             return this;
@@ -101,7 +101,7 @@ namespace Common_Winform.Controls.FeatureGroup
         /// </summary>
         /// <param name="items">可选项列表</param>
         /// <returns></returns>
-        internal BaseListComboBox SetSelectItems(List<ItemData> items)
+        public virtual BaseListComboBox SetSelectItems(List<ItemData> items)
         {
             SelectItems = items;
             return this;
@@ -111,7 +111,7 @@ namespace Common_Winform.Controls.FeatureGroup
         /// </summary>
         /// <param name="items">可选项列表</param>
         /// <returns></returns>
-        internal BaseListComboBox SetSelectItems(List<KeyValuePair<object, string>> items)
+        public virtual BaseListComboBox SetSelectItems(List<KeyValuePair<object, string>> items)
         {
             SelectItems = items.Select(i => ItemData.NewItem(i.Key, i.Value)).ToList();
             return this;
