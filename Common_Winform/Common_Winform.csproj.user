@@ -35,6 +35,9 @@
     <Compile Update="Controls\LabelSimpleState01.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Update="Controls\ValueBox\DecimalBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Update="Controls\ValueBox\FileNameBox.cs">
       <SubType>Component</SubType>
     </Compile>
