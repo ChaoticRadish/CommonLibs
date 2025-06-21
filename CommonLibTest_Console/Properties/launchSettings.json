@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "CommonLibTest_Console": {
+      "commandName": "Project",
+      "commandLineArgs": "Check.CRC001\r\nCompaper.IEnumerable001"
+    }
+  }
+}

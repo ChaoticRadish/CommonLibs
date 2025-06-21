@@ -15,6 +15,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Common_Util.Data\Common_Util.Data.csproj" />
     <ProjectReference Include="..\Common_Util.NewtonsoftJson\Common_Util.NewtonsoftJson.csproj" />
+    <ProjectReference Include="..\Common_Util.Test.Console\Common_Util.Test.Console.csproj" />
     <ProjectReference Include="..\Common_Util\Common_Util.csproj" />
   </ItemGroup>
 

@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Common_Util.Extensions;
+using Common_Util.Test.Console;
+using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
@@ -18,11 +20,11 @@ namespace CommonLibTest_Console
 #if DEBUG
             AllocConsole();
 #endif
-
-            TestBase test = new TimeManage.TimeClock001();
-            
-            test.Run();
-            test.Finish();
+            var runner = new TestRunner();
+            foreach (var str in args.SelectMany(s => s.Split('\n', ' ')).Where(s => s.IsNotEmpty()))
+            {
+                runner.Run(str);
+            }
 
 #if DEBUG
             FreeConsole();
