@@ -2,7 +2,7 @@
   "profiles": {
     "CommonLibTest_Console": {
       "commandName": "Project",
-      "commandLineArgs": "Check.CRC001\r\nCompaper.IEnumerable001"
+      "commandLineArgs": "Configs.JsonConfig001\r\nConfigs.JsonConfig002\r\nConfigs.XmlConfig001"
     }
   }
 }

@@ -12,13 +12,18 @@ namespace CommonLibTest_Console.Configs
     internal class XmlConfig001() : TestBase("测试配置帮助类, 使用Xml实现")
     {
 
+        public override void Setup()
+        {
+            ConfigHelper.OnlyAllowAdd = false;
+            ConfigHelper.ClearCache();
+        }
         protected override void RunImpl()
         {
             var impl = new XmlConfigReadWriteImpl(GetTestDir(), false);
             ConfigHelper.SetDefaultImpl(impl);
             impl.InitConfig<TestModel002>();
             ConfigHelper.OnlyAllowAdd = true;
-            var m = impl.GetConfig<TestModel002>();
+            var m = impl.LoadConfig<TestModel002>();
             WriteLine(m.FullInfoString());
             WriteLine();
             WriteLine();
