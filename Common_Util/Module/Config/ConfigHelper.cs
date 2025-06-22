@@ -4,6 +4,7 @@ using Common_Util.Extensions;
 using Common_Util.String;
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
@@ -18,110 +19,154 @@ namespace Common_Util.Module.Config
 
     public static class ConfigHelper
     {
-        #region 实现方式
-        /// <summary>
-        /// 配置读写实现列表
-        /// </summary>
-        private static Dictionary<string, IConfigReadWriteImpl> Impls = [];
+        #region 共享
 
         /// <summary>
-        /// 默认的配置读写实现
+        /// 全局共享的配置管理器, 未设置的情况下会返回 <see cref="Default"/>
         /// </summary>
-        public static IConfigReadWriteImpl DefaultImpl { get; private set; } = new ConfigurationManagerReadWriteImpl();
-
+        public static IConfigManager Shared 
+        { 
+            get => shared ?? Default;
+            set => shared = value;
+        }
+        private static IConfigManager? shared;
         /// <summary>
-        /// 设置默认的配置读写实现
+        /// 默认的配置管理器
         /// </summary>
-        /// <param name="impl"></param>
-        /// <exception cref="ArgumentNullException"></exception>
-        public static void SetDefaultImpl(IConfigReadWriteImpl impl)
-        {
-            if (impl == null) throw new ArgumentNullException(nameof(impl));
-            DefaultImpl = impl;
-        }
-
-        /// <summary>
-        /// 配置配置读写的实现
-        /// </summary>
-        /// <param name="name"></param>
-        /// <param name="impl"></param>
-        public static void SetImpl(string name, IConfigReadWriteImpl impl)
-        {
-            Impls.Set(name, impl);
-        }
-        /// <summary>
-        /// 配置配置读写的实现, 使用枚举值作为名字
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="enumObj"></param>
-        /// <param name="impl"></param>
-        public static void SetImpl(Enum enumObj, IConfigReadWriteImpl impl)
-        {
-            Impls.Set(enumObj.ToString(), impl);
-        }
-        public static IConfigReadWriteImpl? GetImpl(string name)
-        {
-            if (Impls.TryGetValue(name, out IConfigReadWriteImpl? value))
-            {
-                return value;
-            }
-            else
-            {
-                return null;
-            }
-        }
-        public static IConfigReadWriteImpl? GetImpl(Enum enumObj)
-        {
-            return GetImpl(enumObj.ToString());
-        }
-
+        public static IConfigManager Default => lazyDefault.Value;
+        private readonly static Lazy<IConfigManager> lazyDefault = new(() => new ConfigManager());
 
         #endregion
 
+        #region 静态调用共享的配置管理器, 随时允许调用
+        /// <summary>
+        /// 设置 <paramref name="impl"/> 为当前的默认读写实现
+        /// </summary>
+        /// <param name="impl"></param>
+        public static void SetDefaultImpl(IConfigReadWriteImpl impl)
+        {
+            Shared.TrySetDefaultImpl(impl);
+        }
+
+        #endregion
+
+        #region 静态调用共享的配置管理器, 仅在配置了基于类型或字符串的键值式配置管理器时可用
+
         #region 状态
         /// <summary>
-        /// 使已有的配置对象不能被从字典中移除, 只能载入新的配置对象到缓存的字典中
-        /// <para>如保存配置时, 将只会保存到实现对应的位置(比如文件, 数据库中), 而不会替换缓存字典中的对象</para>
+        /// <see cref="Shared"/> 的配置管理器类型是否支持在帮助类的静态方法中使用
         /// </summary>
+        private static bool SharedStaticCallingSupport
+        {
+            get
+            {
+                return Shared is ICachedConfigManager<Type>
+                    || Shared is ICachedConfigManager<string>;
+            }
+        }
+        /// <summary>
+        /// 检查 <see cref="SharedStaticCallingSupport"/>, 如果不支持, 则抛出异常
+        /// </summary>
+        /// <exception cref="NotSupportedException"></exception>
+        private static void CheckSharedStaticCallingSupport()
+        {
+            if (!SharedStaticCallingSupport) throw new NotSupportedException("当前共享配置读写管理器不支持帮助类静态调用")
+            { 
+                Data = {
+                    ["Shared"] = Shared.GetType().FullName,
+                } 
+            };
+        }
+        /// <summary>
+        /// 使已有的配置对象不能被从字典中移除, 只能载入新的配置对象到缓存的字典中
+        /// </summary>
+        /// <remarks>
+        /// 如保存配置时, 将只会保存到实现对应的位置(比如文件, 数据库中), 而不会替换缓存字典中的对象 <br/>
+        /// 实际上会访问与修改 <see cref="Shared"/> 的 <see cref="ICachedConfigManager.CacheProtecting"/> (当然前提是 <see cref="SharedStaticCallingSupport"/> )
+        /// </remarks>
         public static bool OnlyAllowAdd
         {
             get
             {
-                return _onlyAddConfig;
+                CheckSharedStaticCallingSupport();
+                return Shared is ICachedConfigManager cachedCM && cachedCM.CacheProtecting;
             }
             set
             {
-                _onlyAddConfig = value;
-                if (_onlyAddConfig)
+                CheckSharedStaticCallingSupport(); 
+                if (Shared is ICachedConfigManager cachedCM)
                 {
-                    ClearCloneCache();
+                    cachedCM.SetCacheProtect(value);
                 }
             }
         }
-        private static bool _onlyAddConfig = false;
 
         #endregion
 
-        /// <summary>
-        /// 配置数据对象字典, 存放最后一次保存的配置
-        /// </summary>
-        private static Dictionary<Type, object> Configs = new Dictionary<Type, object>();
-        /// <summary>
-        /// 当前缓存的所有配置
-        /// </summary>
-        public static Type[] ConfigTypes { get => Configs.Keys.ToArray(); }
-
-        private static readonly object GetConfigLocker = new object();
-
+        #region 缓存
         /// <summary>
         /// 清空配置对象的缓存
         /// </summary>
         public static void ClearCache()
         {
-            if (OnlyAllowAdd) return;
-            Configs.Clear();
+            CheckSharedStaticCallingSupport();
+
+            if (Shared is ICachedConfigManager cachedConfigManager)
+            {
+                cachedConfigManager.ClearCaches();
+            }
         }
 
+        #endregion
+        #region 读写实现
+        private static ConcurrentDictionary<Type, string?> typeUseImplName = [];
+        private static string? GetUseImplName(Type type)
+        {
+            return typeUseImplName.GetOrAdd(type, t =>
+            {
+                if (t.ExistCustomAttribute<ConfigReadWriteImplAttribute>(out var attr))
+                {
+                    return attr.Name;
+                }
+                else
+                {
+                    return null;
+                }
+            });
+        }
+
+        #endregion
+
+        #region 读取配置
+
+        /// <summary>
+        /// 判断指定配置类是否已经被加载到内存
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static bool IsLoaded<T>()
+            where T : new()
+        {
+            CheckSharedStaticCallingSupport();
+
+            Type type = typeof(T);
+            if (Shared is ICachedConfigManager<Type> typeCM)
+            {
+                return typeCM.IsLoaded(type);
+            }
+            else if (Shared is ICachedConfigManager<string> stringCM)
+            {
+                return stringCM.IsLoaded(
+                    type.FullName ?? throw new InvalidOperationException("无法取得类型的完整名称")
+                    {
+                        Data = { ["Type"] = type, }
+                    });
+            }
+            else
+            {
+                return false;
+            }
+        }
         /// <summary>
         /// 读取一个配置信息对象, 使用类所设置的配置读写实现
         /// </summary>
@@ -129,10 +174,25 @@ namespace Common_Util.Module.Config
         /// <param name="getClone">获取克隆对象</param>
         public static object? GetConfig(Type type, bool getClone = false)
         {
-            Type thisType = typeof(ConfigHelper);
-            MethodInfo method = thisType.GetMethod(nameof(GetConfig), [typeof(bool)])!;
-            MethodInfo temp = method.MakeGenericMethod(type);
-            return temp.Invoke(null, [getClone]);
+            CheckSharedStaticCallingSupport();
+
+            if (Shared is ICachedConfigManager<Type> typeCM)
+            {
+                return typeCM.Get(type, true, GetUseImplName(type), getClone);
+            }
+            else if (Shared is ICachedConfigManager<string> stringCM)
+            {
+                return stringCM.Get(
+                    type.FullName ?? throw new InvalidOperationException("无法取得类型的完整名称")
+                    {
+                        Data = { ["Type"] = type, }
+                    },
+                    true, GetUseImplName(type), getClone);
+            }
+            else
+            {
+                return null;
+            }
         }
         /// <summary>
         /// 读取一个配置信息对象, 使用类所设置的配置读写实现
@@ -143,162 +203,54 @@ namespace Common_Util.Module.Config
         public static T GetConfig<T>(bool getClone = false)
             where T : new()
         {
-            lock (GetConfigLocker)
-            {
-                Type t = typeof(T);
-                T output;
-                if (Configs.TryGetValue(t, out object? value))
-                {
-                    output = (T)value;
-                }
-                else
-                {
-                    // 需要使用的配置读写实现
-                    IConfigReadWriteImpl impl = DefaultImpl;
-                    t.ExistCustomAttribute<ConfigReadWriteImplAttribute>((attr) =>
-                    {
-                        if (Impls.TryGetValue(attr.Name, out IConfigReadWriteImpl? value))
-                        {
-                            impl = value;
-                        }
-                    });
-                    // 读取, 写入对象
-                    output = impl.GetConfig<T>();
-
-                    Configs.Add(t, output!);
-                }
-
-                if (OnlyAllowAdd || getClone)
-                {
-                    return Clone(output) ?? throw new Exception("克隆异常! 克隆配置信息对象得到null! ");
-                }
-                else
-                {
-                    return output;
-                }
-            }
+            var output = GetConfig(typeof(T), getClone) ?? throw new InvalidOperationException("读取配置信息对象失败");
+            return (T)output;
         }
 
-        #region 克隆配置对象
-        /// <summary>
-        /// 清空克隆缓存
-        /// </summary>
-        private static void ClearCloneCache()
-        {
-            //CloneCache_ConfigJson.Clear();
-            // 暂不使用克隆缓存
-        }
-        //private static Dictionary<Type, string> CloneCache_ConfigJson = new Dictionary<Type, string>();
 
-        /// <summary>
-        /// 克隆配置文件的对象
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="configObj"></param>
-        /// <returns></returns>
-        private static T? Clone<T>(T configObj)
-            where T : new()
-        {
-            // 配置类型深拷贝应该这样子就够用了
-            // 20230815 实测这样子效率会很低, 因为会频繁获取这个克隆, 简单优化一下
-            //Type type = typeof(T);
-            //string json;
-            //if (CloneCache_ConfigJson.ContainsKey(type))
-            //{
-            //    json = CloneCache_ConfigJson[type];
-            //}
-            //else
-            //{
-            //    json = configObj.ToJson();
-            //    CloneCache_ConfigJson.Add(type, json);
-            //}
-            //return Newtonsoft.Json.JsonConvert.DeserializeObject<T>(json);
-
-            object? obj = CloneObj(configObj);
-            return obj == null ? default : (T)obj;
-        }
-
-        /// <summary>
-        /// 简单实现深拷贝
-        /// </summary>
-        /// <param name="obj"></param>
-        /// <returns></returns>
-        private static object? CloneObj(object? obj)
-        {
-            if (obj == null) return null;
-            Type type = obj.GetType();
-            if (type.IsValueType || type == typeof(string))
-            {
-                return obj;
-            }
-            object? output = Activator.CreateInstance(type);
-            if (output == null) return null;
-            PropertyInfo[] properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            foreach (PropertyInfo property in properties)
-            {
-                if (!property.CanWrite) continue;
-                if (property.PropertyType.IsArray)
-                {
-                    object? arraySourceObj = property.GetValue(obj);
-                    if (arraySourceObj == null) continue;
-                    Array arraySource = (Array)arraySourceObj;
-                    var elementType = property.PropertyType.GetElementType();
-                    if (elementType == null)
-                    {
-                        continue;
-                    }
-                    Array arrayDest = Array.CreateInstance(elementType, arraySource.Length);
-                    for (int i = 0; i < arraySource.Length; i++)
-                    {
-                        object? itemSource = arraySource.GetValue(i);
-                        arrayDest.SetValue(CloneObj(itemSource), i);
-                    }
-                    property.SetValue(output, arrayDest);
-                }
-                else if (property.PropertyType.IsList())
-                {
-                    object? listSourceObj = property.GetValue(obj);
-                    if (listSourceObj == null) continue;
-                    IList listSource = (IList)listSourceObj;
-                    if (Activator.CreateInstance(property.PropertyType) is not IList listDest) continue;
-                    for (int i = 0; i < listSource.Count; i++)
-                    {
-                        object? itemSource = listSource[i];
-                        listDest.Add(CloneObj(itemSource));
-                    }
-                    property.SetValue(output, listDest);
-                }
-                else
-                {
-                    object? value = property.GetValue(obj);
-                    if (value == null) continue;
-                    property.SetValue(output, value);
-                }
-            }
-            return output;
-        }
         #endregion
 
-        /// <summary>
-        /// 判断指定配置类是否已经被加载到内存
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public static bool IsLoaded<T>()
-            where T : new()
-        {
-            return Configs.ContainsKey(typeof(T));
-        }
+        #region 保存
         /// <summary>
         /// 保存一个配置信息, 使用类所设置的配置读写实现
         /// </summary>
         /// <param name="type"></param>
-        public static void SaveConfig(Type type, object config)
+        public static void SaveConfig(Type type, object config, string? implName = null)
         {
-            Type thisType = typeof(ConfigHelper);
-            MethodInfo method = thisType.GetMethod(nameof(_saveConfig), BindingFlags.Static | BindingFlags.NonPublic)!;
-            MethodInfo temp = method.MakeGenericMethod(type);
-            temp.Invoke(null, [config]);
+            ArgumentNullException.ThrowIfNull(config);
+            CheckSharedStaticCallingSupport();
+
+            implName ??= GetUseImplName(type);
+            if (Shared is ICachedConfigManager<Type> typeCM)
+            {
+                if (!typeCM.Save(type, config, GetUseImplName(type)))
+                {
+                    goto Failure;
+                }
+            }
+            else if (Shared is ICachedConfigManager<string> stringCM)
+            {
+                if (!stringCM.Save(
+                    type.FullName ?? throw new InvalidOperationException("无法取得类型的完整名称")
+                    {
+                        Data = { ["Type"] = type, }
+                    },
+                    config, GetUseImplName(type)))
+                {
+                    goto Failure;
+                }
+            }
+            return;
+        Failure:
+            throw new InvalidOperationException("保存配置信息失败")
+            {
+                Data = 
+                {
+                    ["Type"] = type,
+                    ["Config"] = config,
+                    ["UseImplName"] = implName,
+                }
+            };
         }
         /// <summary>
         /// 保存一个配置信息, 使用类所设置的配置读写实现
@@ -308,12 +260,8 @@ namespace Common_Util.Module.Config
         public static void SaveConfig<T>(T config)
             where T : new()
         {
-            _saveConfig(config);
-        }
-        private static void _saveConfig<T>(T config)
-            where T : new()
-        {
-            SaveConfig(config, string.Empty);
+            ArgumentNullException.ThrowIfNull(config);
+            SaveConfig(typeof(T), config, null);
         }
         /// <summary>
         /// 使用指定实现保存配置信息
@@ -324,34 +272,8 @@ namespace Common_Util.Module.Config
         public static void SaveConfig<T>(T config, string implName)
             where T : new()
         {
-            Type t = typeof(T);
-
-            IConfigReadWriteImpl? impl = null;
-            // 需要使用的配置读写实现
-            if (string.IsNullOrEmpty(implName))
-            {
-                impl = DefaultImpl;
-                t.ExistCustomAttribute<ConfigReadWriteImplAttribute>((attr) =>
-                {
-                    if (Impls.TryGetValue(attr.Name, out IConfigReadWriteImpl? value))
-                    {
-                        impl = value;
-                    }
-                });
-            }
-            else
-            {
-                if (Impls.TryGetValue(implName, out IConfigReadWriteImpl? value))
-                {
-                    impl = value;
-                }
-                if (impl == null)
-                {
-                    throw new ArgumentException("未找到指定的配置读写实现", nameof(implName));
-                }
-            }
-
-            SaveConfig(config, impl);
+            ArgumentNullException.ThrowIfNull(config);
+            SaveConfig(typeof(T), config, implName);
         }
         /// <summary>
         /// 使用指定实现保存配置信息
@@ -364,30 +286,10 @@ namespace Common_Util.Module.Config
         {
             SaveConfig(config, implName.ToString());
         }
-        /// <summary>
-        /// 使用指定实现保存配置信息
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="config"></param>
-        /// <param name="impl"></param>
-        /// <exception cref="ArgumentNullException"></exception>
-        public static void SaveConfig<T>(T config, IConfigReadWriteImpl impl)
-            where T : new()
-        {
-            // 检查
-            if (impl == null)
-            {
-                throw new ArgumentNullException(nameof(impl));
-            }
-            Type t = typeof(T);
-            if (!OnlyAllowAdd)
-            {
-                // 移除 "最后保存配置" 字典中暂存的配置信息
-                Configs.Remove(t);
-            }
-            // 保存
-            impl.SaveConfig<T>(config);
-        }
+
+        #endregion
+
+        #endregion
 
 
 
