@@ -39,6 +39,8 @@ namespace Common_Util.Module.Config
         #endregion
 
         #region 静态调用共享的配置管理器, 随时允许调用
+
+        #region 实现方式
         /// <summary>
         /// 设置 <paramref name="impl"/> 为当前的默认读写实现
         /// </summary>
@@ -47,6 +49,45 @@ namespace Common_Util.Module.Config
         {
             Shared.TrySetDefaultImpl(impl);
         }
+
+        /// <summary>
+        /// 配置配置读写的实现
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="impl"></param>
+        public static void SetImpl(string name, IConfigReadWriteImpl impl)
+        {
+            Shared.SetImpl(name, impl);
+        }
+        /// <summary>
+        /// 配置配置读写的实现, 使用枚举值作为名字
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="enumObj"></param>
+        /// <param name="impl"></param>
+        public static void SetImpl(Enum enumObj, IConfigReadWriteImpl impl)
+        {
+            Shared.SetImpl(enumObj, impl);
+        }
+        public static IConfigReadWriteImpl? GetImpl(string name)
+        {
+            if (Shared.TryGetImpl(name, out IConfigReadWriteImpl? value))
+            {
+                return value;
+            }
+            else
+            {
+                return null;
+            }
+        }
+        public static IConfigReadWriteImpl? GetImpl(Enum enumObj)
+        {
+            return GetImpl(enumObj.ToString());
+        }
+
+
+        #endregion
+
 
         #endregion
 
@@ -167,18 +208,29 @@ namespace Common_Util.Module.Config
                 return false;
             }
         }
+
         /// <summary>
         /// 读取一个配置信息对象, 使用类所设置的配置读写实现
         /// </summary>
         /// <param name="type"></param>
         /// <param name="getClone">获取克隆对象</param>
-        public static object? GetConfig(Type type, bool getClone = false)
+        public static object? GetConfig(Type type, bool getClone = false, Enum? @enum = null)
+        {
+            return GetConfig(type, getClone, @enum?.ToString());
+        }
+        /// <summary>
+        /// 读取一个配置信息对象, 使用类所设置的配置读写实现
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="getClone">获取克隆对象</param>
+        public static object? GetConfig(Type type, bool getClone = false, string? implName = null)
         {
             CheckSharedStaticCallingSupport();
 
+            implName ??= GetUseImplName(type);
             if (Shared is ICachedConfigManager<Type> typeCM)
             {
-                return typeCM.Get(type, true, GetUseImplName(type), getClone);
+                return typeCM.Get(type, true, implName, getClone);
             }
             else if (Shared is ICachedConfigManager<string> stringCM)
             {
@@ -187,12 +239,24 @@ namespace Common_Util.Module.Config
                     {
                         Data = { ["Type"] = type, }
                     },
-                    true, GetUseImplName(type), getClone);
+                    true, implName, getClone);
             }
             else
             {
                 return null;
             }
+        }
+
+        /// <summary>
+        /// 读取一个配置信息对象, 使用类所设置的配置读写实现
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="getClone">获取克隆对象</param>
+        /// <returns></returns>
+        public static T GetConfig<T>(bool getClone = false, Enum? @enum = null)
+            where T : new()
+        {
+            return GetConfig<T>(getClone, @enum?.ToString());
         }
         /// <summary>
         /// 读取一个配置信息对象, 使用类所设置的配置读写实现
@@ -200,10 +264,10 @@ namespace Common_Util.Module.Config
         /// <typeparam name="T"></typeparam>
         /// <param name="getClone">获取克隆对象</param>
         /// <returns></returns>
-        public static T GetConfig<T>(bool getClone = false)
+        public static T GetConfig<T>(bool getClone = false, string? implName = null)
             where T : new()
         {
-            var output = GetConfig(typeof(T), getClone) ?? throw new InvalidOperationException("读取配置信息对象失败");
+            var output = GetConfig(typeof(T), getClone, implName) ?? throw new InvalidOperationException("读取配置信息对象失败");
             return (T)output;
         }
 

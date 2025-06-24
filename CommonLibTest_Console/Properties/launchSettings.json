@@ -2,7 +2,7 @@
   "profiles": {
     "CommonLibTest_Console": {
       "commandName": "Project",
-      "commandLineArgs": "Configs.JsonConfig001\r\nConfigs.JsonConfig002\r\nConfigs.XmlConfig001"
+      "commandLineArgs": "MultiThread.WorkCountGuard001"
     }
   }
 }

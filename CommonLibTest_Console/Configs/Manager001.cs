@@ -12,5 +12,11 @@ namespace CommonLibTest_Console.Configs
         {
 
         }
+
+        public enum RWImpls
+        {
+            Json,
+            Xml
+        }
     }
 }

@@ -1,4 +1,6 @@
-﻿using Common_Util.Extensions;
+﻿using Common_Util.Data.Struct;
+using Common_Util.Extensions;
+using Common_Util.Module.Concurrency;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -27,6 +29,10 @@ namespace Common_Util.Module.Config
         private IKeyedConfigReadWriteImpl<Type>? settedDefaultImpl;
         private readonly IKeyedConfigReadWriteImpl<Type> defaultImpl = new ConfigurationManagerReadWriteImpl();
 
+        IConfigReadWriteImpl IConfigManager.DefaultImpl => DefaultImpl;
+
+        IReadOnlyDictionary<string, IConfigReadWriteImpl> IConfigManager.Impls => impls.ToDictionary(kvp => kvp.Key, kvp => (IConfigReadWriteImpl)kvp.Value);
+
         public bool IsAvailable(IConfigReadWriteImpl impl)
         {
             if (impl == null) return false;
@@ -40,45 +46,154 @@ namespace Common_Util.Module.Config
             DefaultImpl = (IKeyedConfigReadWriteImpl<Type>)impl;
         }
 
-
         public bool HasImpl(string name)
         {
             name ??= string.Empty;
             return impls.ContainsKey(name);
         }
 
+        #region 基于 ConcurrentDictionary<string, IKeyedConfigReadWriteImpl<Type>> 实现操作方法
 
-        public bool TryAddImpl(string name, IKeyedConfigReadWriteImpl<Type> impl)
-        {
-            name ??= string.Empty;
-            return impls.TryAdd(name, impl);
-        }
-
+        /// <summary>
+        /// 添加与更新操作的守卫对象
+        /// </summary>
+        /// <remarks>
+        /// 执行这两个操作时不允许执行比较移除 (<see cref="TryRemoveImpl(string, MaybeNull{IKeyedConfigReadWriteImpl{Type}}, out IKeyedConfigReadWriteImpl{Type}?)"/>), 
+        /// 执行移除时也将阻止添加与更新 <br/>
+        /// 暂且不针对键加锁, 这样子够用了
+        /// </remarks>
+        private readonly WorkCountGuard implDicIUGuard = new();
+        private static TimeSpan implDicIUWaitGuardTimeout = TimeSpan.FromSeconds(5);
+        private readonly object compareRemoveLocker = new();
         public bool TryGetImpl(string name, [NotNullWhen(true)] out IKeyedConfigReadWriteImpl<Type>? impl)
         {
-            name ??= string.Empty;
             return impls.TryGetValue(name, out impl);
         }
+        public bool TryAddImpl(string name, IKeyedConfigReadWriteImpl<Type> impl)
+        {
+            using var token = implDicIUGuard.TryBeginWork(implDicIUWaitGuardTimeout);
+            if (!token.GetSuccess) return false;
 
+            return impls.TryAdd(name, impl);
+        }
+        public bool TryUpdateImpl(string name, MaybeNull<IKeyedConfigReadWriteImpl<Type>> comparisonValue, IKeyedConfigReadWriteImpl<Type> impl)
+        {
+            using var token = implDicIUGuard.TryBeginWork(implDicIUWaitGuardTimeout);
+            if (!token.GetSuccess) return false;
+
+            IKeyedConfigReadWriteImpl<Type> comparisonImpl;
+            if (comparisonValue.HasValue) comparisonImpl = comparisonValue.Value;
+            else
+            {
+                if (!impls.TryGetValue(name, out var exist))
+                    return false;
+                else
+                    comparisonImpl = exist;
+            }
+            return impls.TryUpdate(name, impl, comparisonImpl);
+        }
+        public bool TrySetImpl(string name, IKeyedConfigReadWriteImpl<Type> impl)
+        {
+            using var token = implDicIUGuard.TryBeginWork(implDicIUWaitGuardTimeout);
+            if (!token.GetSuccess) return false;
+
+            impls.AddOrUpdate(name, impl, (_, _) => impl);
+            return true;
+        }
         public bool TryRemoveImpl(string name, [NotNullWhen(true)] out IKeyedConfigReadWriteImpl<Type>? impl)
         {
-            name ??= string.Empty;
             return impls.TryRemove(name, out impl);
         }
 
-        public bool TryUpdateImpl(string name, IKeyedConfigReadWriteImpl<Type> impl)
+        public bool TryRemoveImpl(string name, MaybeNull<IKeyedConfigReadWriteImpl<Type>> comparisonImpl, [NotNullWhen(true)] out IKeyedConfigReadWriteImpl<Type>? impl)
         {
-            name ??= string.Empty;
-            if (!TryGetImpl(name, out var exist))
+            if (!comparisonImpl.HasValue) return impls.TryRemove(name, out impl);
+            else
             {
+                using var token = implDicIUGuard.TryAcquireLock(implDicIUWaitGuardTimeout);
+                if (!token.GetSuccess)
+                {
+                    impl = default;
+                    return false;
+                }
+
+                lock (compareRemoveLocker)
+                {
+                    if (impls.TryGetValue(name, out var exists) && exists == comparisonImpl.Value)
+                    {
+                        if (impls.TryRemove(name, out impl))
+                        {
+                            return true;
+                        }
+                    }
+                }
+                impl = default;
                 return false;
+            }
+        }
+
+
+        public bool TryGetImpl(string name, [NotNullWhen(true)] out IConfigReadWriteImpl? impl)
+        {
+            if (TryGetImpl(name, out IKeyedConfigReadWriteImpl<Type>? exist))
+            {
+                impl = exist;
+                return true;
             }
             else
             {
-                if (exist == impl) return true;
-                return impls.TryUpdate(name, impl, exist);
+                impl = default;
+                return false;
             }
         }
+
+        public bool TryAddImpl(string name, IConfigReadWriteImpl impl)
+        {
+            if (!IsAvailable(impl)) return false;
+            else return TryAddImpl(name, (IKeyedConfigReadWriteImpl<Type>)impl);
+        }
+
+        public bool TryUpdateImpl(string name, IConfigReadWriteImpl impl)
+        {
+            if (!IsAvailable(impl)) return false;
+            else return TryUpdateImpl(name, (IKeyedConfigReadWriteImpl<Type>)impl);
+        }
+
+        public bool TrySetImpl(string name, IConfigReadWriteImpl impl)
+        {
+            if (!IsAvailable(impl)) return false;
+            else return TrySetImpl(name, (IKeyedConfigReadWriteImpl<Type>)impl);
+        }
+
+        public bool TryRemoveImpl(string name, MaybeNull<IConfigReadWriteImpl> comparisonImpl, [NotNullWhen(true)] out IConfigReadWriteImpl? impl)
+        {
+            if (comparisonImpl.HasValue)
+            {
+                if (IsAvailable(comparisonImpl.Value) && 
+                    TryRemoveImpl(name, 
+                        new MaybeNull<IKeyedConfigReadWriteImpl<Type>>((IKeyedConfigReadWriteImpl<Type>)comparisonImpl.Value), 
+                        out IKeyedConfigReadWriteImpl<Type>? exist))
+                {
+                    impl = exist;
+                    return true;
+                }
+            }
+            else
+            {
+                if (TryRemoveImpl(name,
+                    MaybeNull<IKeyedConfigReadWriteImpl<Type>>.Null,
+                    out IKeyedConfigReadWriteImpl<Type>? exist))
+                {
+                    impl = exist;
+                    return true;
+                }
+            }
+            impl = default;
+            return false;
+        }
+
+        #endregion
+
 
         #region 克隆
         public object Clone(object config)
@@ -165,7 +280,7 @@ namespace Common_Util.Module.Config
 
         public IEnumerable<KeyValuePair<Type, object>> AllCaches => caches;
 
-        IConfigReadWriteImpl IConfigManager.DefaultImpl => DefaultImpl;
+
 
         public bool IsLoaded(Type key)
         {
