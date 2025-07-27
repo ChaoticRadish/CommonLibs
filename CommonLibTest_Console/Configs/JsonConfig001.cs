@@ -15,6 +15,7 @@ namespace CommonLibTest_Console.Configs
         {
             ConfigHelper.OnlyAllowAdd = false;
             ConfigHelper.ClearCache();
+            Directory.Delete(GetTestDir(), true);
         }
         protected override void RunImpl()
         {

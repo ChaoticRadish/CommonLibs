@@ -116,18 +116,30 @@ namespace Common_Util.Module.Config
         /// <param name="loadIfNotLoaded">如果未加载指定键值的配置, 是否加载</param>
         /// <param name="useImplName">加载配置时使用的读写实现的名字</param>
         /// <param name="getClone">取得配置对象时, 是否取得其拷贝, 而不是其引用</param>
+        /// <param name="reload">是否重新加载? <br/>
+        /// 如果已经加载, 则重新加载并替换缓存; 如果未加载, 则无论是否 <paramref name="loadIfNotLoaded"/>, 都将加载
+        /// </param>
         /// <returns></returns>
-        object? Get(TKey key, bool loadIfNotLoaded = false, string? useImplName = null, bool getClone = false)
+        object? Get(TKey key, bool loadIfNotLoaded = false, string? useImplName = null, bool getClone = false, bool reload = false)
         {
             object? output;
             if (IsLoaded(key))
             {
-                if (TryGet(key, out object? config)) output = config;
-                else return null;
+                if (reload)
+                {
+                    var loaded = Load(key, useImplName);
+                    if (loaded != null && TryUpdate(key, loaded)) output = loaded;
+                    else return null;
+                }
+                else
+                {
+                    if (TryGet(key, out object? config)) output = config;
+                    else return null;
+                }
             }
             else
             {
-                if (loadIfNotLoaded)
+                if (loadIfNotLoaded || reload)
                 {
                     var loaded = Load(key, useImplName);
                     if (loaded != null && TryAdd(key, loaded)) output = loaded;
@@ -168,6 +180,28 @@ namespace Common_Util.Module.Config
         }
         #endregion
 
+        #region 覆盖默认实现
+        /// <summary>
+        /// 使用指定名字的配置读写, 将当前缓存中指定键值的配置对象保存起来
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="implName">配置读写实现的名字, 如果为 <see langword="null"/>, 则采用 <see cref="IConfigManager.DefaultImpl"/></param>
+        /// <returns></returns>
+        new bool Save(TKey key, object config, string? implName = null)
+        {
+            if (CacheProtecting)
+            {
+                return false;
+            }
+            var impl = GetImpl(implName);
+            if (impl == null)
+            {
+                return false;
+            }
+            else return impl.SaveConfig(key, config);
+        }
+
+        #endregion
     }
 
 

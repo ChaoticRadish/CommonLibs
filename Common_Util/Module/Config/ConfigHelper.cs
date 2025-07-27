@@ -1,6 +1,7 @@
 ﻿using Common_Util;
 using Common_Util.Data.Constraint;
 using Common_Util.Extensions;
+using Common_Util.Module.Config.Wrapper;
 using Common_Util.String;
 using System;
 using System.Collections;
@@ -144,6 +145,37 @@ namespace Common_Util.Module.Config
 
         #endregion
 
+        private static ICachedConfigManager<Type> GetTypeKeyedShared()
+        {
+            CheckSharedStaticCallingSupport();
+            if (Shared is ICachedConfigManager<Type> typeCM)
+            {
+                return new StringCachedConfigManagerWrapper<Type>(typeCM, keyConvert2StrFunc, keyConvert2TypeFunc);
+            }
+            else if (Shared is ICachedConfigManager<string> stringCM)
+            {
+                return new StringCachedConfigManagerWrapper<Type>(stringCM);
+            }
+            throw new Exceptions.General.ImpossibleForkException();
+        }
+        private static Type keyConvert2TypeFunc(string str)
+        {
+            return typeKeyMappings.TryGetValue(str, out Type? type) ? type : throw new InvalidOperationException("未记录到字符串键值与类型的映射关系")
+            {
+                Data = { ["String"] = str, }
+            };
+        }
+        private static string keyConvert2StrFunc(Type type)
+        {
+            string key = type.FullName ?? throw new InvalidOperationException("无法转换类型为字符串键值")
+            {
+                Data = { ["Type"] = type, }
+            };
+            _ = typeKeyMappings.TryAdd(key, type);
+            return key;
+        }
+        private static ConcurrentDictionary<string, Type> typeKeyMappings = [];
+
         #region 缓存
         /// <summary>
         /// 清空配置对象的缓存
@@ -214,23 +246,24 @@ namespace Common_Util.Module.Config
         /// </summary>
         /// <param name="type"></param>
         /// <param name="getClone">获取克隆对象</param>
-        public static object? GetConfig(Type type, bool getClone = false, Enum? @enum = null)
+        /// <param name="impl">读写实现的枚举值</param>
+        public static object? GetConfig(Type type, bool getClone = false, Enum? impl = null, bool reload = false)
         {
-            return GetConfig(type, getClone, @enum?.ToString());
+            return GetConfig(type, getClone, impl?.ToString(), reload);
         }
         /// <summary>
         /// 读取一个配置信息对象, 使用类所设置的配置读写实现
         /// </summary>
         /// <param name="type"></param>
         /// <param name="getClone">获取克隆对象</param>
-        public static object? GetConfig(Type type, bool getClone = false, string? implName = null)
+        public static object? GetConfig(Type type, bool getClone = false, string? implName = null, bool reload = false)
         {
             CheckSharedStaticCallingSupport();
 
             implName ??= GetUseImplName(type);
             if (Shared is ICachedConfigManager<Type> typeCM)
             {
-                return typeCM.Get(type, true, implName, getClone);
+                return typeCM.Get(type, true, implName, getClone, reload);
             }
             else if (Shared is ICachedConfigManager<string> stringCM)
             {
@@ -252,11 +285,12 @@ namespace Common_Util.Module.Config
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="getClone">获取克隆对象</param>
+        /// <param name="impl">读写实现的枚举值</param>
         /// <returns></returns>
-        public static T GetConfig<T>(bool getClone = false, Enum? @enum = null)
+        public static T GetConfig<T>(bool getClone, Enum? impl, bool reload = false)
             where T : new()
         {
-            return GetConfig<T>(getClone, @enum?.ToString());
+            return GetConfig<T>(getClone, impl?.ToString(), reload);
         }
         /// <summary>
         /// 读取一个配置信息对象, 使用类所设置的配置读写实现
@@ -264,10 +298,10 @@ namespace Common_Util.Module.Config
         /// <typeparam name="T"></typeparam>
         /// <param name="getClone">获取克隆对象</param>
         /// <returns></returns>
-        public static T GetConfig<T>(bool getClone = false, string? implName = null)
+        public static T GetConfig<T>(bool getClone = false, string? implName = null, bool reload = false)
             where T : new()
         {
-            var output = GetConfig(typeof(T), getClone, implName) ?? throw new InvalidOperationException("读取配置信息对象失败");
+            var output = GetConfig(typeof(T), getClone, implName, reload) ?? throw new InvalidOperationException("读取配置信息对象失败");
             return (T)output;
         }
 
@@ -282,39 +316,21 @@ namespace Common_Util.Module.Config
         public static void SaveConfig(Type type, object config, string? implName = null)
         {
             ArgumentNullException.ThrowIfNull(config);
-            CheckSharedStaticCallingSupport();
 
+            var managerWrapper = GetTypeKeyedShared();
             implName ??= GetUseImplName(type);
-            if (Shared is ICachedConfigManager<Type> typeCM)
+            if (!managerWrapper.Save(type, config, implName))
             {
-                if (!typeCM.Save(type, config, GetUseImplName(type)))
+                throw new InvalidOperationException("保存配置信息失败")
                 {
-                    goto Failure;
-                }
-            }
-            else if (Shared is ICachedConfigManager<string> stringCM)
-            {
-                if (!stringCM.Save(
-                    type.FullName ?? throw new InvalidOperationException("无法取得类型的完整名称")
+                    Data =
                     {
-                        Data = { ["Type"] = type, }
-                    },
-                    config, GetUseImplName(type)))
-                {
-                    goto Failure;
-                }
+                        ["Type"] = type,
+                        ["Config"] = config,
+                        ["UseImplName"] = implName,
+                    }
+                };
             }
-            return;
-        Failure:
-            throw new InvalidOperationException("保存配置信息失败")
-            {
-                Data = 
-                {
-                    ["Type"] = type,
-                    ["Config"] = config,
-                    ["UseImplName"] = implName,
-                }
-            };
         }
         /// <summary>
         /// 保存一个配置信息, 使用类所设置的配置读写实现
