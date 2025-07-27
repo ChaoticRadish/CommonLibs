@@ -242,6 +242,26 @@ namespace Common_Util.Test.Console
         {
             WritePair(key: keyText, value: value.FullInfoString(), split);
         }
+        public void WriteJsonPair(object value, [CallerArgumentExpression(nameof(value))] string keyText = "", string split = " => ")
+        {
+            string valueStr;
+            if (value == null)
+            {
+                valueStr = "<null>";
+            }
+            else
+            {
+                valueStr = System.Text.Json.JsonSerializer.Serialize(value, lazyDefaultJsonOption.Value);
+            }
+            WritePair(key: keyText, value: valueStr, split);
+        }
+        private static Lazy<System.Text.Json.JsonSerializerOptions> lazyDefaultJsonOption = new(() => 
+        {
+            return new()
+            {
+                WriteIndented = true,
+            };
+        });
         #endregion
 
         #region 测试用的文件
