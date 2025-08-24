@@ -180,6 +180,20 @@ namespace Common_Util.Module.Config
                 });
                 return output;
             }
+            else if (targetType.IsArray)
+            {
+                var elementType = targetType.GetElementType();
+                if (elementType == null) return null;
+                string[] strs = str.Split(COLLECTION_SPLIT);
+                var arr = Array.CreateInstance(elementType, strs.Length);
+                foreach (var (index, _s) in strs.WithIndex())
+                {
+                    object? obj = ConfigValue2Obj(_s, elementType);
+                    arr.SetValue(obj, index);
+                }
+                return arr;
+
+            }
             else if (targetType.IsGenericType)
             {
                 var generiacTypeDefinition = targetType.GetGenericTypeDefinition();
