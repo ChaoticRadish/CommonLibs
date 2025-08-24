@@ -257,7 +257,15 @@ namespace Common_Winform.Extensions
                 }
                 args.GotDataDone?.Invoke(startArg, getDataResult);
 
-                TData data = getDataResult.Data ?? args.DefaultData ?? throw new InvalidOperationException("获取数据取得空值! ");
+                TData? data;
+                if (getDataResult)
+                {
+                    data = getDataResult.Data ?? args.DefaultData ?? throw new InvalidOperationException("获取数据取得空值! ");
+                }
+                else
+                {
+                    data = default;
+                }
 
                 TArg checkArg;
                 getArgResult = c.TryAutoInvoke(args.GetArgFunc);
@@ -273,7 +281,7 @@ namespace Common_Winform.Extensions
                     }
                     else if (getDataResult)
                     {
-                        args.GetDataSuccess?.Invoke(startArg, data);
+                        args.GetDataSuccess?.Invoke(startArg, data!);
                     }
                     else
                     {
