@@ -4,6 +4,7 @@ using Common_Util.Module.Config;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -11,25 +12,6 @@ using System.Threading.Tasks;
 
 namespace Common_Util.Module.Config
 {
-    /// <summary>
-    /// 配置读写类的实现
-    /// </summary>
-    public interface IConfigReadWriteImpl
-    {
-        /// <summary>
-        /// 获取输入类型的配置
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        T GetConfig<T>() where T : new();
-        /// <summary>
-        /// 保存输入类型的配置
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="config">配置数据对象</param>
-        void SaveConfig<T>(T config) where T : new();
-    }
-
     /// <summary>
     /// 标注使用哪个配置读写实例的特性
     /// </summary>
@@ -52,34 +34,30 @@ namespace Common_Util.Module.Config
     /// <summary>
     /// 基于<see cref="ConfigurationManager"/>的配置帮助类, Debug模式下会优先读取DEBUG前缀的键值对
     /// </summary>
-    public class ConfigurationManagerReadWriteImpl : IConfigReadWriteImpl
+    public class ConfigurationManagerReadWriteImpl : TypeKeyedConfigReadWriteImplBase
     {
-
-
-        public T GetConfig<T>() where T : new()
+        public override bool TryLoadConfig(Type key, [NotNullWhen(true)] out object? config)
         {
-            Type t = typeof(T);
-            T output = new T();
-
-            PropertyInfo[] properties = t.GetProperties();
+            var output = CreateInstance(key);
+            PropertyInfo[] properties = key.GetProperties();
             foreach (PropertyInfo property in properties)
             {
                 if (property.SetMethod == null) continue;
-                string? value = Get(t, property);
+                string? value = Get(key, property);
                 if (value == null) continue;
                 object? obj = ConfigStringHelper.ConfigValue2Obj(value, property.PropertyType);
                 if (obj == null) continue;
                 property.SetValue(output, obj);
             }
-            return output;
+            config = output;
+            return true;
         }
 
-        public void SaveConfig<T>(T config) where T : new()
+        public override bool SaveConfig(Type type, object config)
         {
-            Type t = typeof(T);
             Configuration configuration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
 
-            PropertyInfo[] properties = t.GetProperties();
+            PropertyInfo[] properties = type.GetProperties();
             foreach (PropertyInfo property in properties)
             {
                 if (property.SetMethod == null) continue;
@@ -87,9 +65,9 @@ namespace Common_Util.Module.Config
                 string key;
                 string? value = ConfigStringHelper.Obj2ConfigValue(property.GetValue(config));
 #if DEBUG
-                key = GetNodeKey(t, property, true);
+                key = GetNodeKey(type, property, true);
 #else
-                key = GetNodeKey(t, property, false);
+                key = GetNodeKey(type, property, false);
 #endif
                 var element = configuration.AppSettings.Settings[key];
                 if (element == null)
@@ -103,8 +81,9 @@ namespace Common_Util.Module.Config
             }
             configuration.Save();
             ConfigurationManager.RefreshSection("appSetting");
-        }
 
+            return true;
+        }
 
         #region 读取
         /// <summary>
@@ -139,6 +118,7 @@ namespace Common_Util.Module.Config
             }
             return output;
         }
+
         #endregion
     }
 }
