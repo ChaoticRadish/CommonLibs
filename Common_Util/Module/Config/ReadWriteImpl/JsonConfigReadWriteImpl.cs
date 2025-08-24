@@ -104,10 +104,13 @@ namespace Common_Util.Module.Config
                 try
                 {
                     string jsonStr = File.ReadAllText(path);
-                    JsonDocument doc = JsonDocument.Parse(jsonStr, docOptions);
-                    foreach (var item in doc.RootElement.EnumerateObject())
+                    if (!string.IsNullOrEmpty(jsonStr))
                     {
-                        values.Add(item.Name, item.Value);
+                        JsonDocument doc = JsonDocument.Parse(jsonStr, docOptions);
+                        foreach (var item in doc.RootElement.EnumerateObject())
+                        {
+                            values.Add(item.Name, item.Value);
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -123,10 +126,13 @@ namespace Common_Util.Module.Config
                 try
                 {
                     string jsonStr = File.ReadAllText(debugFile);
-                    JsonDocument doc = JsonDocument.Parse(jsonStr, docOptions);
-                    foreach (var item in doc.RootElement.EnumerateObject())
+                    if (!string.IsNullOrEmpty(jsonStr))
                     {
-                        values.Set(item.Name, item.Value);
+                        JsonDocument doc = JsonDocument.Parse(jsonStr, docOptions);
+                        foreach (var item in doc.RootElement.EnumerateObject())
+                        {
+                            values.Set(item.Name, item.Value);
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -183,17 +189,42 @@ namespace Common_Util.Module.Config
                 {
                     case JsonValueKind.Object:
                         {
-                            var obj = Activator.CreateInstance(type);
-                            if (obj == null) return null;
-                            PropertyInfo[] properties = type.GetProperties();
-                            foreach (var item in jElement.EnumerateObject())
+                            if (type.IsDictionary())
                             {
-                                var property = properties.FirstOrDefault(i => i.Name == item.Name);
-                                if (property == null || property.SetMethod == null) continue;
-                                object? pValue = Convert(item.Value, property.PropertyType);
-                                property.SetValue(obj, pValue);
+                                var obj = Activator.CreateInstance(type);
+                                if (obj == null) return null;
+
+                                var dicInterface = type.GetInterfaces().FirstOrDefault(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IDictionary<,>));
+                                if (dicInterface == null) throw new InvalidOperationException("未取得实现的字典接口信息");
+                                IDictionary dic = (IDictionary)obj;
+                                var gArgs = dicInterface.GetGenericArguments();
+                                var keyType = gArgs[0];
+                                var valueType = gArgs[1];
+
+                                foreach (var item in jElement.EnumerateObject())
+                                {
+                                    object? key = ConfigStringHelper.ConfigValue2Obj(item.Name, keyType);
+                                    if (key == null) continue;
+                                    object? value = Convert(item.Value, valueType);
+                                    dic.Add(key, value);
+                                }
+
+                                return obj;
                             }
-                            return obj;
+                            else
+                            {
+                                var obj = Activator.CreateInstance(type);
+                                if (obj == null) return null;
+                                PropertyInfo[] properties = type.GetProperties();
+                                foreach (var item in jElement.EnumerateObject())
+                                {
+                                    var property = properties.FirstOrDefault(i => i.Name == item.Name);
+                                    if (property == null || property.SetMethod == null) continue;
+                                    object? pValue = Convert(item.Value, property.PropertyType);
+                                    property.SetValue(obj, pValue);
+                                }
+                                return obj;
+                            }
                         }
                     case JsonValueKind.Array:
                         //return String.JsonHelper.Deserialize<T>(jElement.ToString());
@@ -378,12 +409,12 @@ namespace Common_Util.Module.Config
             using (Utf8JsonWriter writer = new Utf8JsonWriter(fs, new JsonWriterOptions()
             {
                 Indented = true,
-            })) 
+            }))
 
-            root.WriteTo(writer, new JsonSerializerOptions()
-            {
-                WriteIndented = true,
-            });
+                root.WriteTo(writer, new JsonSerializerOptions()
+                {
+                    WriteIndented = true,
+                });
             //string str = Newtonsoft.Json.JsonConvert.SerializeObject(obj, Formatting.Indented, new JsonSerializerSettings()
             //{
             //    NullValueHandling = NullValueHandling.Include
@@ -450,6 +481,27 @@ namespace Common_Util.Module.Config
                 foreach (var item in list)
                 {
                     obj.Add(_toJsonObject(itemType, item));
+                }
+                return obj;
+            }
+            else if (type.IsDictionary())
+            {
+                var dicInterface = type.GetInterfaces().FirstOrDefault(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IDictionary<,>));
+                if (dicInterface == null) throw new InvalidOperationException("未取得实现的字典接口信息");
+                IDictionary dic = (IDictionary)value;
+                var gArgs = dicInterface.GetGenericArguments();
+                JsonObject obj = new JsonObject();
+                foreach (var key in dic.Keys)
+                {
+                    var keyStr = ConfigStringHelper.Obj2ConfigValue(key);
+                    if (string.IsNullOrEmpty(keyStr))
+                    {
+                        throw new InvalidCastException("未能将字典键对象转换为有效的 Json 属性名")
+                        {
+                            Data = { ["Key"] = key },
+                        };
+                    }
+                    obj.Add(keyStr, _toJsonObject(gArgs[1], dic[key]));
                 }
                 return obj;
             }
