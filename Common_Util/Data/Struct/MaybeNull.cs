@@ -122,12 +122,12 @@ namespace Common_Util.Data.Struct
         /// <summary>
         /// 取得一个表示没有值的包装器
         /// </summary>
-        public static MaybeNull<T> Null => new();
+        public readonly static MaybeNull<T> Null = new();
         #endregion
 
+        [MemberNotNullWhen(true, nameof(Value))]
         public bool HasValue { get; }
 
-        [MemberNotNullWhen(true, nameof(HasValue))]
         public T? Value { get; }
 
 

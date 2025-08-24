@@ -246,6 +246,11 @@ namespace Common_Util.Log
 
             public string WarningLevel { get; set; }
 
+            /// <summary>
+            /// 处理消息文本的函数
+            /// </summary>
+            public Func<string, string>? MessageHandler { get; set; }
+
             public static LogToLoggerConfig Default => GetDefault(string.Empty, string.Empty);
             public static LogToLoggerConfig GetDefault(string category, string subCategory = "")
             {
@@ -338,7 +343,7 @@ namespace Common_Util.Log
                     Category = config.Category, 
                     SubCategory = config.SubCategory,
                     Level = level,
-                    Message = message,
+                    Message = config.MessageHandler != null ? config.MessageHandler(message) : message,
                     StackFrames = frames,
                     Time = DateTime.Now,
                     Exception = ex,

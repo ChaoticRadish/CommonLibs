@@ -5,6 +5,7 @@ using Common_Util.String;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -18,14 +19,14 @@ namespace Common_Util.Module.Config
     /// <summary>
     /// 使用 <see cref="System.Text.Json"/> 实现的配置读写实现
     /// </summary>
-    public class JsonConfigReadWriteImpl : IConfigReadWriteImpl
+    public class JsonConfigReadWriteImpl : TypeKeyedConfigReadWriteImplBase
     {
         /// <summary>
         /// 
         /// </summary>
         /// <param name="path"></param>
         /// <param name="isFile">true: 指定文件; false: 指定文件夹</param>
-        public JsonConfigReadWriteImpl(string path, bool isFile = false)
+        public JsonConfigReadWriteImpl(string path, bool isFile = false) : base()
         {
             SavePath = path;
             PathIsFile = isFile;
@@ -80,10 +81,11 @@ namespace Common_Util.Module.Config
 
         #region 读
 
-        public T GetConfig<T>() where T : new()
+
+        public override bool TryLoadConfig(Type key, [NotNullWhen(true)] out object? config)
         {
-            Type t = typeof(T);
-            T output = new T();
+            Type t = key;
+            object output = CreateInstance(t);
 
             #region 使用文件
             string path = PathIsFile ? SavePath : $"{SavePath}/{t.Name}.json";
@@ -162,7 +164,8 @@ namespace Common_Util.Module.Config
             }
             #endregion
 
-            return output;
+            config = output;
+            return true;
         }
 
         private object? Convert(JsonElement jElement, Type targetType)
@@ -266,6 +269,23 @@ namespace Common_Util.Module.Config
         #endregion
 
         #region 写
+
+        public override bool SaveConfig(Type key, object config)
+        {
+            _saveConfig(
+                key,
+                config,
+                (property) =>
+                {
+                    return property.GetValue(config);
+                },
+                (path) =>
+                {
+                    return false;
+                });
+            return true;
+        }
+
         /// <summary>
         /// 初始化输入类型的配置文件
         /// </summary>
@@ -277,10 +297,28 @@ namespace Common_Util.Module.Config
 
             foreach (Type type in types)
             {
-                if (type.GetConstructor(Type.EmptyTypes) == null) continue;
+                if (!IsAvailable(type)) continue;
+                object config = CreateInstance(type);
+                _saveConfig(
+                    type,
+                    config,
+                    (property) =>
+                    {
+                        object? obj = null;
+                        // 取特性的默认值
+                        property.ExistCustomAttribute<DefaultValueAttribute>((att) =>
+                        {
+                            obj = ConfigStringHelper.ConfigValue2Obj(att.ValueString, property.PropertyType);
+                        });
 
-                MethodInfo temp = method.MakeGenericMethod(type);
-                temp.Invoke(this, new object[] { });
+                        obj ??= property.GetValue(config);
+                        if (obj == null && property.PropertyType == typeof(string))
+                        {
+                            obj = "";
+                        }
+                        return obj;
+                    },
+                    File.Exists);
             }
         }
 
@@ -290,44 +328,7 @@ namespace Common_Util.Module.Config
         /// <typeparam name="T"></typeparam>
         public void InitConfig<T>() where T : new()
         {
-            T config = new T();
-            _saveConfig(
-                config,
-                (property) =>
-                {
-                    object? obj = null;
-                    // 取特性的默认值
-                    property.ExistCustomAttribute<DefaultValueAttribute>((att) =>
-                    {
-                        obj = ConfigStringHelper.ConfigValue2Obj(att.ValueString, property.PropertyType);
-                    });
-
-                    obj ??= property.GetValue(config);
-                    if (obj == null && property.PropertyType == typeof(string))
-                    {
-                        obj = "";
-                    }
-                    return obj;
-                },
-                (path) =>
-                {
-                    return File.Exists(path);
-                });
-        }
-
-        public void SaveConfig<T>(T config) where T : new()
-        {
-            _saveConfig(
-                config,
-                (property) =>
-                {
-                    return property.GetValue(config);
-                },
-                (path) =>
-                {
-                    return false;
-                });
-
+            InitConfig(typeof(T));
         }
 
         /// <summary>
@@ -337,11 +338,8 @@ namespace Common_Util.Module.Config
         /// <param name="config"></param>
         /// <param name="getValueFunc">获取属性对应值的方法</param>
         /// <param name="needCancelFunc">判断是否需要取消保存的方法, 参数为准备保存的路径</param>
-        private void _saveConfig<T>(T config, Func<PropertyInfo, object?> getValueFunc, Func<string, bool> needCancelFunc) where T : new()
+        private void _saveConfig(Type t, object config, Func<PropertyInfo, object?> getValueFunc, Func<string, bool> needCancelFunc)
         {
-            Type t = typeof(T);
-
-
             string path = PathIsFile ? SavePath : $"{SavePath}/{t.Name}.json";
 #if DEBUG
             path = CreateDebugFilePath(path);
@@ -483,6 +481,7 @@ namespace Common_Util.Module.Config
         }
 
         #endregion
+
 
 
     }

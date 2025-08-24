@@ -144,5 +144,38 @@ namespace Common_Util.Input
         }
 
         #endregion
+
+
+        #region 取整
+        /// <summary>
+        /// 根据步长向上取整
+        /// </summary>
+        /// <param name="input">输入值</param>
+        /// <param name="step">步长</param>
+        /// <returns></returns>
+        public static double CeilByStep(double input, double step)
+        {
+            if (input == 0)
+            {
+                return 0;
+            }
+            if (input % step == 0)
+            {
+                return input;
+            }
+            else
+            {
+                int count = (int)(input / step);
+                if (input > 0)
+                {
+                    return (count + 1) * step;
+                }
+                else
+                {
+                    return (count - 1) * step;
+                }
+            }
+        }
+        #endregion
     }
 }
