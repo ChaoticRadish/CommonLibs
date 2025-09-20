@@ -22,4 +22,18 @@ namespace Common_Util.Interfaces.Behavior
         /// <returns></returns>
         bool IsEquivalent(T1? x, T2? y);
     }
+
+    /// <summary>
+    /// 行为: 能够与 <typeparamref name="T"/> 类型对象比较是否等价
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public interface ICompareEquivalentTo<T>
+    {
+        /// <summary>
+        /// 比较当前对象与 <typeparamref name="T"/> 是否等价
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
+        bool IsEquivalent(T other);
+    }
 }

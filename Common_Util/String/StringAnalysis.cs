@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -316,5 +317,344 @@ namespace Common_Util.String
             public int LastCharIndex { get; set; }
         }
         #endregion
+
+        /// <summary>
+        /// 尝试从 <paramref name="input"/> 中, 从 <paramref name="startIndex"/> 位置开始, 寻找 <paramref name="findStr"/> 字符串, 寻找总字符数不超过 <paramref name="maxReadLength"/>
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="findStr">如果是空字符串, 且 <paramref name="input"/> 不是 <see langword="null"/>, 均会返回空字符串</param>
+        /// <param name="startIndex">如果小于 0, 将从 0 开始查找, 同时会缩减 <paramref name="maxReadLength"/></param>
+        /// <param name="maxReadLength">如果为 <see langword="null"/>, 则不作限制</param>
+        /// <param name="output"></param>
+        /// <returns></returns>
+        public static bool TryReadUntil(string input, string findStr, int startIndex, int? maxReadLength, [NotNullWhen(true)] out string? output)
+        {
+            output = null;
+
+            if (input == null) return false;
+            findStr ??= string.Empty;
+            if (findStr == string.Empty)
+            {
+                output = string.Empty;
+                return true;
+            }
+
+            int useStartIndex = startIndex < 0 ? 0 : startIndex;
+            if ((input.Length - useStartIndex) < findStr.Length) return false; // 查找范围不可能找到指定字符串
+            int _maxReadLength;
+            if (maxReadLength != null)
+            {
+                if (startIndex < 0)
+                {
+                    maxReadLength += startIndex;    // 最终值会缩小
+                }
+                if (useStartIndex + maxReadLength > input.Length)
+                {
+                    _maxReadLength = input.Length - useStartIndex;
+                }
+                else
+                {
+                    _maxReadLength = maxReadLength.Value;
+                }
+                if (findStr.Length > _maxReadLength)
+                {
+                    return false; // 查找范围不可能找到指定字符串
+                }
+            }
+            else
+            {
+                _maxReadLength = input.Length - useStartIndex;
+            }
+
+            // 一边读取一边判断
+            char[] buffer = new char[findStr.Length];
+            int writeIndex = 0; // 需要写入时, 当前需要写入的位置
+            int readIndex = useStartIndex;
+            for (int readCount = 0; readCount < _maxReadLength;)
+            {
+                buffer[writeIndex] = input[readIndex];
+
+                writeIndex++;
+                if (writeIndex >= buffer.Length)
+                {
+                    writeIndex = 0;
+                }
+
+                readIndex++;
+                readCount++;
+
+                // 判断
+                if (readCount >= findStr.Length)
+                {
+                    bool found = true;
+                    for (int checkIndex = 0; checkIndex < findStr.Length; checkIndex++)
+                    {
+                        if (findStr[checkIndex] != buffer[(writeIndex + checkIndex) % findStr.Length])
+                        {
+                            found = false;
+                            break;
+                        }
+                    }
+
+                    if (found)
+                    {
+                        output = input.Substring(useStartIndex, readCount - findStr.Length);
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// 尝试从 <paramref name="input"/> 中, 从 <paramref name="startIndex"/> 位置开始, 寻找 <paramref name="findStr"/> 字符串, 如果未寻找到, 则返回直到中止处的字符串, 寻找的总字符数不超过 <paramref name="maxReadLength"/>
+        /// </summary>
+        /// <remarks>
+        /// 与 <see cref="TryReadUntil(string, string, int, int?, out string?)"/> 的主要差异在于, 如果 <paramref name="input"/> 不包含 <paramref name="findStr"/>, 则将返回范围内的所有字符
+        /// </remarks>
+        /// <param name="input"></param>
+        /// <param name="findStr">如果是空字符串, 且 <paramref name="input"/> 不是 <see langword="null"/>, 均会返回空字符串</param>
+        /// <param name="startIndex">如果小于 0, 将从 0 开始查找, 同时会缩减 <paramref name="maxReadLength"/></param>
+        /// <param name="maxReadLength">如果为 <see langword="null"/>, 则不作限制</param>
+        /// <param name="output"></param>
+        /// <returns></returns>
+        public static bool TryReadUntilOrEnd(string input, string findStr, int startIndex, int? maxReadLength, [NotNullWhen(true)] out string? output)
+        {
+            output = null;
+            if (input == null) return false;
+            if (input == string.Empty)
+            {
+                output = string.Empty;
+                return true;
+            }
+            findStr ??= string.Empty;
+            if (findStr == string.Empty)
+            {
+                output = string.Empty;
+                return true;
+            }
+
+            bool needReturnToEnd = false;
+
+            int useStartIndex = startIndex < 0 ? 0 : startIndex;
+            if ((input.Length - useStartIndex) < findStr.Length) needReturnToEnd = true; 
+            int _maxReadLength;
+            if (maxReadLength != null)
+            {
+                if (startIndex < 0)
+                {
+                    maxReadLength += startIndex;
+                }
+                if (useStartIndex + maxReadLength > input.Length)
+                {
+                    _maxReadLength = input.Length - useStartIndex;
+                }
+                else
+                {
+                    _maxReadLength = maxReadLength.Value;
+                }
+                if (findStr.Length > _maxReadLength)
+                {
+                    needReturnToEnd = true;
+                }
+            }
+            else
+            {
+                _maxReadLength = input.Length - useStartIndex;
+            }
+
+            if (needReturnToEnd)
+            {
+                // 查找范围不可能找到指定字符串
+                if (_maxReadLength <= 0)
+                {
+                    output = string.Empty;
+                }
+                else
+                {
+                    output = input.Substring(useStartIndex, _maxReadLength);
+                }
+                return true;
+            }
+
+            // 一边读取一边判断
+            char[] buffer = new char[findStr.Length];
+            int writeIndex = 0; // 需要写入时, 当前需要写入的位置
+            int readIndex = useStartIndex;
+            for (int readCount = 0; readCount < _maxReadLength;)
+            {
+                buffer[writeIndex] = input[readIndex];
+
+                writeIndex++;
+                if (writeIndex >= buffer.Length)
+                {
+                    writeIndex = 0;
+                }
+
+                readIndex++;
+                readCount++;
+
+                // 判断
+                if (readCount >= findStr.Length)
+                {
+                    bool found = true;
+                    for (int checkIndex = 0; checkIndex < findStr.Length; checkIndex++)
+                    {
+                        if (findStr[checkIndex] != buffer[(writeIndex + checkIndex) % findStr.Length])
+                        {
+                            found = false;
+                            break;
+                        }
+                    }
+
+                    if (found)
+                    {
+                        output = input.Substring(useStartIndex, readCount - findStr.Length);
+                        return true;
+                    }
+                }
+            }
+
+            // 未找到匹配的字符串时
+            output = input.Substring(useStartIndex, _maxReadLength);
+            return true;
+        }
+
+
+        /// <summary>
+        /// 尝试从 <paramref name="input"/> 中, 从 <paramref name="startIndex"/> 位置开始, 寻找 <paramref name="findStrs"/> 中任一字符串, 如果未寻找到, 则返回直到中止处的字符串, 寻找的总字符数不超过 <paramref name="maxReadLength"/>
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="findStrs">需要寻找的字符串, 寻找到其中任意一个值时即停止, 没有优先顺序的差异 (因为只影响截取的位置). 如果是空的或其中任一值为空, 且 <paramref name="input"/> 不是 <see langword="null"/>, 均会返回空字符串</param>
+        /// <param name="startIndex">如果小于 0, 将从 0 开始查找, 同时会缩减 <paramref name="maxReadLength"/></param>
+        /// <param name="maxReadLength">如果为 <see langword="null"/>, 则不作限制</param>
+        /// <param name="foundStr">如果为 <see langword="null"/>, 说明没有找到匹配项, 反之则是找到的在 <paramref name="findStrs"/> 内的匹配项</param>
+        /// <param name="output"></param>
+        /// <returns></returns>
+        public static bool TryReadUntilOrEnd(string input, string[] findStrs, int startIndex, int? maxReadLength, out string? foundStr, [NotNullWhen(true)] out string? output)
+        {
+            output = null;
+            foundStr = null;
+            if (input == null) return false;
+            if (input == string.Empty)
+            {
+                output = string.Empty;
+                foundStr = null;
+                return true;
+            }
+            if (findStrs == null || findStrs.Length == 0 || findStrs.Any(string.IsNullOrEmpty))
+            {
+                output = string.Empty;
+                foundStr = string.Empty;
+                return true;
+            }
+
+            // 查询字符串数组非空, 且均为非空字符串的情况: 
+
+            int minFindLength = findStrs.Min(str => str.Length);
+            int maxFindLength = findStrs.Max(str => str.Length);
+
+            bool needReturnToEnd = false;
+
+            int useStartIndex = startIndex < 0 ? 0 : startIndex;
+            if ((input.Length - useStartIndex) < minFindLength) needReturnToEnd = true;
+            int _maxReadLength;
+            if (maxReadLength != null)
+            {
+                if (startIndex < 0)
+                {
+                    maxReadLength += startIndex;
+                }
+                if (useStartIndex + maxReadLength > input.Length)
+                {
+                    _maxReadLength = input.Length - useStartIndex;
+                }
+                else
+                {
+                    _maxReadLength = maxReadLength.Value;
+                }
+                if (minFindLength > _maxReadLength)
+                {
+                    needReturnToEnd = true;
+                }
+            }
+            else
+            {
+                _maxReadLength = input.Length - useStartIndex;
+            }
+
+            if (needReturnToEnd)
+            {
+                // 查找范围不可能找到指定字符串
+                if (_maxReadLength <= 0)
+                {
+                    output = string.Empty;
+                }
+                else
+                {
+                    output = input.Substring(useStartIndex, _maxReadLength);
+                }
+                foundStr = null;
+                return true;
+            }
+
+            // 一边读取一边判断
+            char[] buffer = new char[maxFindLength];
+            int writeIndex = 0; // 需要写入时, 当前需要写入的位置
+            int readIndex = useStartIndex;
+            for (int readCount = 0; readCount < _maxReadLength;)
+            {
+                buffer[writeIndex] = input[readIndex];
+
+                writeIndex++;
+                if (writeIndex >= buffer.Length)
+                {
+                    writeIndex = 0;
+                }
+
+                readIndex++;
+                readCount++;
+
+                // 判断
+                if (readCount >= minFindLength)
+                {
+                    bool found = false;
+                    string findStr = string.Empty;
+                    for (int findIndex = 0; findIndex < findStrs.Length; findIndex++)
+                    {
+                        findStr = findStrs[findIndex];
+                        if (readCount < findStr.Length) continue;
+                        int checkOffset = maxFindLength - findStr.Length;
+                        bool subFound = true;
+                        for (int checkIndex = 0; checkIndex < findStr.Length; checkIndex++)
+                        {
+                            if (findStr[checkIndex] != buffer[(writeIndex + checkOffset + checkIndex) % maxFindLength])
+                            {
+                                subFound = false;
+                                break;
+                            }
+                        }
+                        if (subFound)
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    if (found)
+                    {
+                        output = input.Substring(useStartIndex, readCount - findStr.Length);
+                        foundStr = findStr;
+                        return true;
+                    }
+                }
+            }
+
+            // 未找到匹配的字符串时
+            output = input.Substring(useStartIndex, _maxReadLength);
+            foundStr = null;
+            return true;
+        }
     }
 }
