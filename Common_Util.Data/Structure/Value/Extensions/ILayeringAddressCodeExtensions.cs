@@ -457,10 +457,7 @@ namespace Common_Util.Data.Structure.Value.Extensions
             SimpleMultiTree<TNodeValue> output = new();
 
             rootValue ??= _createRange<TLayer>();
-            output.Root = new SimpleMultiTreeNode<TNodeValue>(createRangeFunc([]))
-            {
-                Childrens = [],
-            };
+            output.Root = new SimpleMultiTreeNode<TNodeValue>(createRangeFunc([]));
 
             // 插入节点到树中
 
@@ -472,8 +469,7 @@ namespace Common_Util.Data.Structure.Value.Extensions
                 (arg) => new SimpleMultiTreeNode<TNodeValue>(arg.code),
                 (arg) =>
                 {
-                    arg.parent.Childrens ??= [];
-                    arg.parent.Childrens.Add(arg.node);
+                    arg.parent.AddNode(arg.node);
                 },
                 comparer);
 

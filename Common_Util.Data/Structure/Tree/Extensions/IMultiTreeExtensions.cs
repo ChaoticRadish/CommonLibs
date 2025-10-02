@@ -132,6 +132,7 @@ namespace Common_Util.Data.Structure.Tree.Extensions
                 NodeValue = node.NodeValue,
             };
             nodeStack.Push((node, node.Childrens.GetEnumerator(), nextIndex, nullNodeIndex));
+            nextIndex++;
 
             // bool push = true;
 
@@ -163,6 +164,7 @@ namespace Common_Util.Data.Structure.Tree.Extensions
                         NodeValue = nextNode.NodeValue,
                     };
                     nodeStack.Push((nextNode, nextNode.Childrens.GetEnumerator(), nextIndex, nodeIndex));
+                    nextIndex++;
                     // push = true;
                 }
                 else
@@ -313,11 +315,7 @@ namespace Common_Util.Data.Structure.Tree.Extensions
                     if (item.ParentIndex >= 0)
                     {
                         var parentNode = newNodes[item.ParentIndex];
-                        if (parentNode.Childrens == null)
-                        {
-                            parentNode.Childrens = [];
-                        }
-                        parentNode.Childrens.Add(newNode);
+                        parentNode.AddNode(newNode);
                     }
                     newNodes.Add(newNode);
                 }
@@ -430,11 +428,7 @@ namespace Common_Util.Data.Structure.Tree.Extensions
                 if (item.ParentIndex >= 0)
                 {
                     var parentNode = newNodes[item.ParentIndex];
-                    if (parentNode.Childrens == null)
-                    {
-                        parentNode.Childrens = [];
-                    }
-                    parentNode.Childrens.Add(newNode);
+                    parentNode.AddNode(newNode);
                 }
                 newNodes.Add(newNode);
             }
