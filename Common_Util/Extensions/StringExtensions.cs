@@ -247,5 +247,39 @@ namespace Common_Util.Extensions
             return value.ToString(_format_fixed_point);
         }
         #endregion
+
+        #region 包含 C# 字符串值的解析, 实现上是直接调用了 StringAnalysis 的相关方法, 详细见该类型
+
+        /// <summary>
+        /// 将字符串分割成子字符串，忽略 C# 字符串值。
+        /// </summary>
+        /// <remarks>
+        /// 支持使用反斜杠 \ 来转义引号字符。
+        /// </remarks>
+        /// <param name="input">要分割的字符串。</param>
+        /// <param name="delimiter">用作分隔符的字符。</param>
+        public static IEnumerable<string> SplitIgnoreStringValue(this string input, char delimiter, 
+            StringSplitOptions splitOptions = StringSplitOptions.None)
+            => Common_Util.String.StringAnalysis.SplitIgnoreStringValue(input, delimiter, splitOptions);
+
+        /// <summary>
+        /// 报告指定字符在此字符串中的第一个匹配项的索引，忽略 C# 字符串值。
+        /// </summary>
+        /// <param name="input">要搜索的字符串。</param>
+        /// <param name="value">要查找的字符。</param>
+        /// <returns>如果找到该字符，则为 value 的从零开始的索引位置；如果未找到，则为 -1。</returns>
+        public static int IndexOfIgnoreStringValue(this string input, char value)
+            => Common_Util.String.StringAnalysis.IndexOfIgnoreStringValue(input, value);
+
+
+        /// <summary>
+        /// 报告指定字符在此字符串中的最后一个匹配项的索引，忽略 C# 字符串值。
+        /// </summary>
+        /// <param name="input">要搜索的字符串。</param>
+        /// <param name="value">要查找的字符。</param>
+        /// <returns>如果找到该字符，则为 value 的从零开始的索引位置；如果未找到，则为 -1。</returns>
+        public static int LastIndexOfIgnoreStringValue(this string input, char value)
+            => Common_Util.String.StringAnalysis.LastIndexOfIgnoreStringValue(input, value);
+        #endregion
     }
 }
