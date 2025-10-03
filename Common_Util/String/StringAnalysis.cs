@@ -656,5 +656,194 @@ namespace Common_Util.String
             foundStr = null;
             return true;
         }
+
+
+        /* 
+         * 解析过程中会将字符串值作为一个整体略过的解析方式
+         * 例如: "mytest=\"plan=123\"" 用这里的分割方法分割后会得到: ["mytest", "\"plan=123\""], 而不是 ["mytest", "\"plan", "123\""]
+         */
+        #region 包含 C# 字符串值的解析
+
+        /// <summary>
+        /// 将字符串分割成子字符串，忽略 C# 字符串值。
+        /// </summary>
+        /// <remarks>
+        /// 支持使用反斜杠 \ 来转义引号字符。
+        /// </remarks>
+        /// <param name="input">要分割的字符串。</param>
+        /// <param name="delimiter">用作分隔符的字符。</param>
+        public static IEnumerable<string> SplitIgnoreStringValue(string input, char delimiter, StringSplitOptions splitOptions = StringSplitOptions.None)
+        {
+            if (string.IsNullOrEmpty(input))
+            {
+                yield break;
+            }
+            static bool handleReturnValue(StringBuilder sb, StringSplitOptions splitOptions, out string value)
+            {
+                if (sb.Length == 0)
+                {
+                    value = string.Empty;
+                    if ((splitOptions & StringSplitOptions.RemoveEmptyEntries) > 0)
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    value = sb.ToString();
+                    if ((splitOptions & StringSplitOptions.TrimEntries) > 0)
+                    {
+                        value = value.Trim();
+                        if (value.Length == 0)
+                        {
+                            if ((splitOptions & StringSplitOptions.RemoveEmptyEntries) > 0)
+                            {
+                                return false;
+                            }
+                        }
+                    }
+                }
+                return true;
+            }
+
+            var currentSegment = new StringBuilder();
+            bool inQuotes = false;
+            const char quoteChar = '"';
+            string returnValue;
+            for (int i = 0; i < input.Length; i++)
+            {
+                char c = input[i];
+
+                // 处理转义字符
+                if (c == '\\')
+                {
+                    // 如果是转义符，检查下一个字符是否存在
+                    if (i + 1 < input.Length)
+                    {
+                        // 将转义符和下一个字符都添加到当前段
+                        currentSegment.Append(input[i]);
+                        currentSegment.Append(input[i + 1]);
+                        i++; // 跳过下一个字符
+                    }
+                    continue;
+                }
+
+                // 处理引号
+                if (c == quoteChar)
+                {
+                    inQuotes = !inQuotes;
+                    currentSegment.Append(c); // 保留引号在结果中
+                    continue;
+                }
+
+                // 处理分隔符
+                if (c == delimiter && !inQuotes)
+                {
+                    if (handleReturnValue(currentSegment, splitOptions, out returnValue))
+                    {
+                        yield return returnValue;
+                    }
+                    currentSegment.Clear();
+                    continue;
+                }
+
+                // 普通字符，直接添加
+                currentSegment.Append(c);
+            }
+
+            // 返回最后一个段
+            if (handleReturnValue(currentSegment, splitOptions, out returnValue))
+            {
+                yield return returnValue;
+            }
+        }
+
+        /// <summary>
+        /// 报告指定字符在此字符串中的第一个匹配项的索引，忽略 C# 字符串值。
+        /// </summary>
+        /// <param name="input">要搜索的字符串。</param>
+        /// <param name="value">要查找的字符。</param>
+        /// <returns>如果找到该字符，则为 value 的从零开始的索引位置；如果未找到，则为 -1。</returns>
+        public static int IndexOfIgnoreStringValue(string input, char value)
+        {
+            if (string.IsNullOrEmpty(input))
+            {
+                return -1;
+            }
+
+            const char quoteChar = '"';
+            bool inQuotes = false;
+            for (int i = 0; i < input.Length; i++)
+            {
+                char c = input[i];
+
+                // 处理转义字符
+                if (c == '\\')
+                {
+                    i++; // 跳过下一个字符
+                    continue;
+                }
+
+                // 处理引号
+                if (c == quoteChar)
+                {
+                    inQuotes = !inQuotes;
+                    continue;
+                }
+
+                // 查找目标字符
+                if (c == value && !inQuotes)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        /// <summary>
+        /// 报告指定字符在此字符串中的最后一个匹配项的索引，忽略 C# 字符串值。
+        /// </summary>
+        /// <param name="input">要搜索的字符串。</param>
+        /// <param name="value">要查找的字符。</param>
+        /// <returns>如果找到该字符，则为 value 的从零开始的索引位置；如果未找到，则为 -1。</returns>
+        public static int LastIndexOfIgnoreStringValue(string input, char value)
+        {
+            if (string.IsNullOrEmpty(input))
+            {
+                return -1;
+            }
+
+            const char quoteChar = '"';
+            bool inQuotes = false;
+            // 从后往前遍历
+            for (int i = input.Length - 1; i >= 0; i--)
+            {
+                char c = input[i];
+
+                // 注意：从后往前遍历时，转义逻辑需要调整
+                // 如果当前字符是引号，并且它不是被转义的，才翻转状态
+                if (c == quoteChar)
+                {
+                    // 检查它是否被转义 (即前面是否是 \)
+                    if (i == 0 || input[i - 1] != '\\')
+                    {
+                        inQuotes = !inQuotes;
+                    }
+                    continue;
+                }
+
+                // 查找目标字符
+                if (c == value && !inQuotes)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+
+        #endregion
     }
 }
