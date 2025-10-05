@@ -707,48 +707,34 @@ namespace Common_Util.String
             }
 
             var currentSegment = new StringBuilder();
-            bool inQuotes = false;
-            const char quoteChar = '"';
+
+            var flagMap = IgnoreStringValueFlagMap(input);
+
             string returnValue;
             for (int i = 0; i < input.Length; i++)
             {
                 char c = input[i];
-
-                // 处理转义字符
-                if (c == '\\')
+                if (!flagMap[i])
                 {
-                    // 如果是转义符，检查下一个字符是否存在
-                    if (i + 1 < input.Length)
+                    currentSegment.Append(c);
+                }
+                else
+                {
+                    if (c == delimiter)
                     {
-                        // 将转义符和下一个字符都添加到当前段
-                        currentSegment.Append(input[i]);
-                        currentSegment.Append(input[i + 1]);
-                        i++; // 跳过下一个字符
+                        if (handleReturnValue(currentSegment, splitOptions, out returnValue))
+                        {
+                            yield return returnValue;
+                        }
+                        currentSegment.Clear();
+                        continue;
                     }
-                    continue;
-                }
-
-                // 处理引号
-                if (c == quoteChar)
-                {
-                    inQuotes = !inQuotes;
-                    currentSegment.Append(c); // 保留引号在结果中
-                    continue;
-                }
-
-                // 处理分隔符
-                if (c == delimiter && !inQuotes)
-                {
-                    if (handleReturnValue(currentSegment, splitOptions, out returnValue))
+                    else
                     {
-                        yield return returnValue;
+                        currentSegment.Append(c);
                     }
-                    currentSegment.Clear();
-                    continue;
                 }
 
-                // 普通字符，直接添加
-                currentSegment.Append(c);
             }
 
             // 返回最后一个段
@@ -771,28 +757,16 @@ namespace Common_Util.String
                 return -1;
             }
 
-            const char quoteChar = '"';
-            bool inQuotes = false;
+            // 判定范围的标记表, true 为需判断的字符
+            var flagMap = IgnoreStringValueFlagMap(input);
+
+            // 第二次遍历查找字符
             for (int i = 0; i < input.Length; i++)
             {
+                if (!flagMap[i]) continue;
                 char c = input[i];
 
-                // 处理转义字符
-                if (c == '\\')
-                {
-                    i++; // 跳过下一个字符
-                    continue;
-                }
-
-                // 处理引号
-                if (c == quoteChar)
-                {
-                    inQuotes = !inQuotes;
-                    continue;
-                }
-
-                // 查找目标字符
-                if (c == value && !inQuotes)
+                if (c == value)
                 {
                     return i;
                 }
@@ -814,27 +788,17 @@ namespace Common_Util.String
                 return -1;
             }
 
-            const char quoteChar = '"';
-            bool inQuotes = false;
+            // 判定范围的标记表, true 为需判断的字符
+            var flagMap = IgnoreStringValueFlagMap(input);
+
+            // 第二次遍历查找字符
             // 从后往前遍历
             for (int i = input.Length - 1; i >= 0; i--)
             {
+                if (!flagMap[i]) continue;
                 char c = input[i];
 
-                // 注意：从后往前遍历时，转义逻辑需要调整
-                // 如果当前字符是引号，并且它不是被转义的，才翻转状态
-                if (c == quoteChar)
-                {
-                    // 检查它是否被转义 (即前面是否是 \)
-                    if (i == 0 || input[i - 1] != '\\')
-                    {
-                        inQuotes = !inQuotes;
-                    }
-                    continue;
-                }
-
-                // 查找目标字符
-                if (c == value && !inQuotes)
+                if (c == value)
                 {
                     return i;
                 }
@@ -842,7 +806,45 @@ namespace Common_Util.String
 
             return -1;
         }
+        private static bool[] IgnoreStringValueFlagMap(string input)
+        {
+            bool[] flagMap = new bool[input.Length];
 
+            const char quoteChar = '"';
+            const char escapeChar = '\\';
+            bool inQuotes = false;
+            for (int i = 0; i < input.Length; i++)
+            {
+                char c = input[i];
+                if (inQuotes)
+                {
+                    switch (c)
+                    {
+                        case quoteChar:
+                            inQuotes = false;
+                            break;
+                        case escapeChar:
+                            i++;
+                            break;
+                    }
+                }
+                else
+                {
+                    switch (c)
+                    {
+                        case quoteChar:
+                            inQuotes = true;
+                            break;
+                        default:
+                            flagMap[i] = true;
+                            break;
+                    }
+                }
+            }
+            if (inQuotes)
+                throw new InvalidOperationException("字符串内的双引号未正确闭合! ");
+            return flagMap;
+        }
 
         #endregion
     }
