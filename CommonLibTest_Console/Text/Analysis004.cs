@@ -15,6 +15,7 @@ namespace CommonLibTest_Console.Text
             string testString2 = "key1=value1,key2=\"value,with,commas\",key3=value3";
             string testString3 = "path=\"C:\\Program Files\\App\\config.ini\",arg1=\"name=\\\"My App\\\"\",test=\"Hello, World! \"";
             string testString4 = "111,222,333,   , , 4 4 ,";
+            string testString5 = "my\\test=\"plan=123\", my\\tes!";
 
             WriteLine("--- Testing SplitIgnoreStringValue ---");
             WriteLine($"Original: '{testString1}'");
@@ -58,6 +59,22 @@ namespace CommonLibTest_Console.Text
             // - Part: 'path="C:\Program Files\App\config.ini"'
             // - Part: 'arg1="name=\"My App\""'
             // - Part: 'test="Hello, World! "'
+
+            WriteLine($"\nOriginal: '{testString5}'");
+            foreach (var part in testString5.SplitIgnoreStringValue('='))
+            {
+                WriteLine($"- Part: '{part}'");
+            }
+            // - Part: 'my\test='
+            // - Part: '"plan=123", my\tes!'
+
+            WriteLine($" '{testString5}' 中的首个等于号: {testString5.IndexOfIgnoreStringValue('=')}"); // 预期: 7
+            WriteLine($" '{testString5}' 中的最后一个等于号: {testString5.LastIndexOfIgnoreStringValue('=')}"); // 预期: 7
+
+
+            WriteLine($" '{testString5}' 中的首个 't' : {testString5.IndexOfIgnoreStringValue('t')}"); // 预期: 3
+            WriteLine($" '{testString5}' 中的最后一个 't' : {testString5.LastIndexOfIgnoreStringValue('t')}"); // 预期: 23
+
 
             WriteLine("\n--- Testing with SplitOptions ---");
             WriteLine("StringSplitOptions.None");
