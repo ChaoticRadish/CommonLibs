@@ -226,28 +226,6 @@ namespace Common_Util.Extensions
         }
         #endregion
 
-        #region 数值
-        private static readonly string _format_fixed_point = "0." + "#".Repeat(339);
-        /// <summary>
-        /// 使用非科学计数法将一个 float 转换为字符串
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public static string NoScientificNotationString(this float value)
-        {
-            return value.ToString(_format_fixed_point);
-        }
-        /// <summary>
-        /// 使用非科学计数法将一个 double 转换为字符串
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public static string NoScientificNotationString(this double value)
-        {
-            return value.ToString(_format_fixed_point);
-        }
-        #endregion
-
         #region 包含 C# 字符串值的解析, 实现上是直接调用了 StringAnalysis 的相关方法, 详细见该类型
 
         /// <summary>
