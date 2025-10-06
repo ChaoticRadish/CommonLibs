@@ -1,4 +1,5 @@
 ﻿using Common_Util.Extensions;
+using Common_Util.Extensions.NumberParsing;
 using Common_Util.Interfaces.UI;
 using Common_Wpf.Extensions;
 using Common_Wpf.Interfaces;
