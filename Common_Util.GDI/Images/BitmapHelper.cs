@@ -239,7 +239,7 @@ namespace Common_Util.GDI.Images
             return Scale(image, finalWidth, finalHeight);
         }
         /// <summary>
-        /// 将图片缩放到较短边都不大于指定大小
+        /// 将图片缩放到较短边都不大于指定大小, 始终返回一个新实例
         /// </summary>
         /// <param name="image"></param>
         /// <param name="size"></param>
@@ -250,6 +250,33 @@ namespace Common_Util.GDI.Images
             if (image.Width <= size || image.Height <= size)
             {// 有一边比输入尺寸短, 说明较短边是小于指定尺寸的
                 return new Bitmap(image);
+            }
+            int finalWidth; // 最终宽度
+            int finalHeight;    // 最终高度
+            if (image.Width < image.Height)
+            {// 宽度较短
+                finalWidth = size;
+                finalHeight = (int)((float)size / image.Width * image.Height);
+            }
+            else
+            {// 高度较短
+                finalHeight = size;
+                finalWidth = (int)((float)size / image.Height * image.Width);
+            }
+            return Scale(image, finalWidth, finalHeight);
+        }
+        /// <summary>
+        /// 检查图片较短边是否小于 <paramref name="size"/>, 如果是, 则将 <paramref name="image"/> 直接返回, 否则缩放得到一个新实例后返回
+        /// </summary>
+        /// <param name="image"></param>
+        /// <param name="size"></param>
+        /// <returns></returns>
+        public static Image CheckOrScaleShorterSmallThen(Image image, int size)
+        {
+            size = size > 0 ? size : 1;
+            if (image.Width <= size || image.Height <= size)
+            {// 有一边比输入尺寸短, 说明较短边是小于指定尺寸的
+                return image;
             }
             int finalWidth; // 最终宽度
             int finalHeight;    // 最终高度
