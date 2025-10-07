@@ -124,7 +124,8 @@ namespace Common_Util.Extensions
         /// <param name="str"></param>
         /// <param name="defaultValue"></param>
         /// <returns></returns>
-        public static string WhenEmptyDefault(this string? str, string defaultValue)
+        [return: NotNullIfNotNull(nameof(defaultValue))]
+        public static string? WhenEmptyDefault(this string? str, string? defaultValue)
         {
             if (string.IsNullOrEmpty(str))
             {
