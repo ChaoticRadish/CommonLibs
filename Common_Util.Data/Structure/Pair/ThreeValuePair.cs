@@ -33,10 +33,17 @@ namespace Common_Util.Data.Structure.Pair
         public TValue3 Value3 { get; set; }
         #endregion
 
-        #region 转换
-        public KeyValuePair<TValue1, TValue2> GetValue1N2()
+        #region 显式转换
+        public readonly KeyValuePair<TValue1, TValue2> GetValue1N2()
         {
             return new KeyValuePair<TValue1, TValue2>(Value1, Value2);
+        }
+        #endregion
+
+        #region 隐式转换
+        public static implicit operator ThreeValueTuples<TValue1, TValue2, TValue3>((TValue1, TValue2, TValue3) obj)
+        {
+            return new(obj.Item1, obj.Item2, obj.Item3);
         }
         #endregion
 
@@ -49,6 +56,12 @@ namespace Common_Util.Data.Structure.Pair
                     && EqualityComparer<TValue2>.Default.Equals(Value2, valueTuples.Value2)
                     && EqualityComparer<TValue3>.Default.Equals(Value3, valueTuples.Value3);
             }
+            else if (obj is System.ValueTuple<TValue1, TValue2, TValue3>  sysValueTuples)
+            {
+                return EqualityComparer<TValue1>.Default.Equals(Value1, sysValueTuples.Item1)
+                    && EqualityComparer<TValue2>.Default.Equals(Value2, sysValueTuples.Item2)
+                    && EqualityComparer<TValue3>.Default.Equals(Value3, sysValueTuples.Item3);
+            }
             return base.Equals(obj);
         }
 
@@ -56,6 +69,19 @@ namespace Common_Util.Data.Structure.Pair
         {
             return $"{Value1?.GetHashCode() ?? 0}-{Value2?.GetHashCode() ?? 0}-{Value3?.GetHashCode() ?? 0}".GetHashCode();
         }
+
+        public static bool operator ==(ThreeValueTuples<TValue1, TValue2, TValue3> a, System.ValueTuple<TValue1, TValue2, TValue3> sysValueTuples)
+        {
+            return EqualityComparer<TValue1>.Default.Equals(a.Value1, sysValueTuples.Item1)
+                && EqualityComparer<TValue2>.Default.Equals(a.Value2, sysValueTuples.Item2)
+                && EqualityComparer<TValue3>.Default.Equals(a.Value3, sysValueTuples.Item3);
+        }
+        public static bool operator !=(ThreeValueTuples<TValue1, TValue2, TValue3> a, System.ValueTuple<TValue1, TValue2, TValue3> sysValueTuples)
+        {
+            return !(a == sysValueTuples);
+        }
+
+
         #endregion
     }
 }

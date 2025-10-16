@@ -847,5 +847,29 @@ namespace Common_Util.String
         }
 
         #endregion
+
+
+        #region 键值对
+        /// <summary>
+        /// 按顺序尝试使用 <paramref name="splitChars"/> 中的字符去拆分 <paramref name="str"/> 为键值对
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="splitChars"></param>
+        /// <returns></returns>
+        public static KeyValuePair<string, string>? ReadAsKeyValuePair(string str, string splitChars = ":：-")
+        {
+            int index = -1;
+            foreach (char c in splitChars)
+            {
+                index = str.IndexOf(c);
+                if (index >= 0) break;
+            }
+
+            if (index < 0) return null;
+            string key = str.Substring(0, index);
+            string value = str.Substring(index + 1);
+            return new KeyValuePair<string, string>(key.Trim(), value.Trim());
+        }
+        #endregion
     }
 }
