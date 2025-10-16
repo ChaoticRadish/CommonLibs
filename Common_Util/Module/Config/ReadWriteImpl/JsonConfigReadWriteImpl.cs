@@ -269,7 +269,7 @@ namespace Common_Util.Module.Config
                     case JsonValueKind.Number:
                         if (type.IsEnum)
                         {
-                            string? str = jElement.GetString();
+                            string? str = jElement.ToString();
                             return str == null ? null : EnumHelper.Convert(type, str);
                         }
                         else

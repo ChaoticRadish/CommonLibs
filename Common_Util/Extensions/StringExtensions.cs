@@ -124,7 +124,8 @@ namespace Common_Util.Extensions
         /// <param name="str"></param>
         /// <param name="defaultValue"></param>
         /// <returns></returns>
-        public static string WhenEmptyDefault(this string? str, string defaultValue)
+        [return: NotNullIfNotNull(nameof(defaultValue))]
+        public static string? WhenEmptyDefault(this string? str, string? defaultValue)
         {
             if (string.IsNullOrEmpty(str))
             {
@@ -223,28 +224,6 @@ namespace Common_Util.Extensions
         {
             if (ip == null) return false;
             return IPv6Regex.Match(ip).Success;
-        }
-        #endregion
-
-        #region 数值
-        private static readonly string _format_fixed_point = "0." + "#".Repeat(339);
-        /// <summary>
-        /// 使用非科学计数法将一个 float 转换为字符串
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public static string NoScientificNotationString(this float value)
-        {
-            return value.ToString(_format_fixed_point);
-        }
-        /// <summary>
-        /// 使用非科学计数法将一个 double 转换为字符串
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public static string NoScientificNotationString(this double value)
-        {
-            return value.ToString(_format_fixed_point);
         }
         #endregion
 

@@ -30,7 +30,7 @@ namespace Common_Util
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
-        public static bool IsTrueString(string input)
+        public static bool IsTrueString(string? input)
         {
             if (string.IsNullOrEmpty(input)) return false;
             if (TrueStrings.Contains(input.Trim().ToLower()))

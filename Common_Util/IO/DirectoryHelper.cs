@@ -101,5 +101,35 @@ namespace Common_Util.IO
                 }
             }
         }
+
+
+        /// <summary>
+        /// 清理最后写入时间在 <paramref name="days"/> 天前的文件 (仅清理输入目录下的文件, 不会清理子目录中的文件)
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="days"></param>
+        public static void ClearOld(string path, double days)
+        {
+            ClearOld(path, DateTime.Now - TimeSpan.FromDays(days));
+        }
+        /// <summary>
+        /// 清理最后写入时间小于输入日期的文件 (仅清理输入目录下的文件, 不会清理子目录中的文件)
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="date"></param>
+        public static void ClearOld(string path, DateTime date)
+        {
+            DirectoryInfo info = new DirectoryInfo(path);
+            if (info.Exists)
+            {
+                foreach (FileInfo file in info.GetFiles())
+                {
+                    if (file.LastWriteTime <= date)
+                    {
+                        file.Delete();
+                    }
+                }
+            }
+        }
     }
 }
