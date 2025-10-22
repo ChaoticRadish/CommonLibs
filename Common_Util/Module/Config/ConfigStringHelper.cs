@@ -33,6 +33,10 @@ namespace Common_Util.Module.Config
             {
                 return _type.FullName;
             }
+            if (obj is Guid guid)
+            {
+                return guid.ToString();
+            }
             if (typeof(IEnumerable<string>).IsAssignableFrom(obj.GetType()))
             {
                 return StringHelper.Concat(((IEnumerable<string>)obj).ToList(), "; ", false);
@@ -97,10 +101,30 @@ namespace Common_Util.Module.Config
         /// </summary>
         /// <param name="str"></param>
         /// <param name="targetType">目标类型</param>
+        /// <param name="options">可选参数</param>
         /// <returns></returns>
-        public static object? ConfigValue2Obj(string? str, Type targetType)
+        public static object? ConfigValue2Obj(string? str, Type targetType, ConfigValue2ObjOptions? options = null)
         {
+            options ??= ConfigValue2ObjOptions.Default;
+            if (options.Value.EmptyValueConvertWay.HasFlag(EmptyValueConvertWays.Empty2NullResult))
+            {
+                if (string.IsNullOrEmpty(str)) return null;
+            }
+            if (options.Value.EmptyValueConvertWay.HasFlag(EmptyValueConvertWays.WhiteSpace2NullResult))
+            {
+                if (string.IsNullOrWhiteSpace(str)) return null;
+            }
+
+
+
             if (str == null) return null;
+
+            Type? nullableTarget = targetType.NullableTarget();
+            bool isNullable = nullableTarget != null;
+            if (isNullable)
+            {
+                targetType = nullableTarget!;
+            }
 
             if (targetType == typeof(string))
             {
@@ -108,63 +132,84 @@ namespace Common_Util.Module.Config
             }
             else if (targetType == typeof(bool))
             {
-                return ValueHelper.IsTrueString(str);
+                if (ValueHelper.TryLooselyParse(str, out var val)) return val;
+                else goto ReturnDefault;
             }
             else if (targetType == typeof(int))
             {
-                return int.TryParse(str, out var val) ? val : 0;
+                if (int.TryParse(str, out var val)) return val;
+                else goto ReturnDefault;
             }
             else if (targetType == typeof(uint))
             {
-                return uint.TryParse(str, out var val) ? val : 0;
+                if (uint.TryParse(str, out var val)) return val;
+                else goto ReturnDefault;
             }
             else if (targetType == typeof(long))
             {
-                return long.TryParse(str, out var val) ? val : 0;
+                if (long.TryParse(str, out var val)) return val;
+                else goto ReturnDefault;
             }
             else if (targetType == typeof(ulong))
             {
-                return ulong.TryParse(str, out var val) ? val : 0;
+                if (ulong.TryParse(str, out var val)) return val;
+                else goto ReturnDefault;
             }
             else if (targetType == typeof(float))
             {
-                return float.TryParse(str, out var val) ? val : 0;
+                if (float.TryParse(str, out var val)) return val;
+                else goto ReturnDefault;
             }
             else if (targetType == typeof(double))
             {
-                return double.TryParse(str, out var val) ? val : 0;
+                if (double.TryParse(str, out var val)) return val;
+                else goto ReturnDefault;
             }
             else if (targetType == typeof(byte))
             {
-                return byte.TryParse(str, out var val) ? val : 0;
+                if (byte.TryParse(str, out var val)) return val;
+                else goto ReturnDefault;
             }
             else if (targetType == typeof(char))
             {
-                return char.TryParse(str, out var val) ? val : 0;
+                if (char.TryParse(str, out var val)) return val;
+                else goto ReturnDefault;
             }
             else if (targetType == typeof(short))
             {
-                return short.TryParse(str, out var val) ? val : 0;
+                if (short.TryParse(str, out var val)) return val;
+                else goto ReturnDefault;
             }
             else if (targetType == typeof(ushort))
             {
-                return ushort.TryParse(str, out var val) ? val : 0;
+                if (ushort.TryParse(str, out var val)) return val;
+                else goto ReturnDefault;
             }
             else if (targetType == typeof(decimal))
             {
-                return decimal.TryParse(str, out var val) ? val : 0;
+                if (decimal.TryParse(str, out var val)) return val;
+                else goto ReturnDefault;
             }
             else if (targetType == typeof(DateTime))
             {
-                return DateTime.TryParse(str, out var val) ? val : default;
+                if (DateTime.TryParse(str, out var val)) return val;
+                else goto ReturnDefault;
+            }
+            else if (targetType == typeof(Guid))
+            {
+                if (Guid.TryParse(str, out var val)) return val;
+                else goto ReturnDefault;
             }
             else if (targetType.IsAssignableTo(typeof(IStringConveying)))
             {
-                return StringConveyingHelper.FromString(targetType, str);
+                if (StringConveyingHelper.TryFromString(targetType, str, out var val)) return val;
+                else goto ReturnDefault;
             }
             else if (targetType.IsEnum)
             {
-                return EnumHelper.Convert(targetType, str);
+                var val = EnumHelper.Convert(targetType, str);
+                if (val != null) return val;
+                else goto ReturnDefault;
             }
             else if (targetType == typeof(Type))
             {
@@ -178,12 +223,13 @@ namespace Common_Util.Module.Config
                     }
                     return false;
                 });
-                return output;
+                if (output != null) return output;
+                else goto ReturnDefault;
             }
             else if (targetType.IsArray)
             {
                 var elementType = targetType.GetElementType();
-                if (elementType == null) return null;
+                if (elementType == null) goto ReturnDefault;
                 string[] strs = str.Split(COLLECTION_SPLIT);
                 var arr = Array.CreateInstance(elementType, strs.Length);
                 foreach (var (index, _s) in strs.WithIndex())
@@ -205,7 +251,7 @@ namespace Common_Util.Module.Config
                     if (genericArgs.Length == 1)
                     {
                         IList? list = (IList?)Activator.CreateInstance(typeof(List<>).MakeGenericType(genericArgs[0]));
-                        if (list == null) return null;
+                        if (list == null) goto ReturnDefault;
                         string[] strs = str.Split(COLLECTION_SPLIT);
                         foreach (string _s in strs)
                         {
@@ -216,7 +262,61 @@ namespace Common_Util.Module.Config
                     }
                 }
             }
-            return null;
+
+        ReturnDefault:
+            if (isNullable || !targetType.IsValueType) return null;
+            else return Activator.CreateInstance(targetType);
+
+        }
+
+        public readonly struct ConfigValue2ObjOptions
+        {
+            /// <summary>
+            /// 默认值
+            /// </summary>
+            public static ConfigValue2ObjOptions Default => new ConfigValue2ObjOptions()
+            {
+                EmptyValueConvertWay = EmptyValueConvertWays.None,
+            };
+
+            /// <summary>
+            /// 各类空值的转换方式
+            /// </summary>
+            public EmptyValueConvertWays EmptyValueConvertWay { get; init; }
+        }
+        /// <summary>
+        /// 各类空值的转换方式
+        /// </summary>
+        [Flags]
+        public enum EmptyValueConvertWays : int
+        {
+            /// <summary>
+            /// 不做转换
+            /// </summary>
+            None = 0,
+            /// <summary>
+            /// 空字符串直接转换为 <see langword="null"/> 结果
+            /// </summary>
+            /// <remarks>
+            /// 最高优先级
+            /// </remarks>
+            Empty2NullResult = 0b1,
+            /// <summary>
+            /// 空白字符串直接转换为 <see langword="null"/> 结果
+            /// </summary>
+            /// <remarks>
+            /// 最高优先级
+            /// </remarks>
+            WhiteSpace2NullResult = 0b10,
+
+            /// <summary>
+            /// <see langword="null"/> 值输入先转换为空字符串再做后续操作
+            /// </summary>
+            Null2EmptyString = 0b100,
+            /// <summary>
+            /// 空白字符串先转换为空字符串再做后续操作
+            /// </summary>
+            WhiteSpace2EmptyResult = 0b1000,
         }
         #endregion
 

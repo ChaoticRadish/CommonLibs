@@ -438,7 +438,7 @@ namespace Common_Util.String
             bool needReturnToEnd = false;
 
             int useStartIndex = startIndex < 0 ? 0 : startIndex;
-            if ((input.Length - useStartIndex) < findStr.Length) needReturnToEnd = true; 
+            if ((input.Length - useStartIndex) < findStr.Length) needReturnToEnd = true;
             int _maxReadLength;
             if (maxReadLength != null)
             {
@@ -752,11 +752,21 @@ namespace Common_Util.String
         /// <returns>如果找到该字符，则为 value 的从零开始的索引位置；如果未找到，则为 -1。</returns>
         public static int IndexOfIgnoreStringValue(string input, char value)
         {
-            if (string.IsNullOrEmpty(input))
+            if (input == null) return -1;
+            return IndexOfIgnoreStringValue(input.AsSpan(), value);
+        }
+        /// <summary>
+        /// 报告指定字符在此字符串中的第一个匹配项的索引，忽略 C# 字符串值。
+        /// </summary>
+        /// <param name="input">要搜索的字符串。</param>
+        /// <param name="value">要查找的字符。</param>
+        /// <returns>如果找到该字符，则为 value 的从零开始的索引位置；如果未找到，则为 -1。</returns>
+        public static int IndexOfIgnoreStringValue(ReadOnlySpan<char> input, char value)
+        {
+            if (input.Length == 0)
             {
                 return -1;
             }
-
             // 判定范围的标记表, true 为需判断的字符
             var flagMap = IgnoreStringValueFlagMap(input);
 
@@ -783,11 +793,24 @@ namespace Common_Util.String
         /// <returns>如果找到该字符，则为 value 的从零开始的索引位置；如果未找到，则为 -1。</returns>
         public static int LastIndexOfIgnoreStringValue(string input, char value)
         {
-            if (string.IsNullOrEmpty(input))
+            if (input == null)
             {
                 return -1;
             }
-
+            return LastIndexOfIgnoreStringValue(input.AsSpan(), value);
+        }
+        /// <summary>
+        /// 报告指定字符在此字符串中的最后一个匹配项的索引，忽略 C# 字符串值。
+        /// </summary>
+        /// <param name="input">要搜索的字符串。</param>
+        /// <param name="value">要查找的字符。</param>
+        /// <returns>如果找到该字符，则为 value 的从零开始的索引位置；如果未找到，则为 -1。</returns>
+        public static int LastIndexOfIgnoreStringValue(ReadOnlySpan<char> input, char value)
+        {
+            if (input.Length == 0)
+            {
+                return -1;
+            }
             // 判定范围的标记表, true 为需判断的字符
             var flagMap = IgnoreStringValueFlagMap(input);
 
@@ -807,6 +830,8 @@ namespace Common_Util.String
             return -1;
         }
         private static bool[] IgnoreStringValueFlagMap(string input)
+            => IgnoreStringValueFlagMap(input.AsSpan());
+        private static bool[] IgnoreStringValueFlagMap(ReadOnlySpan<char> input)
         {
             bool[] flagMap = new bool[input.Length];
 
