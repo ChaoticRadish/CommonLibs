@@ -1,9 +1,12 @@
-﻿using Common_Util.Extensions;
+﻿using Common_Util.Data.Structure.Linear;
+using Common_Util.Extensions;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection.Metadata.Ecma335;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -14,14 +17,19 @@ namespace Common_Util.String
     /// </summary>
     public class CharSequenceReader
     {
-        private readonly IEnumerator<char> enumerator;
+        private IEnumerator<char> enumerator;
 
+        #region 构造函数
+        public CharSequenceReader()
+        {
+            resetAs(EmptyEnumerator<char>.Shared);
+        }
         public CharSequenceReader(IEnumerable<char> chars)
         {
-            enumerator = chars.GetEnumerator();
-            LogicLocation = 0;
-            ReadBuffer = CreateReadBuffer();
+            ResetAs(chars);
         }
+
+        #endregion
 
         #region 读取缓存状态
         /// <summary>
@@ -35,7 +43,7 @@ namespace Common_Util.String
         /// <summary>
         /// 读取缓存
         /// </summary>
-        private ICharSequenceReadBuffer ReadBuffer { get; init; }
+        private ICharSequenceReadBuffer ReadBuffer { get; set; }
 
         /// <summary>
         /// 当前读取缓存的起始位置
@@ -46,6 +54,10 @@ namespace Common_Util.String
         /// </summary>
         private int ReadBufferCount { get => ReadBuffer.Count; }
 
+        /// <summary>
+        /// 当前是否已经读取到尽头
+        /// </summary>
+        public bool IsExhausted { get; private set; } = false;
         #endregion
 
         #region 缓存实例
@@ -56,14 +68,16 @@ namespace Common_Util.String
         protected virtual ICharSequenceReadBuffer CreateReadBuffer() => new DefaultCharSequenceReadBuffer();
         #endregion
 
-        #region 提供操作
+        #region 查看操作
         /// <summary>
         /// 从当前的逻辑位置后 <paramref name="offset"/> 位置处读取一个字符, 但是不推进逻辑位置
         /// </summary>
         /// <param name="offset"></param>
         /// <returns></returns>
-        public bool TryReadValue(int offset, out char output)
+        public bool TryPeekValue(int offset, out char output)
         {
+            ArgumentOutOfRangeException.ThrowIfNegative(offset);
+
             output = default;
             if (offset >= ReadBufferCount)
             {
@@ -74,6 +88,64 @@ namespace Common_Util.String
             output = ReadBuffer[offset];
             return true;
         }
+
+        /// <summary>
+        /// 从当前的逻辑位置开始读取 <paramref name="count"/> 个字符, 拼接为字符串. 
+        /// </summary>
+        /// <remarks>
+        /// 能够读取到的长度不足 <paramref name="count"/> 时不会视为失败, 而是尽量返回范围内的字符
+        /// </remarks>
+        /// <param name="count"></param>
+        public string PeekStringPartial(int offset, int count)
+        {
+            ArgumentOutOfRangeException.ThrowIfNegative(offset);
+
+            int needCount = offset + count;
+            if (needCount > ReadBufferCount)
+            {
+                int needRead = needCount - ReadBufferCount;
+                ReadToBuffer(needRead);
+            }
+            if (offset >= ReadBufferCount)
+            {
+                return string.Empty;
+            }
+            int returnCount = Math.Min(ReadBufferCount, needCount) - offset;
+            char[] chars = new char[returnCount];
+            for (int i = 0; i < returnCount; i++)
+            {
+                chars[i] = ReadBuffer[offset + i];
+            }
+            return new(chars);
+        }
+        /// <summary>
+        /// 从当前的逻辑位置开始读取 <paramref name="count"/> 个字符, 拼接为字符串. 严格读取 <paramref name="count"/> 个字符, 不足会视为失败
+        /// </summary>
+        /// <param name="count"></param>
+        /// <param name="str"></param>
+        public bool TryPeekStringExact(int offset, int count, [NotNullWhen(true)] out string? str)
+        {
+            ArgumentOutOfRangeException.ThrowIfNegative(offset);
+
+            int needCount = offset + count;
+            str = default;
+            if (needCount > ReadBufferCount)
+            {
+                int needRead = needCount - ReadBufferCount;
+                int readed = ReadToBuffer(needRead);
+                if (needRead > readed) return false;    // 实际读取到的数据量少于需要读取的
+            }
+            char[] chars = new char[count];
+            for (int i = 0; i < count; i++)
+            {
+                chars[i] = ReadBuffer[offset + i];
+            }
+            str = new(chars);
+            return true;
+        }
+        #endregion
+
+        #region 读取操作
 
         /// <summary>
         /// 移动 <paramref name="count"/> 个字符, 并忽略他们
@@ -135,7 +207,7 @@ namespace Common_Util.String
                             break;
                         }
                     }
-                    
+
                     // 提交时保留待查找字符串长度的缓存, 在此之前的则不保留
                     SubmitReaded(startIndex + index + 1 - str.Length - ReadBufferStart);
 
@@ -268,6 +340,62 @@ namespace Common_Util.String
             return false;
         }
 
+        /// <summary>
+        /// 读取从当前位置开始之后的所有字符作为一个字符串
+        /// </summary>
+        /// <returns></returns>
+        public string Drain()
+        {
+            TrimBufferToCurrent();
+            if (IsExhausted) return string.Empty;
+            while (TryReadSaveFromSource(out _)) ;
+            return ReadBuffer.GetBufferContent();
+        }
+
+        #endregion
+
+        #region 缓存操作
+        /// <summary>
+        /// 清理逻辑位置前的历史缓存中 <paramref name="length"/> 个字符
+        /// </summary>
+        /// <param name="length"></param>
+        public void TrimBuffer(int length)
+        {
+            if (length > LogicLocation - ReadBufferStart)
+                throw new ArgumentException($"清理字符数 {length} 超出当前历史缓存部分长度 {LogicLocation - ReadBufferStart}", nameof(length));
+            ClearBuffer(length);
+        }
+        /// <summary>
+        /// 清理所有历史缓存, 以使当前缓存位置与逻辑位置重合
+        /// </summary>
+        public void TrimBufferToCurrent() => ClearBuffer(LogicLocation - ReadBufferStart);
+
+        private void ClearBuffer(int length)
+        {
+            if (length <= 0) return;
+            ReadBuffer.Clear(length);
+            ReadBufferStart += length;
+        }
+        #endregion
+
+        #region 重置操作
+        /// <summary>
+        /// 重置当前读取器
+        /// </summary>
+        /// <param name="chars"></param>
+        [MemberNotNull(nameof(enumerator), nameof(ReadBuffer))]
+        public void ResetAs(IEnumerable<char> chars)
+        {
+            resetAs(chars.GetEnumerator());
+        }
+        [MemberNotNull(nameof(enumerator), nameof(ReadBuffer))]
+        private void resetAs(IEnumerator<char> enumerator)
+        {
+            this.enumerator = enumerator;
+            LogicLocation = 0;
+            ReadBuffer = CreateReadBuffer();
+            IsExhausted = false;
+        }
         #endregion
 
         #region 内部操作
@@ -287,6 +415,7 @@ namespace Common_Util.String
             }
             else
             {
+                IsExhausted = true;
                 readed = default;
                 return false;
             }
@@ -339,6 +468,7 @@ namespace Common_Util.String
             }
             else
             {
+                IsExhausted = true;
                 return false;
             }
         }
@@ -400,6 +530,7 @@ namespace Common_Util.String
 
         #endregion
 
+
         #region 调试
         /// <summary>
         /// 取得描述当前状态的字符串
@@ -407,11 +538,11 @@ namespace Common_Util.String
         /// <returns></returns>
         public string GetStatusString(string splitChar = "; ")
         {
-            return string.Join(splitChar, 
-                $"{nameof(LogicLocation)}: {LogicLocation}", 
-                $"{nameof(EnumeratorIndex)}: {EnumeratorIndex}", 
-                $"{nameof(ReadBufferStart)}: {ReadBufferStart}", 
-                $"{nameof(ReadBufferCount)}: {ReadBufferCount}", 
+            return string.Join(splitChar,
+                $"{nameof(LogicLocation)}: {LogicLocation}",
+                $"{nameof(EnumeratorIndex)}: {EnumeratorIndex}",
+                $"{nameof(ReadBufferStart)}: {ReadBufferStart}",
+                $"{nameof(ReadBufferCount)}: {ReadBufferCount}",
                 $"{nameof(ReadBuffer)}: {ReadBuffer.GetBufferContent().WhenEmptyDefault("<empty>")}");
         }
         #endregion
