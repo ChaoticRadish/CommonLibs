@@ -32,11 +32,11 @@ namespace CommonLibTest_Console.Text
                 reader.Skip(5);
                 WritePair(reader.GetStatusString(), "Skip(5)", "\n");
 
-                bool readResult1 = reader.TryReadValue(8, out char output1);
-                WritePair(reader.GetStatusString(), $"TryReadValue(8), result:{readResult1}, output:{output1}", "\n");  // 当前缓存应为: FGHIJKLMN, output 为 N
+                bool readResult1 = reader.TryPeekValue(8, out char output1);
+                WritePair(reader.GetStatusString(), $"TryPeekValue(8), result:{readResult1}, output:{output1}", "\n");  // 当前缓存应为: FGHIJKLMN, output 为 N
 
-                bool readResult2 = reader.TryReadValue(5, out char output2);
-                WritePair(reader.GetStatusString(), $"TryReadValue(5), result:{readResult2}, output:{output2}", "\n");  // 当前缓存应为: FGHIJKLMN, output 为 K
+                bool readResult2 = reader.TryPeekValue(5, out char output2);
+                WritePair(reader.GetStatusString(), $"TryPeekValue(5), result:{readResult2}, output:{output2}", "\n");  // 当前缓存应为: FGHIJKLMN, output 为 K
 
                 bool readResult3 = reader.TryReadUntil("LMN", out var output3);
                 WritePair(reader.GetStatusString(), $"TryReadUntil(\"LMN\"), result:{readResult3}, output:{output3}", "\n");    // 当前缓存应为: LMN, output 为 FGHIJK
