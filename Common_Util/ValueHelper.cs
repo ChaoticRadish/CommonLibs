@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
+using System.Linq;
 using System.Reflection;
 using System.Text;
-    
+
 namespace Common_Util
 {
     /// <summary>
@@ -12,21 +13,21 @@ namespace Common_Util
     public static class ValueHelper
     {
         /// <summary>
-        /// True值字符串
+        /// <see langword="true"/> 值字符串
         /// </summary>
         public readonly static List<string> TrueStrings = new List<string>
         {
             "是", "是的", "正确", "没错", "1", "true", "ture", "y", "yes", "t", "一",
         };
         /// <summary>
-        /// False值字符串
+        /// <see langword="false"/> 值字符串
         /// </summary>
         public readonly static List<string> FalseStrings = new List<string>
         {
-            "不", "不是", "错误", "0", "false", "flase", "fales", "n", "f", "no", "nope", "",
+            "不", "不是", "错误", "0", "false", "flase", "fales", "n", "f", "no", "nope",
         };
         /// <summary>
-        /// 判断输入的值是否为True值的字符串
+        /// 判断输入的值是否为 <see langword="true"/> 值的字符串
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
@@ -41,6 +42,29 @@ namespace Common_Util
             {
                 return false;
             }
+        }
+        /// <summary>
+        /// 尝试以宽松的方式, 转换 <paramref name="input"/> 为布尔值
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="b"></param>
+        /// <returns></returns>
+        public static bool TryLooselyParse(string? input, out bool b)
+        {
+            b = false;
+            if (string.IsNullOrEmpty(input)) return false;
+            input = input.Trim().ToLower();
+            if (TrueStrings.Contains(input))
+            {
+                b = true;
+                return true;
+            }
+            else if (FalseStrings.Contains(input))
+            {
+                b = false;
+                return true;
+            }
+            else return false;
         }
 
 

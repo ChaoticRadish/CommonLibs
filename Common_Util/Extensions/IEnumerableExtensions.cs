@@ -146,7 +146,7 @@ namespace Common_Util.Extensions
         /// <param name="equalityComparer"></param>
         /// <returns></returns>
         public static (IEnumerable<T> ThisOneExclusion, IEnumerable<T> OtherOneExclusion) ExcludeDisorderEquals<T>(
-            this IEnumerable<T> thisOne, IEnumerable<T> otherOne, 
+            this IEnumerable<T> thisOne, IEnumerable<T> otherOne,
             IEqualityComparer<T>? equalityComparer = null)
         {
             var arr1 = thisOne.ToArray();
@@ -173,7 +173,7 @@ namespace Common_Util.Extensions
                 int index = 0;
                 foreach (T? item in arr)
                 {
-                    if (item is null) 
+                    if (item is null)
                     {
                         nullIndexMaskArr[index] = true;
                         nullCount++;
@@ -257,6 +257,29 @@ namespace Common_Util.Extensions
         }
         #endregion
 
+        #region 查找
+
+        /// <summary>
+        /// 寻找集合内的首个符合条件 <paramref name="condition"/> 的东西, 返回其相对起始位置的偏移量
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="enumerable"></param>
+        /// <returns>
+        /// -1: 未找到符合条件的东西 <br/>
+        /// 非负数: 符合条件的东西相对起始位置的偏移量
+        /// </returns>
+        public static int OffsetOfFirst<T>(this IEnumerable<T> enumerable, Func<T, bool> condition)
+        {
+            int offset = 0;
+            foreach (T t in enumerable)
+            {
+                if (condition(t)) return offset;
+                offset++;
+            }
+            return -1;
+        }
+
+        #endregion
 
         #region 遍历
         /// <summary>
@@ -379,7 +402,7 @@ namespace Common_Util.Extensions
                     t2 = e2.Current;
                     index2++;
                 }
-                else 
+                else
                 {
                     e2End = true;
                     index2 = -1;
@@ -455,7 +478,7 @@ namespace Common_Util.Extensions
                     yield return file;
                 }
             }
-        } 
+        }
 
         #endregion
 
