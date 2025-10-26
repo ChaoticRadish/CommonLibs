@@ -371,6 +371,49 @@ namespace Common_Util.Data.Structure.Tree.Extensions
         }
 
         /// <summary>
+        /// 将简易多叉树保留原有结构, 转换成另一种不同类型的简易多叉树
+        /// </summary>
+        /// <typeparam name="TSimpleMultiTree1"></typeparam>
+        /// <typeparam name="TValue1"></typeparam>
+        /// <typeparam name="TNode1"></typeparam>
+        /// <typeparam name="TSimpleMultiTree2"></typeparam>
+        /// <typeparam name="TValue2"></typeparam>
+        /// <typeparam name="TNode2"></typeparam>
+        /// <param name="tree1"></param>
+        /// <param name="createTree2Func">初始创建输出树实例的方法</param>
+        /// <param name="convertNodeFunc">通过目标节点值创建目标节点对象</param>
+        /// <returns></returns>
+        public static TSimpleMultiTree2 Convert<TSimpleMultiTree1, TValue1, TNode1, TSimpleMultiTree2, TValue2, TNode2>(
+            this TSimpleMultiTree1 tree1,
+            Func<TSimpleMultiTree2> createTree2Func,
+            Func<IMultiTreeNode<TValue1>, TNode2> convertNodeFunc)
+            where TSimpleMultiTree1 : SimpleMultiTree<TValue1, TNode1>
+            where TNode1 : SimpleMultiTreeNode<TValue1, TNode1>
+            where TSimpleMultiTree2 : SimpleMultiTree<TValue2, TNode2>
+            where TNode2 : SimpleMultiTreeNode<TValue2, TNode2>
+        {
+            var tree2 = createTree2Func();
+            if (tree1.Root == null) return tree2;
+
+            List<TNode2> tree2Nodes = [];
+
+            foreach (var tree1NodeInfo in IndexPreorder(tree1))
+            {
+                var node2 = convertNodeFunc(tree1NodeInfo.Node);
+                if (tree1NodeInfo.ParentIndex >= 0)
+                {
+                    var parentNode = tree2Nodes[tree1NodeInfo.ParentIndex];
+                    parentNode.AddNode(node2);
+                }
+                tree2Nodes.Add(node2);
+            }
+            tree2.Root = tree2Nodes.FirstOrDefault();
+
+            return tree2;
+        }
+
+
+        /// <summary>
         /// 如果传入的树是 <see cref="ObservableMultiTree{TValue}"/> 则将其返回, 如果不是, 则实例化一个 <see cref="ObservableMultiTree{TValue}"/>
         /// </summary>
         /// <typeparam name="TValue"></typeparam>
