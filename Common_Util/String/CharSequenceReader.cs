@@ -33,11 +33,11 @@ namespace Common_Util.String
 
         #region 读取缓存状态
         /// <summary>
-        /// 当前逻辑读取位置
+        /// 当前逻辑读取位置 (指向的位置还未被读取)
         /// </summary>
         public int LogicLocation { get; private set; }
         /// <summary>
-        /// 枚举器的当前位置
+        /// 枚举器的当前位置 (指向的位置还未被读取)
         /// </summary>
         public int EnumeratorIndex { get; private set; }
         /// <summary>
@@ -46,7 +46,7 @@ namespace Common_Util.String
         private ICharSequenceReadBuffer ReadBuffer { get; set; }
 
         /// <summary>
-        /// 当前读取缓存的起始位置
+        /// 当前读取缓存的起始位置 (指向的位置还未被读取)
         /// </summary>
         private int ReadBufferStart { get; set; }
         /// <summary>
@@ -172,18 +172,18 @@ namespace Common_Util.String
         /// 从当前位置开始读取, 直到遇到指定的字符串
         /// </summary>
         /// <remarks>
-        /// 移动量为 <paramref name="found"/> 的长度, 如果没有找到, 会一直移动到当前读取器源序列的终点
+        /// 移动量为 <paramref name="output"/> 的长度, 如果没有找到, 会一直移动到当前读取器源序列的终点
         /// </remarks>
         /// <param name="str"></param>
-        /// <param name="found">
+        /// <param name="output">
         /// 从当前位置开始到 <paramref name="str"/> 前的字符串 (不包含 <paramref name="str"/> 本身) <br/>
         /// 当未查找到时, 返回从开始查找的位置, 到源序列结束处的所有字符构成的字符串
         /// </param>
         /// <returns>如果读取到末尾都没有找到匹配的字符串, 将返回 <see langword="false"/></returns>
-        public bool TryReadUntil(string str, [NotNullWhen(true)] out string? found)
+        public bool TryReadUntil(string str, [NotNullWhen(true)] out string? output)
         {
             ArgumentNullException.ThrowIfNull(str, nameof(str));
-            found = null;
+            output = null;
             if (string.IsNullOrEmpty(str)) return false;
 
             StringBuilder sb = new();
@@ -214,7 +214,7 @@ namespace Common_Util.String
                     if (foundFlag)
                     {
                         sb.Remove(sb.Length - str.Length, str.Length);
-                        found = sb.ToString();
+                        output = sb.ToString();
                         return true;
                     }
 
@@ -225,19 +225,80 @@ namespace Common_Util.String
 
             // 未找到时, 提交当前所有内容
             SubmitAllBuffer();
-            found = sb.ToString();
+            output = sb.ToString();
+            return false;
+        }
+
+        /// <summary>
+        /// 从当前位置开始读取, 直到遇到 <paramref name="chars"/> 中出现过的字符
+        /// </summary>
+        /// <remarks>
+        /// 移动量为 <paramref name="output"/> 的长度, 如果没有遇到在 <paramref name="chars"/> 中的字符, 会一直移动到当前读取器源序列的终点
+        /// </remarks>
+        /// <param name="chars"></param>
+        /// <param name="output"></param>
+        /// <returns></returns>
+        public bool TryReadUntilAnyChar(IEnumerable<char> chars, [NotNullWhen(true)] out string? output, out char foundChar)
+        {
+            ArgumentNullException.ThrowIfNull(chars, nameof(chars));
+            output = null;
+            foundChar = default;
+            if (!chars.Any()) return false;
+
+            StringBuilder sb = new StringBuilder();
+            bool b = TryReadUntilAnyChar(chars, sb, out foundChar);
+            output = sb.ToString();
+            return b;
+        }
+        /// <summary>
+        /// 从当前位置开始读取, 直到遇到 <paramref name="stopChars"/> 中出现过的字符
+        /// </summary>
+        /// <remarks>
+        /// 如果没有遇到在 <paramref name="stopChars"/> 中的字符, 会一直移动到当前读取器源序列的终点
+        /// </remarks>
+        /// <param name="stopChars"></param>
+        /// <param name="stringBuilder">寻找过程中读取出来的字符追加到此对象, 不会包含 <paramref name="foundChar"/></param>
+        /// <returns></returns>
+        public bool TryReadUntilAnyChar(IEnumerable<char> stopChars, StringBuilder stringBuilder, out char foundChar)
+        {
+            ArgumentNullException.ThrowIfNull(stopChars, nameof(stopChars));
+            foundChar = default;
+            if (!stopChars.Any())
+                return false;
+
+            int startIndex = LogicLocation;
+            int index = 0;
+            while (TryReadSaveWhereLocation(startIndex + index, out char readed))
+            {
+                if (stopChars.Any(c => c == readed))
+                {
+                    foundChar = readed;
+                    return true;
+                }
+                else
+                {
+                    stringBuilder.Append(readed);
+                    // 提交读取到的内容
+                    SubmitReaded(startIndex + index + 1 - ReadBufferStart);
+                }
+
+                index++;
+            }
+
+            // 未找到时, 提交当前所有内容
+            SubmitAllBuffer();
             return false;
         }
         /// <summary>
         /// 从当前位置开始读取, 直到遇到指定的字符串 (忽略字符串值的部分)
         /// </summary>
         /// <param name="str"></param>
-        /// <param name="found">从当前位置开始到 <paramref name="str"/> 前的字符串 (不包含 <paramref name="str"/> 本身)</param>
+        /// <param name="output">从当前位置开始到 <paramref name="str"/> 前的字符串 (不包含 <paramref name="str"/> 本身)</param>
         /// <returns></returns>
-        public bool TryReadUntilIgnoreStringText(string str, [NotNullWhen(true)] out string? found)
+        public bool TryReadUntilIgnoreStringText(string str, [NotNullWhen(true)] out string? output)
         {
             ArgumentNullException.ThrowIfNull(str, nameof(str));
-            found = null;
+            output = null;
             if (string.IsNullOrEmpty(str)) return false;
 
             StringBuilder sb = new();
@@ -325,7 +386,7 @@ namespace Common_Util.String
                     if (foundFlag)
                     {
                         sb.Remove(sb.Length - str.Length, str.Length);
-                        found = sb.ToString();
+                        output = sb.ToString();
                         return true;
                     }
 
@@ -336,7 +397,7 @@ namespace Common_Util.String
 
             // 未找到时, 提交当前所有内容
             SubmitAllBuffer();
-            found = sb.ToString();
+            output = sb.ToString();
             return false;
         }
 
