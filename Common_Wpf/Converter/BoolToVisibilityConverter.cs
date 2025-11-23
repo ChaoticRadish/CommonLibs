@@ -9,19 +9,19 @@ using System.Windows;
 
 namespace Common_Wpf.Converter
 {
-    [ValueConversion(typeof(bool), typeof(Visibility))]
-    public class BoolToVisibilityConverter : IValueConverter
+    public class BoolToVisibilityConverterBase
     {
-        public BoolToVisibilityConverter()
+        public BoolToVisibilityConverterBase()
             : this(true)
         {
 
         }
-        public BoolToVisibilityConverter(bool collapsewhenInvisible)
+        public BoolToVisibilityConverterBase(bool collapsewhenInvisible)
             : base()
         {
             CollapseWhenInvisible = collapsewhenInvisible;
         }
+
         /// <summary>
         /// 不可见时使用 <see cref="Visibility.Collapsed"/>
         /// </summary>
@@ -45,13 +45,37 @@ namespace Common_Wpf.Converter
             }
 
         }
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+
+        protected static bool Convert(object obj)
         {
-            if (value == null)
-                return Visibility.Visible;
-            return (bool)value ? Visibility.Visible : FalseVisibility;
+            if (obj is bool _b) return _b;
+            else return true;
+        }
+    }
+
+    /// <summary>
+    /// 将 <see langword="bool"/> 根据值转换为 <see cref="Visibility"/>
+    /// </summary>
+    /// <remarks>
+    /// 非 <see langword="bool"/> 或 <see langword="null"/> 均视为 <see langword="true"/>
+    /// </remarks>
+    [ValueConversion(typeof(bool), typeof(Visibility))]
+    public class BoolToVisibilityConverter : BoolToVisibilityConverterBase, IValueConverter
+    {
+        public BoolToVisibilityConverter()
+            : base(true)
+        {
+        }
+        public BoolToVisibilityConverter(bool collapsewhenInvisible)
+            : base(collapsewhenInvisible)
+        {
         }
 
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            bool b = Convert(value);
+            return b ? Visibility.Visible : FalseVisibility;
+        }
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             if (value == null)
@@ -59,4 +83,34 @@ namespace Common_Wpf.Converter
             return ((Visibility)value == Visibility.Visible);
         }
     }
+
+    /// <summary>
+    /// 判断所有 <see langword="bool"/> 是否均为 <see langword="true"/> 转换为 <see cref="Visibility"/>
+    /// </summary>
+    /// <remarks>
+    /// 非 <see langword="bool"/> 或 <see langword="null"/> 均视为 <see langword="true"/>
+    /// </remarks>
+    public class MultiBoolToVisibilityConverter : BoolToVisibilityConverterBase, IMultiValueConverter
+    {
+        public MultiBoolToVisibilityConverter()
+            : base(true)
+        {
+        }
+        public MultiBoolToVisibilityConverter(bool collapsewhenInvisible)
+            : base(collapsewhenInvisible)
+        {
+        }
+
+        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (values.Length == 0) return Visibility.Visible;
+            bool b = values.All(Convert);
+            return b ? Visibility.Visible : FalseVisibility;
+        }
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+        {
+            throw new NotSupportedException($"不支持将 {nameof(Visibility)} 转换为 {nameof(Boolean)} 数组");
+        }
+    }
+
 }
