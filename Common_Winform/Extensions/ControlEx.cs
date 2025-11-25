@@ -18,6 +18,8 @@ namespace Common_Winform.Extensions
 {
     public static class ControlEx
     {
+        #region Invoke
+
         /// <summary>
         /// 自动检查是否需要使用BeginInvoke方法
         /// </summary>
@@ -149,7 +151,68 @@ namespace Common_Winform.Extensions
             }
         }
 
-        
+        #region async / await 
+        /// <summary>
+        /// 异步地根据当前线程是否在 UI 线程上, 选择一种方式执行一个函数，并返回其结果。
+        /// </summary>
+        /// <typeparam name="TResult">函数的返回值类型。</typeparam>
+        /// <param name="control">用于封送回 UI 线程的控件。</param>
+        /// <param name="func">要在 UI 线程上执行的函数。</param>
+        /// <returns>一个 Task，其结果为函数的返回值。</returns>
+        public static Task AutoInvokeAsync<TResult>(this Control control, Func<TResult> func)
+        {
+            // 1. 检查是否需要 Invoke
+            if (!control.InvokeRequired)
+            {
+                // 如果已经在 UI 线程上，直接执行并返回一个已完成的 Task
+                try
+                {
+                    var result = func();
+                    return Task.FromResult(result);
+                }
+                catch (Exception ex)
+                {
+                    return Task.FromException<TResult>(ex);
+                }
+            }
+
+            // 2. 如果不在 UI 线程，使用 TaskCompletionSource 来创建一个可手动控制的 Task
+            var tcs = new TaskCompletionSource<TResult>();
+
+            // 3. 使用 BeginInvoke 来异步调用
+            // BeginInvoke 不会阻塞当前的后台线程
+            control.BeginInvoke(new Action(() =>
+            {
+                try
+                {
+                    // 这个 Action 会在 UI 线程上执行
+                    var result = func();
+                    tcs.SetResult(result); // 设置 Task 的成功结果
+                }
+                catch (Exception ex)
+                {
+                    tcs.SetException(ex); // 如果函数内部出错，设置 Task 的异常
+                }
+            }));
+
+            // 4. 返回我们创建的 Task
+            return tcs.Task;
+        }
+        /// <summary>
+        /// 异步地根据当前线程是否在 UI 线程上, 选择一种方式执行一个操作（无返回值）。
+        /// </summary>
+        /// <param name="control">用于封送回 UI 线程的控件。</param>
+        /// <param name="action">要在 UI 线程上执行的操作。</param>
+        /// <returns>一个表示操作完成的 Task。</returns>
+        public static Task AutoInvokeAsync(this Control control, Action action)
+        {
+            // 调用有返回值的重载，只是返回一个固定的默认值
+            return control.AutoInvokeAsync(() => { action(); return true; });
+        }
+        #endregion
+
+        #endregion
+
         /// <summary>
         /// 自动设置是否可用
         /// </summary>
