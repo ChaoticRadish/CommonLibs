@@ -159,7 +159,7 @@ namespace Common_Winform.Extensions
         /// <param name="control">用于封送回 UI 线程的控件。</param>
         /// <param name="func">要在 UI 线程上执行的函数。</param>
         /// <returns>一个 Task，其结果为函数的返回值。</returns>
-        public static Task AutoInvokeAsync<TResult>(this Control control, Func<TResult> func)
+        public static Task<TResult> AutoInvokeAsync<TResult>(this Control control, Func<TResult> func)
         {
             // 1. 检查是否需要 Invoke
             if (!control.InvokeRequired)
