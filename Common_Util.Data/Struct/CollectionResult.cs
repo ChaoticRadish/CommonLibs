@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Common_Util.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.NetworkInformation;
@@ -27,6 +28,54 @@ namespace Common_Util.Data.Struct
         public string? SuccessInfo { get; set; }
         public string? FailureReason { get; set; }
 
+        #region 输出字符串
+        /// <summary>
+        /// 将结果转换为详细的字符串
+        /// </summary>
+        /// <param name="itemToString">数据项转换为字符串的方法</param>
+        /// <param name="rowNumber">是否输出行号</param>
+        /// <param name="rowSplit">行分隔符</param>
+        /// <returns></returns>
+        public readonly string ToString(Func<T, string> itemToString, bool rowNumber = false, string rowSplit = "\n")
+        {
+            StringBuilder builder = new StringBuilder();
+            builder.Append('<').Append(IsSuccess ? "成功" : "失败").Append('>');
+            if (IsSuccess)
+            {
+                if (!SuccessInfo.IsEmpty())
+                {
+                    builder.Append(' ').Append(SuccessInfo.TrimEnd());
+                }
+                if (Datas != null && Datas.Length > 0)
+                {
+                    int index = 0;
+                    foreach (var data in Datas)
+                    {
+                        index++;
+                        builder.Append(rowSplit);
+                        if (rowNumber)
+                        {
+                            builder.Append(index).Append(". ");
+                        }
+                        builder.Append(itemToString(data));
+                    }
+                }
+                else
+                {
+                    builder.Append(rowSplit);
+                    builder.Append("< 空结果集 >");
+                }
+            }
+            else
+            {
+                if (!FailureReason.IsEmpty())
+                {
+                    builder.Append(' ').Append(FailureReason);
+                }
+            }
+            return builder.ToString();
+        }
+        #endregion
 
         /// <summary>
         /// 成功查询, 但是得到空结果
