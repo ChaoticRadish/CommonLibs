@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Common_Util.GDI
+namespace Common_Util.Data.Structure.Pair
 {
     public static class ColorHelper
     {
@@ -27,7 +27,7 @@ namespace Common_Util.GDI
         /// </summary>
         /// <param name="color"></param>
         /// <returns></returns>
-        public static System.Drawing.Color HsvToRgb(HSVColor color)
+        public static System.Drawing.Color HsvToRgb(HsvaColorF color)
         {
             return HsvToRgb(color.H, color.S, color.V, color.A);
         }
@@ -82,7 +82,7 @@ namespace Common_Util.GDI
         /// <param name="b"></param>
         /// <param name="a"></param>
         /// <returns></returns>
-        public static HSVColor RgbToHsv(int r, int g, int b, int a = 255)
+        public static HsvaColorF RgbToHsv(int r, int g, int b, int a = 255)
         {
             ValueRevision.ToRange(ref r, 0, 255);
             ValueRevision.ToRange(ref g, 0, 255);
@@ -95,7 +95,7 @@ namespace Common_Util.GDI
         /// </summary>
         /// <param name="color"></param>
         /// <returns></returns>
-        public static HSVColor RgbToHsv(System.Drawing.Color color)
+        public static HsvaColorF RgbToHsv(System.Drawing.Color color)
         {
             float H, S, V;
             // RGB色值转换到[0, 1]
@@ -142,7 +142,7 @@ namespace Common_Util.GDI
             }
             // 明度计算
             V = CMax;
-            return new HSVColor()
+            return new HsvaColorF()
             {
                 H = H,
                 S = S,
@@ -158,7 +158,7 @@ namespace Common_Util.GDI
         /// <returns></returns>
         public static System.Drawing.Color ChangeValue(System.Drawing.Color color, float value)
         {
-            HSVColor hsv = RgbToHsv(color);
+            HsvaColorF hsv = RgbToHsv(color);
             hsv.V = value;
             return HsvToRgb(hsv);
         }
@@ -170,34 +170,9 @@ namespace Common_Util.GDI
         /// <returns></returns>
         public static System.Drawing.Color ChangeValue(System.Drawing.Color color, Func<float, float> valueChangeFunc)
         {
-            HSVColor hsv = RgbToHsv(color);
+            HsvaColorF hsv = RgbToHsv(color);
             hsv.V = valueChangeFunc.Invoke(hsv.V);
             return HsvToRgb(hsv);
-        }
-    }
-
-    public struct HSVColor
-    {
-        /// <summary>
-        /// 色相
-        /// </summary>
-        public float H { get; set; }
-        /// <summary>
-        /// 饱和度
-        /// </summary>
-        public float S { get; set; }
-        /// <summary>
-        /// 明度
-        /// </summary>
-        public float V { get; set; }
-        /// <summary>
-        /// 透明度
-        /// </summary>
-        public float A { get; set; }
-
-        public override string ToString()
-        {
-            return $"H:{H}, S:{S}, V:{V}, A:{A}";
         }
     }
 }
