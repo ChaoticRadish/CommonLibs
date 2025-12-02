@@ -461,6 +461,13 @@ namespace Common_Util.Data.Structure.Tree.Extensions
                 return newTree;
             }
         }
+
+
+        public static LinearizedTree<TValue> Linearize<TValue>(this IMultiTree<TValue> multiTree)
+        {
+            return new(multiTree);
+        }
+
         #endregion
 
 
