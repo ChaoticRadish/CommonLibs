@@ -11,12 +11,14 @@ namespace Common_Winform.Extensions
 {
     public static class FormEx
     {
+        #region 窗口阻塞
+
         /// <summary>
         /// 阻塞窗口, 会在UI线程中修改阻塞状态
         /// </summary>
         /// <param name="b"></param>
         /// <param name="actionText">阻塞是为了执行什么事情, 如果不是空字符串, 将同时调用<see cref="ShowWaitingForm(Form, string)"/>显示等待窗口</param>
-        public static void Obstruction(this Form form, bool b, string? actionText = null)
+        public static ObstructionScope Obstruction(this Form form, bool b, string? actionText = null)
         {
             form.AutoInvoke(new Action(() =>
             {
@@ -33,9 +35,46 @@ namespace Common_Winform.Extensions
                 {
                     HideWaitingForm(form);
                 }
-
             }));
+            return new()
+            {
+                Form = form,
+                EnterState = b,
+                ActionDesc = actionText,
+            };
         }
+
+        /// <summary>
+        /// 阻塞状态的作用域
+        /// </summary>
+        /// <remarks>
+        /// 可释放, 释放后将根据作用域进入的状态 (<see cref="EnterState"/>) 切换状态. 例如为了执行某事进入了阻塞状态, 在释放之后则会解除阻塞状态
+        /// </remarks>
+        /// <param name="form"></param>
+        /// <param name="enterState"></param>
+        /// <param name="actionDesc"></param>
+        public readonly struct ObstructionScope : IDisposable
+        {
+            /// <summary>
+            /// 操作的窗口
+            /// </summary>
+            public Form Form { get; init; }
+            /// <summary>
+            /// 作用域的状态是否为阻塞
+            /// </summary>
+            public bool EnterState { get; init; } 
+            /// <summary>
+            /// 阻塞 / 取消阻塞的目的描述, 比如阻塞是为了作什么事情
+            /// </summary>
+            public string? ActionDesc { get; init; } 
+
+            public readonly void Dispose()
+            {
+                _ = Obstruction(Form, !EnterState, null);
+            }
+        }
+
+        #endregion
 
         /// <summary>
         /// 展示等待窗口
