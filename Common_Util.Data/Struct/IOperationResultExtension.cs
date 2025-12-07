@@ -271,8 +271,18 @@ namespace Common_Util.Data.Struct
         }
 
 
-
-
+        /// <summary>
+        /// 如果操作结果为失败, 则抛出异常
+        /// </summary>
+        /// <param name="result"></param>
+        /// <exception cref="OperationFailureException"></exception>
+        public static void ThrowIfFailure(this IOperationResult result)
+        {
+            if (result.IsFailure)
+            {
+                throw new OperationFailureException(result);
+            }
+        }
         /// <summary>
         /// 取得操作结果的数据, 否则抛出异常
         /// </summary>
