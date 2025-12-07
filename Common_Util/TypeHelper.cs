@@ -47,7 +47,7 @@ namespace Common_Util
         }
 
         /// <summary>
-        /// 检查输入类型是否是指定泛型定义
+        /// 检查输入的泛型类型是否是指定泛型定义
         /// </summary>
         /// <remarks>
         /// 判断 <paramref name="checkType"/> 是否一个原型为 <paramref name="definition"/> 的泛型类型 <br/>
@@ -76,7 +76,7 @@ namespace Common_Util
             }
         }
         /// <summary>
-        /// 检查输入类型是否是继承指定泛型接口
+        /// 检查输入的泛型类型是否实现指定泛型接口
         /// </summary>
         /// <remarks>
         /// 仅当传入类型 <paramref name="checkType"/> 是泛型类型 (非泛型定义), 且实现的所有接口中, 存在任一泛型接口的原型是 <paramref name="definition"/> 时, 返回 <see langword="true"/>
@@ -84,7 +84,7 @@ namespace Common_Util
         /// <param name="checkType">将被检查的类型</param>
         /// <param name="definition">泛型定义</param>
         /// <returns></returns>
-        public static bool GenericTypeIsInheritFrom(
+        public static bool GenericTypeIsImplementDefinition(
             Type checkType,
             Type definition)
         {
