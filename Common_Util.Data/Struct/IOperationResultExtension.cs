@@ -304,7 +304,7 @@ namespace Common_Util.Data.Struct
             {
                 if (result.Data == null)
                 {
-                    throw new ImpossibleForkException("操作结果是成功的, 当时其数据却为 null! ");
+                    throw new ImpossibleForkException("操作结果是成功的, 但是其数据却为 null! ");
                 }
                 else
                 {
