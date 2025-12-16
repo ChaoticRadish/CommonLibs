@@ -323,7 +323,11 @@ namespace Common_Winform.Extensions
                 TData? data;
                 if (getDataResult)
                 {
-                    data = getDataResult.Data ?? args.DefaultData ?? throw new InvalidOperationException("获取数据取得空值! ");
+                    data = getDataResult.Data;
+                    if (!args.AllowNullData)
+                    {
+                        data = data ?? args.DefaultData ?? throw new InvalidOperationException("获取数据取得空值! ");
+                    }
                 }
                 else
                 {
@@ -402,6 +406,10 @@ namespace Common_Winform.Extensions
             /// </summary>
             public Action<TArg, OperationResultEx<TData>>? GetDataFailure { get; init; }
 
+            /// <summary>
+            /// 是否允许出现 <see langword="null"/> 值的数据
+            /// </summary>
+            public bool AllowNullData { get; init; }
             /// <summary>
             /// 如果获取数据后, 数据为 <see langword="null"/> 值, 则赋予此值
             /// </summary>
