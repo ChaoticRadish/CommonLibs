@@ -18,7 +18,7 @@ namespace Common_Util.Data.Structure.Pair
         private uint Data;
 
         /// <summary>
-        /// 红色值, 值域 [0, 255)
+        /// 红色值, 值域 [0, 255]
         /// </summary>
         public byte R 
         {
@@ -26,7 +26,7 @@ namespace Common_Util.Data.Structure.Pair
             set => Data = (uint)(value << 24) | (Data & 0x00FFFFFF);
         }
         /// <summary>
-        /// 绿色值, 值域 [0, 255)
+        /// 绿色值, 值域 [0, 255]
         /// </summary>
         public byte G
         {
@@ -34,7 +34,7 @@ namespace Common_Util.Data.Structure.Pair
             set => Data = (uint)(value << 16) | (Data & 0xFF00FFFF);
         }
         /// <summary>
-        /// 蓝色值, 值域  [0, 255)
+        /// 蓝色值, 值域  [0, 255]
         /// </summary>
         public byte B
         {
@@ -42,7 +42,7 @@ namespace Common_Util.Data.Structure.Pair
             set => Data = (uint)(value << 8) | (Data & 0xFFFF00FF);
         }
         /// <summary>
-        /// 透明度, 值域 [0, 255)
+        /// 透明度, 值域 [0, 255]
         /// </summary>
         public byte A
         {
