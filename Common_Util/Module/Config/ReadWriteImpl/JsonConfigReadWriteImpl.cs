@@ -531,7 +531,7 @@ namespace Common_Util.Module.Config
         {
             return type.IsEnum || type == typeof(Type) 
                 || type == typeof(DateTime)
-                || typeof(IStringConveying).IsAssignableFrom(type);
+                || StringConveyingHelper.ConvertibleCheck(type);
         }
 
         #endregion

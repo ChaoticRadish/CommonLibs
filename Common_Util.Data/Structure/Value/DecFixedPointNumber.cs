@@ -22,7 +22,7 @@ namespace Common_Util.Data.Structure.Value
     /// <para>可用于性能要求不高, 但是要求数值在十进制运算时不允许丢失精度的场景</para>
     /// </summary>
     [TypeConverter(typeof(DecFixedPointNumberTypeConverter))]
-    public partial struct DecFixedPointNumber : IStringConveying, ICloneable
+    public partial struct DecFixedPointNumber : IStringConveying<DecFixedPointNumber>, ICloneable
     {
         #region 构造函数
         public DecFixedPointNumber()
@@ -562,15 +562,15 @@ namespace Common_Util.Data.Structure.Value
         }
         public static implicit operator DecFixedPointNumber(float f)
         {
-            return StringConveyingHelper.FromString<DecFixedPointNumber>(f.NoScientificNotationString());
+            return (DecFixedPointNumber)f.NoScientificNotationString();
         }
         public static implicit operator DecFixedPointNumber(double d)
         {
-            return StringConveyingHelper.FromString<DecFixedPointNumber>(d.NoScientificNotationString());
+            return (DecFixedPointNumber)d.NoScientificNotationString();
         }
         public static implicit operator string(DecFixedPointNumber number)
         {
-            return number.ToString();
+            return number.ConvertToString();
         }
         #endregion
         #region 显式转换 (可能会失败, 或者精度可能会损失)
@@ -666,6 +666,10 @@ namespace Common_Util.Data.Structure.Value
             return double.Parse(number.ToString());
         }
 
+        static explicit IStringConveying<DecFixedPointNumber>.operator string(DecFixedPointNumber number)
+        {
+            return number.ConvertToString();
+        }
         #endregion
 
 
@@ -679,6 +683,7 @@ namespace Common_Util.Data.Structure.Value
         {
             return !(left == right);
         }
+
         #endregion
     }
 }

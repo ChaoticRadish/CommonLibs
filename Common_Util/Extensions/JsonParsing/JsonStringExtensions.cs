@@ -47,6 +47,16 @@ namespace Common_Util.Extensions.JsonParsing
             return jsonStr == null ? default : System.Text.Json.JsonSerializer.Deserialize<T>(jsonStr);
         }
         /// <summary>
+        /// 将 Json 字符串转换为指定类型的对象
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="jsonStr"></param>
+        /// <returns></returns>
+        public static object? ToObject(this string? jsonStr, Type targetType)
+        {
+            return jsonStr == null ? default : System.Text.Json.JsonSerializer.Deserialize(jsonStr, targetType);
+        }
+        /// <summary>
         /// 尝试将 Json 字符串转换为指定类型的对象
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -60,6 +70,26 @@ namespace Common_Util.Extensions.JsonParsing
             try
             {
                 obj = System.Text.Json.JsonSerializer.Deserialize<T>(jsonStr);
+                return obj != null;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+        /// <summary>
+        /// 尝试将 Json 字符串转换为指定类型的对象
+        /// </summary>
+        /// <param name="jsonStr"></param>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public static bool TryToObject(this string? jsonStr, Type targetType, [NotNullWhen(true)] out object? obj)
+        {
+            obj = default;
+            if (jsonStr == null) return false;
+            try
+            {
+                obj = System.Text.Json.JsonSerializer.Deserialize(jsonStr, targetType);
                 return obj != null;
             }
             catch

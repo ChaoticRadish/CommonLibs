@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
+using static System.Collections.Specialized.BitVector32;
 
 namespace Common_Util
 {
@@ -310,8 +311,8 @@ namespace Common_Util
         /// <summary>
         /// 遍历当前域内的所有类型
         /// </summary>
-        /// <param name="action"></param>
-        public static void ForeachCurrentDomainType(Action<Type> action)
+        /// <returns></returns>
+        public static IEnumerable<Type> CurrentDomainAllType()
         {
             var assemblies = AppDomain.CurrentDomain.GetAssemblies();
             foreach (var assembly in assemblies)
@@ -319,28 +320,33 @@ namespace Common_Util
                 var Types = assembly.GetTypes();
                 foreach (var type in Types)
                 {
-                    action.Invoke(type);
+                    yield return type;
                 }
             }
         }
         /// <summary>
-        /// 遍历当前域内的所有类型
+        /// 遍历当前域内的所有类型, 对每一个类型执行输入的内容
         /// </summary>
-        /// <param name="func">返回值: true:中断遍历</param>
+        /// <param name="action"></param>
+        public static void ForeachCurrentDomainType(Action<Type> action)
+        {
+            foreach (var type in CurrentDomainAllType())
+            {
+                action.Invoke(type);
+            }
+        }
+        /// <summary>
+        /// 遍历当前域内的所有类型, 对每一个类型执行输入的内容, 由返回值决定是否中断
+        /// </summary>
+        /// <param name="func">返回值: <see langword="true"/>:中断遍历</param>
         public static void ForeachCurrentDomainType(Func<Type, bool> func)
         {
-            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
             bool breakFlag;
-            foreach (var assembly in assemblies)
+            foreach (var type in CurrentDomainAllType())
             {
-                var Types = assembly.GetTypes();
-                foreach (var type in Types)
-                {
-                    breakFlag = func.Invoke(type);
-                    if (breakFlag) return;
-                }
+                breakFlag = func.Invoke(type);
+                if (breakFlag) return;
             }
-            
         }
 
         #endregion

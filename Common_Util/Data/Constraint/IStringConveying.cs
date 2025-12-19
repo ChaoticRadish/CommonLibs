@@ -11,43 +11,35 @@ using System.Threading.Tasks;
 namespace Common_Util.Data.Constraint
 {
     /// <summary>
-    /// 与字符串可以互相转换的对象
+    /// 与字符串可以互相无损转换的对象
     /// </summary>
-    public interface IStringConveying
+    /// <remarks>
+    /// 每一个具体的、非抽象的类型都必须为它自己 <see cref="TSelf"/> 提供 static 运算符的实现。
+    /// </remarks>
+    public interface IStringConveying<TSelf>
+        where TSelf : IStringConveying<TSelf>
     {
-        /// <summary>
-        /// 将本实例转换为字符串, 转换后的字符串可以使用 <see cref="StringConveyingHelper.FromString"/> 生成与本实例等价的另一个实例
-        /// </summary>
-        /// <remarks>
-        /// 此方法与 <see cref="object.ToString"/> 的区别在于, 后者取得的字符串可能无法转换回当前对象, 前者要求必须能够转换为等价的实例! 
-        /// </remarks>
-        /// <returns></returns>
-        string ConvertToString();
-
-        /// <summary>
-        /// 修改当前实例数据为输入字符串代表的数据
-        /// </summary>
-        /// <param name="value"></param>
-        void ChangeValue(string value);
+        static abstract explicit operator TSelf(string s);
+        static abstract explicit operator string(TSelf t);
     }
     public static class StringConveyingHelper
     {
         /// <summary>
-        /// 实例化一个对象, 并使用指定字符串赋初值
+        /// 以显式转换的方式, 将字符串转换为目标类型
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="str"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]  
         public static T FromString<T>(string str)
-            where T : IStringConveying, new()
+            where T : IStringConveying<T>
         {
-            return _fromStringImpl<T>(str);
+            return (T)str;
         }
 
 
         /// <summary>
-        /// 实例化一个对象, 并使用指定字符串赋初值
+        /// 以显式转换的方式, 将字符串转换为目标类型
         /// </summary>
         /// <param name="type"></param>
         /// <param name="str"></param>
@@ -56,55 +48,74 @@ namespace Common_Util.Data.Constraint
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static object FromString(Type type, string str)
         {
-            // 输入限制
-            var ex = _creatableCheck(type);
-            // 调用转换
-            return _invokeFromStringImpl(type, str);
+            return _toObj(type, str);
         }
+
         /// <summary>
-        /// 实例化一个对象, 并使用指定字符串赋初值
+        /// 以显式转换的方式, 将对象转换为字符串
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        [return: NotNullIfNotNull(nameof(obj))]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static string? ToString(object? obj)
+        {
+            return obj == null ? null : _toStr(obj.GetType(), obj);
+        }
+
+        /// <summary>
+        /// 判断一个类型是否允许与字符串互相转换
         /// </summary>
         /// <param name="type"></param>
-        /// <param name="str"></param>
-        /// <param name="output"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool TryFromString(Type type, string str, [NotNullWhen(true)] out object? output)
+        public static bool ConvertibleCheck(Type type)
         {
-            var ex = _creatableCheck(type);
-            if (ex != null)
+            return _convertibleCheck(type) == null;
+        }
+        /// <summary>
+        /// 检查 <paramref name="type"/> 是否可以与字符串互相转换, 如果可以, 则将其实例 <paramref name="obj"/> 转换并输出到 <paramref name="convertResult"/>
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="obj">如果是 <see langword="null"/>, <see cref="convertResult"> 有可能是 <see langword="null"/></param>
+        /// <param name="convertResult">转换结果</param>
+        /// <returns></returns>
+        public static bool ToStringIfConvertible(Type type, object obj, [NotNullWhen(true)] out string? convertResult)
+        {
+            if (ConvertibleCheck(type))
             {
-                output = null;
-                return false;
+                convertResult = _toStr(type, obj);
+                return true;
             }
             else
             {
-                output = _invokeFromStringImpl(type, str);
+                convertResult = null;
+                return false;
+            }
+        }
+        /// <summary>
+        /// 检查 <paramref name="type"/> 是否可以与字符串互相转换, 如果可以, 则将字符串 <paramref name="str"/> 转换并输出到 <paramref name="convertResult"/>
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="str">如果是 <see langword="null"/>, <see cref="convertResult"> 有可能是 <see langword="null"/></param>
+        /// <param name="convertResult">转换结果</param>
+        /// <returns></returns>
+        public static bool ToObjectIfConvertible(Type type, string str, [NotNullWhen(true)] out object? convertResult)
+        {
+            if (ConvertibleCheck(type))
+            {
+                convertResult = _toObj(type, str);
                 return true;
+            }
+            else
+            {
+                convertResult = null;
+                return false;
             }
         }
 
         #region 私有方法
 
-        private static object _invokeFromStringImpl(Type type, string str)
-        {
-            MethodInfo method = _fromStringImplMethodInfo.Value.MakeGenericMethod(type);
-            object output = method.Invoke(null, [str])!;
-            return output;
-        }
-
-        private static Lazy<MethodInfo> _fromStringImplMethodInfo = new(() =>
-        {
-            return typeof(StringConveyingHelper)
-                .GetMethod(nameof(_fromStringImpl), BindingFlags.NonPublic | BindingFlags.Static)!;
-        });
-        private static T _fromStringImpl<T>(string str)
-            where T : IStringConveying, new()
-        {
-            T output = new();
-            output.ChangeValue(str);
-            return output;
-        }
 
         /// <summary>
         /// 检查输入类型是否可以自动创建
@@ -116,19 +127,36 @@ namespace Common_Util.Data.Constraint
         /// </remarks>
         /// <param name="type"></param>
         /// <returns></returns>
-        private static Exception? _creatableCheck(Type type)
+        private static Exception? _convertibleCheck(Type type)
         {
-            if (!type.IsAssignableTo(typeof(IStringConveying)))
+            if (!TypeHelper.ExistInterfaceIsDefinitionFrom(type, typeof(IStringConveying<>), out Type[] founds) 
+                || !founds.Contains(type))
             {
-                return new ArgumentException($"输入类型 {type.Name} 不继承自 {typeof(IStringConveying).Name}", nameof(type));
-            }
-            if (!type.HavePublicEmptyCtor())
-            {
-                return new ArgumentException($"输入类型 {type.Name} 没用公共无参构造函数", nameof(type));
+                return new ArgumentException($"输入类型 {type.Name} 不实现 {typeof(IStringConveying<>)}", nameof(type));
             }
             return null;
         }
 
+        private static string _toStr(Type type, object obj)
+        {
+            var method = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic)
+                .Where(m => m.Name == "op_Explicit" && m.GetParameters().Length == 1 && m.GetParameters()[0].ParameterType == type)
+                .First();
+            var result = method.Invoke(null, [obj]);
+            if (obj != null && (result == null || result is not string))
+                throw new Common_Util.Exceptions.General.ImplementationException($"显示转换接口未按预期返回非 null 字符串值");
+            return (string)result!;
+        }
+        private static object _toObj(Type type, string str)
+        {
+            var method = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic)
+                .Where(m => m.Name == "op_Explicit" && m.GetParameters().Length == 1 && m.GetParameters()[0].ParameterType == typeof(string))
+                .First();
+            var result = method.Invoke(null, [str]);
+            if (str != null && (result == null || result.GetType() != type))
+                throw new Common_Util.Exceptions.General.ImplementationException($"显示转换接口未按预期返回非 null 值");
+            return result!;
+        }
 
         #endregion
     }

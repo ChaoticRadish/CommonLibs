@@ -269,7 +269,7 @@ namespace Common_Util.Module
                 {
                     DealType = DealTypeEnum.ToString;
                 }
-                else if (type.IsAssignableFrom(typeof(IStringConveying)))
+                else if (StringConveyingHelper.ConvertibleCheck(type))
                 {
                     DealType = DealTypeEnum.ToString;
                 }

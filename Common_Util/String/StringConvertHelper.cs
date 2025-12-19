@@ -74,13 +74,10 @@ namespace Common_Util.String
                 isSuccess = true;
                 return str;
             }
-            else if (typeof(IStringConveying).IsAssignableFrom(targetType))
+            else if (StringConveyingHelper.ToObjectIfConvertible(targetType, str, out var convertResult))
             {
-                if (StringConveyingHelper.TryFromString(targetType, str, out var obj))
-                {
-                    isSuccess = true;
-                    return obj;
-                }
+                isSuccess = true;
+                return convertResult;
             }
             else if (targetType.IsEnum)
             {
