@@ -122,15 +122,21 @@ namespace Common_Util.Data.Constraint
         /// </summary>
         /// <remarks>
         /// 需符合以下要求: <br/>
-        /// 1. 继承接口 <see cref="IStringConveying"/> <br/>
+        /// 1. 继承接口 <see cref="IStringConveying{TSelf}"/> <br/>
         /// 2. 具有公共无参构造函数
         /// </remarks>
         /// <param name="type"></param>
         /// <returns></returns>
         private static Exception? _convertibleCheck(Type type)
         {
-            if (!TypeHelper.ExistInterfaceIsDefinitionFrom(type, typeof(IStringConveying<>), out Type[] founds) 
-                || !founds.Contains(type))
+            if (!TypeHelper.ExistInterfaceIsDefinitionFrom(type, typeof(IStringConveying<>), out Type[] matches) 
+                || 
+                // 没有任何一个匹配接口的泛型参数是传入类型
+                !matches.Any(t =>
+                {
+                    var gArgs = t.GetGenericArguments();
+                    return gArgs.Length > 0 && gArgs[0] == type;
+                }))
             {
                 return new ArgumentException($"输入类型 {type.Name} 不实现 {typeof(IStringConveying<>)}", nameof(type));
             }
@@ -139,7 +145,7 @@ namespace Common_Util.Data.Constraint
 
         private static string _toStr(Type type, object obj)
         {
-            var method = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic)
+            var method = type.GetMethods(BindingFlags.Public | BindingFlags.Static)
                 .Where(m => m.Name == "op_Explicit" && m.GetParameters().Length == 1 && m.GetParameters()[0].ParameterType == type)
                 .First();
             var result = method.Invoke(null, [obj]);
@@ -149,7 +155,7 @@ namespace Common_Util.Data.Constraint
         }
         private static object _toObj(Type type, string str)
         {
-            var method = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic)
+            var method = type.GetMethods(BindingFlags.Public | BindingFlags.Static)
                 .Where(m => m.Name == "op_Explicit" && m.GetParameters().Length == 1 && m.GetParameters()[0].ParameterType == typeof(string))
                 .First();
             var result = method.Invoke(null, [str]);
