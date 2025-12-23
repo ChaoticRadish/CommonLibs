@@ -123,13 +123,13 @@ namespace Common_Util.Data.Structure.Tree.Extensions
             int nextIndex = 0;
             const int nullNodeIndex = -1;   // 不存在的节点, 其索引用此值表示
 
-
             yield return new NodeIndexData<TValue>()
             {
                 Node = node,
                 ParentIndex = nullNodeIndex,
                 NodeIndex = nextIndex,
                 NodeValue = node.NodeValue,
+                Depth = nodeStack.Count,
             };
             nodeStack.Push((node, node.Childrens.GetEnumerator(), nextIndex, nullNodeIndex));
             nextIndex++;
@@ -162,6 +162,7 @@ namespace Common_Util.Data.Structure.Tree.Extensions
                         ParentIndex = nodeIndex,
                         NodeIndex = nextIndex,
                         NodeValue = nextNode.NodeValue,
+                        Depth = nodeStack.Count,
                     };
                     nodeStack.Push((nextNode, nextNode.Childrens.GetEnumerator(), nextIndex, nodeIndex));
                     nextIndex++;
@@ -266,6 +267,10 @@ namespace Common_Util.Data.Structure.Tree.Extensions
             /// 当前节点的值
             /// </summary>
             public TValue NodeValue { get; set; }
+            /// <summary>
+            /// 节点深度 (根节点为 0, 根节点的子节点为 1, 再下一级子节点为 2, 以此类推)
+            /// </summary>
+            public int Depth { get; set; }
         }
         #endregion
 
@@ -456,6 +461,13 @@ namespace Common_Util.Data.Structure.Tree.Extensions
                 return newTree;
             }
         }
+
+
+        public static LinearizedTree<TValue> Linearize<TValue>(this IMultiTree<TValue> multiTree)
+        {
+            return new(multiTree);
+        }
+
         #endregion
 
 

@@ -529,7 +529,9 @@ namespace Common_Util.Module.Config
 
         private bool needConvertToString(Type type)
         {
-            return type.IsEnum || type == typeof(Type) || typeof(IStringConveying).IsAssignableFrom(type);
+            return type.IsEnum || type == typeof(Type) 
+                || type == typeof(DateTime)
+                || StringConveyingHelper.ConvertibleCheck(type);
         }
 
         #endregion

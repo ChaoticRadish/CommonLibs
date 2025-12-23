@@ -29,6 +29,8 @@ namespace Common_Util.Module.Config
         {
             if (obj == null) return null;
 
+            var objType = obj.GetType();
+
             if (obj is Type _type)
             {
                 return _type.FullName;
@@ -37,38 +39,38 @@ namespace Common_Util.Module.Config
             {
                 return guid.ToString();
             }
-            if (typeof(IEnumerable<string>).IsAssignableFrom(obj.GetType()))
+            if (typeof(IEnumerable<string>).IsAssignableFrom(objType))
             {
                 return StringHelper.Concat(((IEnumerable<string>)obj).ToList(), "; ", false);
             }
-            if (typeof(IEnumerable<int>).IsAssignableFrom(obj.GetType()))
+            if (typeof(IEnumerable<int>).IsAssignableFrom(objType))
             {
                 return StringHelper.Concat(((IEnumerable<int>)obj).Select(i => i.ToString()).ToList(), "; ", false);
             }
-            if (obj is IStringConveying conveying)
+            if (StringConveyingHelper.ToStringIfConvertible(objType, obj, out var convertResult))
             {
-                return conveying.ConvertToString();
+                return convertResult;
             }
-            if ((obj.GetType().IsEnumerable() || obj.GetType().IsList())
-                && obj.GetType().GenericTypeArguments.Length == 1
-                && typeof(IStringConveying).IsAssignableFrom(obj.GetType().GenericTypeArguments[0]))
+            if ((objType.IsEnumerable() || objType.IsList())
+                && objType.GenericTypeArguments.Length == 1
+                && StringConveyingHelper.ConvertibleCheck(objType.GenericTypeArguments[0]))
             {
                 IEnumerable list = (IEnumerable)obj;
                 List<string> valueStrings = new List<string>();
-                Type type = obj.GetType().GenericTypeArguments[0];
+                Type type = objType.GenericTypeArguments[0];
                 foreach (object item in list)
                 {
-                    valueStrings.Add(((IStringConveying)item).ConvertToString());
+                    valueStrings.Add(item == null ? string.Empty : StringConveyingHelper.ToString(item));
                 }
                 return StringHelper.Concat(valueStrings, COLLECTION_SPLIT, false);
             }
-            else if ((obj.GetType().IsEnumerable() || obj.GetType().IsList())
-                && obj.GetType().GenericTypeArguments.Length == 1
-                && obj.GetType().GenericTypeArguments[0].IsEnum)
+            else if ((objType.IsEnumerable() || objType.IsList())
+                && objType.GenericTypeArguments.Length == 1
+                && objType.GenericTypeArguments[0].IsEnum)
             {
                 IEnumerable list = (IEnumerable)obj;
                 List<string> valueStrings = new List<string>();
-                Type type = obj.GetType().GenericTypeArguments[0];
+                Type type = objType.GenericTypeArguments[0];
                 foreach (object item in list)
                 {
                     string? str = Enum.GetName(type, item);
@@ -200,10 +202,9 @@ namespace Common_Util.Module.Config
                 if (Guid.TryParse(str, out var val)) return val;
                 else goto ReturnDefault;
             }
-            else if (targetType.IsAssignableTo(typeof(IStringConveying)))
+            else if (StringConveyingHelper.ToObjectIfConvertible(targetType, str, out var convertResult))
             {
-                if (StringConveyingHelper.TryFromString(targetType, str, out var val)) return val;
-                else goto ReturnDefault;
+                return convertResult;
             }
             else if (targetType.IsEnum)
             {

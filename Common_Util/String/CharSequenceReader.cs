@@ -55,8 +55,11 @@ namespace Common_Util.String
         private int ReadBufferCount { get => ReadBuffer.Count; }
 
         /// <summary>
-        /// 当前是否已经读取到尽头
+        /// 当前数据源是否已经读取到尽头
         /// </summary>
+        /// <remarks>
+        /// 注意这个属性不是逻辑位置是否到了尽头
+        /// </remarks>
         public bool IsExhausted { get; private set; } = false;
         #endregion
 
@@ -145,6 +148,17 @@ namespace Common_Util.String
         }
         #endregion
 
+        #region 检查
+        /// <summary>
+        /// 检查当前逻辑读取位置是否已经读取到尽头
+        /// </summary>
+        /// <returns></returns>
+        public bool CheckLogicExhausted()
+        {
+            return !TryReadSaveWhereLocation(LogicLocation, out _);
+        }
+        #endregion
+
         #region 读取操作
 
         /// <summary>
@@ -166,6 +180,76 @@ namespace Common_Util.String
                     return;
                 }
             }
+        }
+
+        /// <summary>
+        /// 从当前位置开始读取, 直到读取到 <paramref name="count"/> 数量, 或读取到读取器源序列的终点
+        /// </summary>
+        /// <param name="count"></param>
+        /// <param name="stringBuilder"></param>
+        public void ReadCountOrEnd(int count, StringBuilder stringBuilder)
+        {
+            ArgumentOutOfRangeException.ThrowIfLessThan(count, 0);
+            if (count == 0) return;
+
+            int startIndex = LogicLocation;
+            int index = 0;
+            while (TryReadSaveWhereLocation(startIndex + index, out char readed))
+            {
+                stringBuilder.Append(readed);
+                if (index == count - 1)
+                {
+                    SubmitReaded(startIndex + index + 1 - ReadBufferStart);
+                    return;
+                }
+                index++;
+            }
+            SubmitAllBuffer();
+        }
+
+        /// <summary>
+        /// 从当前位置开始读取, 直到读取器源序列的终点
+        /// </summary>
+        /// <param name="stringBuilder"></param>
+        public void ReadUntilEnd(StringBuilder stringBuilder)
+        {
+            int startIndex = LogicLocation;
+            int index = 0;
+            while (TryReadSaveWhereLocation(startIndex + index, out char readed))
+            {
+                stringBuilder.Append(readed);
+                index++;
+            }
+            SubmitAllBuffer();
+        }
+
+        /// <summary>
+        /// 从当前位置开始读取, 直到读取到不在 <paramref name="chars"/> 中的字符, 或读取到读取器源序列的终点
+        /// </summary>
+        /// <param name="chars"></param>
+        /// <param name="stringBuilder"></param>
+        public void ReadUntilNotIn(IEnumerable<char> chars, StringBuilder stringBuilder)
+        {
+            var charSet = chars.ToHashSet();
+            if (!chars.Any()) return;
+
+            int startIndex = LogicLocation;
+            int index = 0;
+            while (TryReadSaveWhereLocation(startIndex + index, out char readed))
+            {
+                if (charSet.Contains(readed))
+                {
+                    stringBuilder.Append(readed);
+                    SubmitReaded(startIndex + index + 1 - ReadBufferStart);
+                }
+                else
+                {
+                    return;
+                }
+
+                index++;
+            }
+            SubmitAllBuffer();
         }
 
         /// <summary>
@@ -266,11 +350,13 @@ namespace Common_Util.String
             if (!stopChars.Any())
                 return false;
 
+            var stopCharSet = stopChars.ToHashSet();
+
             int startIndex = LogicLocation;
             int index = 0;
             while (TryReadSaveWhereLocation(startIndex + index, out char readed))
             {
-                if (stopChars.Any(c => c == readed))
+                if (stopCharSet.Contains(readed))
                 {
                     foundChar = readed;
                     return true;
@@ -408,7 +494,7 @@ namespace Common_Util.String
         public string Drain()
         {
             TrimBufferToCurrent();
-            if (IsExhausted) return string.Empty;
+            if (CheckLogicExhausted()) return string.Empty;
             while (TryReadSaveFromSource(out _)) ;
             return ReadBuffer.GetBufferContent();
         }
