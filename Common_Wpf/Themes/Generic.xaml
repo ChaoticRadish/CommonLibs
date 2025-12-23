@@ -9,6 +9,7 @@
         <ResourceDictionary Source="pack://application:,,,/Common_Wpf;component/Controls/FeatureGroup/Facility/KeyValuePairContainer.xaml"/>
 
         <ResourceDictionary Source="pack://application:,,,/Common_Wpf;component/Controls/LayoutPanel/RetractableContainer.xaml"/>
+        <ResourceDictionary Source="pack://application:,,,/Common_Wpf;component/Controls/LayoutPanel/NullAwareContentControl.xaml"/>
         <ResourceDictionary Source="pack://application:,,,/Common_Wpf;component/Controls/LayoutPanel/LeftMenuPageSwitcher.xaml"/>
         
         <ResourceDictionary Source="pack://application:,,,/Common_Wpf;component/Controls/ValueBox/IntShower001.xaml"/>
