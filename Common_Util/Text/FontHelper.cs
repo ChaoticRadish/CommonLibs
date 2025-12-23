@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Common_Util.GDI
+namespace Common_Util.Font
 {
     public class FontHelper
     {

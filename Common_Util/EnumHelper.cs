@@ -23,6 +23,7 @@ namespace Common_Util
             if (enumObj == null) return null;
             Type type = enumObj.GetType();
             string enumName = Enum.GetName(type, enumObj)!;
+            if (enumName == null) return enumObj.ToString();
             FieldInfo field = type.GetField(enumName!)!;
             Attributes.General.EnumDescAttribute? enumDesc
                 = field.GetCustomAttribute<Attributes.General.EnumDescAttribute>();

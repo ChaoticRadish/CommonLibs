@@ -407,6 +407,40 @@ namespace Common_Util.Extensions
                 list[0] = item;
             }
         }
+        /// <summary>
+        /// 添加或移动传入项 <paramref name="item"/> 到列表的首位
+        /// </summary>
+        /// <remarks>
+        /// 如果存在由入参 <paramref name="isSameOneCheck"/> 判断相同的项, 则将遇到的首个相同项移动到首位, 如果不存在, 则添加
+        /// </remarks>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="list"></param>
+        /// <param name="item"></param>
+        /// <param name="isSameOneCheck"></param>
+        public static void AddOrMoveToHead<T>(this IList<T> list, T item, Func<T, T, bool> isSameOneCheck)
+        {
+            int index = -1;
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (isSameOneCheck(list[i], item))
+                {
+                    index = i;
+                    break;
+                }
+            }
+            if (index < 0)
+            {
+                list.Insert(0, item);
+            }
+            else
+            {
+                for (int i = 0; i < index; i++)
+                {
+                    list[i + 1] = list[i];
+                }
+                list[0] = item;
+            }
+        }
         #endregion
     }
 }

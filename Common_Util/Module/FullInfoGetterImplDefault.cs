@@ -70,6 +70,10 @@ namespace Common_Util.Module
                         {
                             return time.ToString(TIME_FORMAT);
                         }
+                        else if (StringConveyingHelper.ToStringIfConvertible(type, obj, out var convertResult))
+                        {
+                            return convertResult;
+                        }
                         else
                         {
                             return obj.ToString() ?? string.Empty;
@@ -269,7 +273,7 @@ namespace Common_Util.Module
                 {
                     DealType = DealTypeEnum.ToString;
                 }
-                else if (type.IsAssignableFrom(typeof(IStringConveying)))
+                else if (StringConveyingHelper.ConvertibleCheck(type))
                 {
                     DealType = DealTypeEnum.ToString;
                 }
