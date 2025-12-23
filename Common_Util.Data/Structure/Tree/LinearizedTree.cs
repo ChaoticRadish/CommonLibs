@@ -113,7 +113,7 @@ namespace Common_Util.Data.Structure.Tree
             int end = indexInfo.ChildIndexStart + indexInfo.ChildCount;
             for (int indexOfChildIndices = indexInfo.ChildIndexStart; indexOfChildIndices < end; indexOfChildIndices++)
             {
-                yield return getNode(indexOfChildIndices);
+                yield return getNode(childIndices[indexOfChildIndices]);
             }
         }
         public ReadOnlySpan<int> GetChildrenIndices(int nodeIndex)
