@@ -57,7 +57,7 @@ namespace CommonLibTest_Wpf.TestPages.ValueTest.Code
 
                 try
                 {
-                    CurrentInput = StringConveyingHelper.FromString<LayeringAddressCode>(inputText);
+                    CurrentInput = (LayeringAddressCode)inputText;
                 }
                 catch
                 {
