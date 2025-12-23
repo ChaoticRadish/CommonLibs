@@ -244,20 +244,28 @@ namespace Common_Winform.Controls.FeatureGroup
             }
 
 
+            private static bool relateObjEqual(object? a, object? b)
+            {
+                if (a == null && b != null) return false;
+                if (a != null && b == null) return false;
+                if (a == null && b == null) return true;
+                return a!.Equals(b);
+            }
+
             public static bool operator ==(ItemData left, ItemData right)
             {
                 if (left.IsNotSelectedItem && right.IsNotSelectedItem)
                 {
                     return true;
                 }
-                return left.RelateObj == right.RelateObj;
+                return relateObjEqual(left.RelateObj, right.RelateObj);
             }
 
             public static bool operator !=(ItemData left, ItemData right)
             {
                 if (left.IsNotSelectedItem && right.IsNotSelectedItem)
                 {
-                    return left.RelateObj != right.RelateObj;
+                    return !relateObjEqual(left.RelateObj, right.RelateObj);
                 }
                 else
                 {
@@ -272,7 +280,7 @@ namespace Common_Winform.Controls.FeatureGroup
                     {
                         return true;
                     }
-                    return RelateObj == iObj.RelateObj;
+                    return relateObjEqual(RelateObj, iObj.RelateObj);
                 }
                 return base.Equals(obj);
             }
