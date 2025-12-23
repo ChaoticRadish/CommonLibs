@@ -366,11 +366,21 @@ namespace Common_Util.GDI.Images
         }
 
         /// <summary>
-        /// 将byte[]转换为位图
+        /// 将 byte[] 转换为位图
         /// </summary>
         /// <param name="bytes"></param>
         /// <returns></returns>
         public static System.Drawing.Bitmap? ByteArrayCloneToBitmap(byte[] bytes)
+        {
+            return ByteArrayCloneToBitmap(bytes, out _);
+        }
+        /// <summary>
+        /// 将 byte[] 转换为位图
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <param name="ex">转换失败的情况下会输出异常对象</param>
+        /// <returns></returns>
+        public static System.Drawing.Bitmap? ByteArrayCloneToBitmap(byte[] bytes, out Exception? ex)
         {
             try
             {
@@ -382,14 +392,17 @@ namespace Common_Util.GDI.Images
                 using (MemoryStream memoryStream = new MemoryStream(bytesClone))
                 {
                     System.Drawing.Bitmap output = new System.Drawing.Bitmap(memoryStream);
+                    ex = null;
                     return output;
                 }
             }
-            catch
+            catch (Exception _ex)
             {
+                ex = _ex;
                 return null;
             }
         }
+
         /// <summary>
         /// 将byte[]转换为位图
         /// </summary>
@@ -468,7 +481,7 @@ namespace Common_Util.GDI.Images
         /// </summary>
         /// <param name="path"></param>
         /// <returns></returns>
-        public static Image? GetBitmap(string path)
+        public static Image? GetBitmap(string? path)
         {
             if (string.IsNullOrEmpty(path))
             {
