@@ -70,6 +70,10 @@ namespace Common_Util.Module
                         {
                             return time.ToString(TIME_FORMAT);
                         }
+                        else if (StringConveyingHelper.ToStringIfConvertible(type, obj, out var convertResult))
+                        {
+                            return convertResult;
+                        }
                         else
                         {
                             return obj.ToString() ?? string.Empty;
