@@ -4,6 +4,7 @@ using Common_Util.String;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -31,13 +32,31 @@ namespace Common_Util.Module.Config
 
             var objType = obj.GetType();
 
+            string? baseValueConverted = obj switch
+            {
+                bool v => v.ToString(CultureInfo.InvariantCulture),
+                sbyte v => v.ToString(CultureInfo.InvariantCulture),
+                byte v => v.ToString(CultureInfo.InvariantCulture),
+                short v => v.ToString(CultureInfo.InvariantCulture),
+                ushort v => v.ToString(CultureInfo.InvariantCulture),
+                int v => v.ToString(CultureInfo.InvariantCulture),
+                uint v => v.ToString(CultureInfo.InvariantCulture),
+                long v => v.ToString(CultureInfo.InvariantCulture),
+                ulong v => v.ToString(CultureInfo.InvariantCulture),
+                float v => v.ToString(CultureInfo.InvariantCulture),
+                double v => v.ToString(CultureInfo.InvariantCulture),
+                decimal v => v.ToString(CultureInfo.InvariantCulture),
+                Guid v => v.ToString(),
+                DateTime v => v.ToString("o", CultureInfo.InvariantCulture),
+                DateTimeOffset v => v.ToString("o", CultureInfo.InvariantCulture),
+                DBNull v => "<null>",
+                _ => null,
+            };
+            if (baseValueConverted != null) return baseValueConverted;
+
             if (obj is Type _type)
             {
                 return _type.FullName;
-            }
-            if (obj is Guid guid)
-            {
-                return guid.ToString();
             }
             if (typeof(IEnumerable<string>).IsAssignableFrom(objType))
             {
@@ -167,6 +186,11 @@ namespace Common_Util.Module.Config
                 if (double.TryParse(str, out var val)) return val;
                 else goto ReturnDefault;
             }
+            else if (targetType == typeof(sbyte))
+            {
+                if (sbyte.TryParse(str, out var val)) return val;
+                else goto ReturnDefault;
+            }
             else if (targetType == typeof(byte))
             {
                 if (byte.TryParse(str, out var val)) return val;
@@ -195,6 +219,11 @@ namespace Common_Util.Module.Config
             else if (targetType == typeof(DateTime))
             {
                 if (DateTime.TryParse(str, out var val)) return val;
+                else goto ReturnDefault;
+            }
+            else if (targetType == typeof(DateTimeOffset))
+            {
+                if (DateTimeOffset.TryParse(str, out var val)) return val;
                 else goto ReturnDefault;
             }
             else if (targetType == typeof(Guid))
