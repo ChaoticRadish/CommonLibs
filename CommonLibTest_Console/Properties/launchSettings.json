@@ -2,7 +2,7 @@
   "profiles": {
     "CommonLibTest_Console": {
       "commandName": "Project",
-      "commandLineArgs": "DataStruct.LayeringAddressCode001\r\nXml.Read001\r\n"
+      "commandLineArgs": "Text.DelimitedCodec001\r\n"
     }
   }
 }
