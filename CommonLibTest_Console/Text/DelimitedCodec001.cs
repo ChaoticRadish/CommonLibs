@@ -2,6 +2,7 @@
 using Common_Util.Data.Constraint;
 using Common_Util.Data.Mechanisms.Impl;
 using Common_Util.Extensions;
+using Common_Util.Random;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,32 +11,36 @@ using System.Threading.Tasks;
 
 namespace CommonLibTest_Console.Text
 {
-    internal class DelimitedCodec001() : TestBase("测试分隔符编解码器的一个默认实现 DelimitedCodec")
+    internal class DelimitedCodec001() : TestBase("测试分隔符编解码器 DelimitedCodec")
     {
         protected override void RunImpl()
         {
             DelimitedCodec codec = new();
 
+            DateTime min = new DateTime(2025, 1, 1);
+            DateTime max = new DateTime(2026, 1, 1);
+
             TestModel1 test = new()
             {
                 Name = "ABCDE",
                 Age = 123,
-                Model = new TestModel2() { TestInt = -1, TestString = "Model1" },
+                Date = RandomValueTypeHelper.GetDateTime(min, max),
+                Model = new TestModel2() { TestInt = -1, TestString = "Model1", TestDate = RandomValueTypeHelper.GetDateTime(min, max), },
                 Enumerable = [
-                    new TestModel2() { TestInt = 1, TestString = "Enumerable1" },
-                    new TestModel2() { TestInt = 2, TestString = "Enumerable2" },
+                    new TestModel2() { TestInt = 1, TestString = "Enumerable1", TestDate = RandomValueTypeHelper.GetDateTime(min, max), },
+                    new TestModel2() { TestInt = 2, TestString = "Enumerable2", TestDate = RandomValueTypeHelper.GetDateTime(min, max), },
                     ],
                 Collection = [
-                    new TestModel2() { TestInt = 3, TestString = "Collection1" },
-                    new TestModel2() { TestInt = 4, TestString = "Collection2" },
+                    new TestModel2() { TestInt = 3, TestString = "Collection1", TestDate = RandomValueTypeHelper.GetDateTime(min, max), },
+                    new TestModel2() { TestInt = 4, TestString = "Collection2", TestDate = RandomValueTypeHelper.GetDateTime(min, max), },
                     ],
                 List = [
-                    new TestModel2() { TestInt = 5, TestString = "List1" },
-                    new TestModel2() { TestInt = 6, TestString = "List2" },
+                    new TestModel2() { TestInt = 5, TestString = "List1", TestDate = RandomValueTypeHelper.GetDateTime(min, max), },
+                    new TestModel2() { TestInt = 6, TestString = "List2", TestDate = RandomValueTypeHelper.GetDateTime(min, max), },
                     ],
                 Array = [
-                    new TestModel2() { TestInt = 7, TestString = "Array1" },
-                    new TestModel2() { TestInt = 8, TestString = "Array2" },
+                    new TestModel2() { TestInt = 7, TestString = "Array1", TestDate = RandomValueTypeHelper.GetDateTime(min, max), },
+                    new TestModel2() { TestInt = 8, TestString = "Array2", TestDate = RandomValueTypeHelper.GetDateTime(min, max), },
                     ],
             };
 
@@ -59,6 +64,9 @@ namespace CommonLibTest_Console.Text
             [SequenceFlag(5)]
             public TestModel2 Model { get; set; }
 
+            [SequenceFlag(6)]
+            public DateTime? Date { get; set; }
+
             [SequenceFlag(4)]
             public IEnumerable<TestModel2> Enumerable { get; set; }
 
@@ -78,7 +86,8 @@ namespace CommonLibTest_Console.Text
             public string TestString { get; set; }
             [SequenceFlag(2)]
             public int TestInt { get; set; }
-
+            [SequenceFlag(6)]
+            public DateTime TestDate { get; set; } 
 
             static explicit IStringConveying<TestModel2>.operator TestModel2(string s)
             {
