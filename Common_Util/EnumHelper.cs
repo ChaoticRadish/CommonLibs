@@ -192,8 +192,8 @@ namespace Common_Util
         /// 将字符串转换为枚举 (优先通过枚举名, 不匹配再通过描述)
         /// </summary>
         /// <param name="str"></param>
-        /// <returns>null时表示转换失败</returns>
-        public static object? Convert(Type type, string str)
+        /// <returns><see langword="null"/> 时表示转换失败</returns>
+        public static object? Convert(Type type, string str, bool onlyDefined = true)
         {
             string[] names = Enum.GetNames(type);
 
@@ -219,75 +219,56 @@ namespace Common_Util
 
             }
             // 通过数值判断
+            object? value = null;
             if (Enum.GetUnderlyingType(type) == typeof(int))
             {
                 if (int.TryParse(str, out int val))
-                {
-                    if (Enum.IsDefined(type, val))
-                    {
-                        return val;
-                    }
-                }
+                    value = val;
             }
             else if (Enum.GetUnderlyingType(type) == typeof(uint))
             {
                 if (uint.TryParse(str, out uint val))
-                {
-                    if (Enum.IsDefined(type, val))
-                    {
-                        return val;
-                    }
-                }
+                    value = val;
             }
             else if (Enum.GetUnderlyingType(type) == typeof(short))
             {
                 if (short.TryParse(str, out short val))
-                {
-                    if (Enum.IsDefined(type, val))
-                    {
-                        return val;
-                    }
-                }
+                    value = val;
             }
             else if (Enum.GetUnderlyingType(type) == typeof(ushort))
             {
                 if (ushort.TryParse(str, out ushort val))
-                {
-                    if (Enum.IsDefined(type, val))
-                    {
-                        return val;
-                    }
-                }
+                    value = val;
             }
             else if (Enum.GetUnderlyingType(type) == typeof(long))
             {
                 if (long.TryParse(str, out long val))
-                {
-                    if (Enum.IsDefined(type, val))
-                    {
-                        return val;
-                    }
-                }
+                    value = val;
             }
             else if (Enum.GetUnderlyingType(type) == typeof(ulong))
             {
                 if (long.TryParse(str, out long val))
-                {
-                    if (Enum.IsDefined(type, val))
-                    {
-                        return val;
-                    }
-                }
+                    value = val;
             }
             else if (Enum.GetUnderlyingType(type) == typeof(byte))
             {
                 if (byte.TryParse(str, out byte val))
+                    value = val;
+            }
+            else if (Enum.GetUnderlyingType(type) == typeof(sbyte))
+            {
+                if (sbyte.TryParse(str, out sbyte val))
+                    value = val;
+            }
+            // 数值转换为枚举对象
+            if (value != null) 
+            {
+                if (onlyDefined)
                 {
-                    if (Enum.IsDefined(type, val))
-                    {
-                        return val;
-                    }
+                    if (Enum.IsDefined(type, value))
+                        return Enum.ToObject(type, value);
                 }
+                else return Enum.ToObject(type, value);
             }
 
             return null;

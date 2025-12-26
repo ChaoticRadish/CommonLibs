@@ -1,4 +1,5 @@
-﻿using Common_Util.Data.Converter.Json;
+﻿using Common_Util.Data.Constraint;
+using Common_Util.Data.Converter.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +14,7 @@ namespace Common_Util.Data.Structure.Pair
     /// 单字节 RGB 色彩模型
     /// </summary>
     [JsonConverter(typeof(RgbaColorBJsonConverter))]
-    public struct RgbaColorB
+    public struct RgbaColorB : IStringConveying<RgbaColorB>
     {
         private uint Data;
 
@@ -76,6 +77,20 @@ namespace Common_Util.Data.Structure.Pair
                 B = color.B,
                 A = color.A
             };
+        }
+
+        #endregion
+
+        #region 显式转换
+        public static explicit operator RgbaColorB(string s)
+        {
+            if (uint.TryParse(s, out var v)) return v;
+            else return default;
+        }
+
+        public static explicit operator string(RgbaColorB t)
+        {
+            return ((uint)t).ToString();
         }
         #endregion
 

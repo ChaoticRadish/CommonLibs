@@ -4,6 +4,7 @@ using Common_Util.String;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -57,6 +58,14 @@ namespace Common_Util.Module.Config
             if (obj is Type _type)
             {
                 return _type.FullName;
+            }
+            if (objType.IsEnum)
+            {
+                Enum enumValue = (Enum)obj;
+                if (Enum.IsDefined(objType, enumValue))
+                    return enumValue.ToString();
+                else
+                    return enumValue.ToString("D");
             }
             if (typeof(IEnumerable<string>).IsAssignableFrom(objType))
             {
@@ -147,10 +156,20 @@ namespace Common_Util.Module.Config
                 targetType = nullableTarget!;
             }
 
-            if (targetType == typeof(string))
+            if (targetType == typeof(DBNull))
+                return DBNull.Value;
+            else if (targetType.IsEnum)
             {
-                return str;
+                object? temp = null;
+                if (targetType.IsDefined(typeof(FlagsAttribute), false))
+                    temp = EnumHelper.Convert(targetType, str, false);
+                else
+                    temp = EnumHelper.Convert(targetType, str, true);
+                if (temp == null) goto ReturnDefault;
+                else return temp;
             }
+            else if (targetType == typeof(string))
+                return str;
             else if (targetType == typeof(bool))
             {
                 if (ValueHelper.TryLooselyParse(str, out var val)) return val;
