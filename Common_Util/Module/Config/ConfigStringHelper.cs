@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -115,7 +116,7 @@ namespace Common_Util.Module.Config
             }
         }
         /// <summary>
-        /// 字符串配置值转换为对象
+        /// 字符串配置值转换为 <typeparamref name="T"/> 对象
         /// </summary>
         /// <typeparam name="T">目标类型</typeparam>
         /// <param name="str"></param>
@@ -125,6 +126,27 @@ namespace Common_Util.Module.Config
             object? obj = ConfigValue2Obj(str, typeof(T));
             if (obj == null) return default;
             else return (T)obj;
+        }
+        /// <summary>
+        /// 尝试将字符串配置值转换为 <typeparamref name="T"/> 对象 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="str"></param>
+        /// <param name="convertResult"></param>
+        /// <returns></returns>
+        public static bool TryConfigValue2Obj<T>(string str, [NotNullWhen(true)] out T? convertResult)
+        {
+            object? obj = ConfigValue2Obj(str, typeof(T));
+            if (obj == null)
+            {
+                convertResult = default;
+                return false;
+            }
+            else
+            {
+                convertResult = (T)obj;
+                return true;
+            }
         }
         /// <summary>
         /// 字符串配置值转换为对象
