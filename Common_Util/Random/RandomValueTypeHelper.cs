@@ -78,6 +78,32 @@ namespace Common_Util.Random
             return min == max ? min : random.Next(min, max);
         }
         /// <summary>
+        /// 指定区间内的整数
+        /// </summary>
+        /// <param name="random"></param>
+        /// <param name="min"></param>
+        /// <param name="max"></param>
+        /// <returns></returns>
+        public static ushort GetUshort(ushort min, ushort max, System.Random? random = null)
+        {
+            random ??= DefaultRandom;
+            if (min > max) (min, max) = (max, min);
+            return min == max ? min : (ushort)random.Next(min, max);
+        }
+        /// <summary>
+        /// 指定区间内的整数
+        /// </summary>
+        /// <param name="random"></param>
+        /// <param name="min"></param>
+        /// <param name="max"></param>
+        /// <returns></returns>
+        public static short GetShort(short min, short max, System.Random? random = null)
+        {
+            random ??= DefaultRandom;
+            if (min > max) (min, max) = (max, min);
+            return min == max ? min : (short)random.Next(min, max);
+        }
+        /// <summary>
         /// 指定区间内的非负整数
         /// </summary>
         /// <param name="random"></param>

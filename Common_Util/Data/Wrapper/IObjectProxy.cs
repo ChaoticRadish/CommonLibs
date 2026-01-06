@@ -41,6 +41,52 @@ namespace Common_Util.Data.Wrapper
         private readonly Func<T> providerFunc = providerFunc;
         public T Object => providerFunc();
     }
+    /// <summary>
+    /// 固定抛出异常的对象代理
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public readonly struct ExceptionObjectProxy<T> : IObjectProxy<T>
+    {
+        private readonly Exception? exception;
+        private readonly Func<Exception>? getExceptionFunc;
+
+        /// <summary>
+        /// 获取 <see cref="Object"/> 时固定抛出 <see cref="NullReferenceException"/>
+        /// </summary>
+        public ExceptionObjectProxy()
+        {
+            exception = null;
+            getExceptionFunc = null;
+        }
+        /// <summary>
+        /// 获取 <see cref="Object"/> 时固定抛出 <paramref name="ex"/>
+        /// </summary>
+        /// <param name="ex"></param>
+        public ExceptionObjectProxy(Exception ex)
+        {
+            exception = ex;
+            getExceptionFunc = null;
+        }
+        /// <summary>
+        /// 获取 <see cref="Object"/> 时, 通过 <paramref name="getEx"/> 获取异常对象并抛出
+        /// </summary>
+        /// <param name="getEx"></param>
+        public ExceptionObjectProxy(Func<Exception> getEx)
+        {
+            exception = null;
+            getExceptionFunc = getEx;
+        }
+
+        public T Object
+        {
+            get
+            {
+                if (exception != null) throw exception;
+                if (getExceptionFunc != null) throw getExceptionFunc();
+                throw new NullReferenceException();
+            }
+        }
+    }
 
     #endregion
 
