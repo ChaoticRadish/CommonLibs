@@ -29,7 +29,22 @@ namespace Common_Util.Data.Mechanisms
         /// <typeparam name="TPayload"></typeparam>
         /// <param name="payload"></param>
         /// <returns></returns>
-        IOperationResult<TMedium> Serialize<TPayload>([DisallowNull] TPayload payload);
+        public IOperationResult<TMedium> Serialize<TPayload>([DisallowNull] TPayload payload)
+        {
+            var result = Serialize(typeof(TPayload), payload);
+            return new OperationResult<TMedium>()
+            {
+                Data = result.Data,
+                IsSuccess = result.IsSuccess,
+                SuccessInfo = result.SuccessInfo,
+                FailureReason = result.FailureReason,
+            };
+        }
+
+        /// <summary>
+        /// 序列化负载数据为传输介质
+        /// </summary>
+        IOperationResult<TMedium> Serialize(Type payloadType, [DisallowNull] object payload);
     }
     /// <summary>
     /// 适用于特定介质类型 (<typeparamref name="TMedium"/>) 的反序列化器接口
@@ -43,7 +58,23 @@ namespace Common_Util.Data.Mechanisms
         /// <typeparam name="TPayload"></typeparam>
         /// <param name="obj"></param>
         /// <returns></returns>
-        IOperationResult<TPayload> Deserialize<TPayload>(TMedium obj);
+        public IOperationResult<TPayload> Deserialize<TPayload>(TMedium obj)
+        {
+            var result = Deserialize(typeof(TPayload), obj);
+            return new OperationResult<TPayload>()
+            {
+                Data = (TPayload?)result.Data,
+                IsSuccess = result.IsSuccess,
+                SuccessInfo = result.SuccessInfo,
+                FailureReason = result.FailureReason,
+            };
+        }
+
+        /// <summary>
+        /// 序列化负载数据为传输介质
+        /// </summary>
+        IOperationResult<object> Deserialize(Type payloadType, TMedium obj);
+
     }
     
 }

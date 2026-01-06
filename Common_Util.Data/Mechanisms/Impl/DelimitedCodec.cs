@@ -32,17 +32,21 @@ namespace Common_Util.Data.Mechanisms.Impl
     /// <param name="delimitChar">分隔符, 需要是基础类型不会出现的字符</param>
     /// <param name="nullFlag">空对象标记, 允许任意值</param>
     /// <param name="notNullFlag">非空对象标记, 允许任意值</param>
+    /// <param name="strictMode">是否使用严格模式, 非严格模式下处理失败的属性会跳过</param>
     public sealed class DelimitedCodec(
         char delimitChar = DelimitedCodec.DEFAULT_DELIMIT_CHAR,
         char nullFlag = DelimitedCodec.DEFAULT_NULL_FLAG_CHAR,
-        char notNullFlag = DelimitedCodec.DEFAULT_NOTNULL_FLAG_CHAR
-        ) : ICodec<string>, IStreamCodec<char>
+        char notNullFlag = DelimitedCodec.DEFAULT_NOTNULL_FLAG_CHAR,
+        bool strictMode = false
+        ) : IStringCodec, ICodec<string>, IStreamCodec<char>
     {
         public static DelimitedCodec Shared { get; } = new();
 
         public const char DEFAULT_DELIMIT_CHAR = '|';
         public const char DEFAULT_NULL_FLAG_CHAR = '-';
         public const char DEFAULT_NOTNULL_FLAG_CHAR = '+';
+
+        private readonly bool strictMode = strictMode;
 
         private readonly char usingDelimitChar = delimitChar;
         private readonly char[] usingDelimitCharArray = [delimitChar];
@@ -55,10 +59,10 @@ namespace Common_Util.Data.Mechanisms.Impl
             /// 是否适用于此编解码器
             /// </summary>
             /// <param name="needInnerCreateInstance">是否需要在编解码器内部创建实例</param>
-            public readonly bool ValidType(bool needInnerCreateInstance)
+            public readonly bool ValidType(bool needInnerCreateInstance, bool needAnyProperty)
             {
                 return (HasPublicEmptyCtor || !needInnerCreateInstance)
-                    && Properties.Length > 0;
+                    && (Properties.Length > 0 || !needAnyProperty);
             }
             /// <summary>
             /// 类型是否具有空构造方法
@@ -271,6 +275,11 @@ namespace Common_Util.Data.Mechanisms.Impl
         #region 实现
 
         #region 反序列化
+
+        public IOperationResult<object> Deserialize(Type payloadType, string obj)
+        {
+            return Deserialize(payloadType, obj.AsReadableChannel());
+        }
         private OperationResult<object> Deserialize(Type type, IReadableChannel<char> channel)
         {
             var getInfos = _getTypeSerializeInfos(type);
@@ -278,7 +287,7 @@ namespace Common_Util.Data.Mechanisms.Impl
             {
                 return "未能取得类型判断结果信息";
             }
-            if (!getInfos.Value.ValidType(true))
+            if (!getInfos.Value.ValidType(true, strictMode))
             {
                 return $"类型不适用于此编解码器: {getInfos.Value.InvalidReason}";
             }
@@ -293,12 +302,24 @@ namespace Common_Util.Data.Mechanisms.Impl
             foreach (var property in infos.Properties)
             {
                 buffer.Clear();
-                var handleResult = _deserializePropertyValue(property, reader, buffer);
-                if (handleResult.IsFailure)
-                    return handleResult;
+                object? value;
+                try
+                {
+                    var handleResult = _deserializePropertyValue(property, reader, buffer);
+                    if (handleResult.IsFailure)
+                    {
+                        if (strictMode) return handleResult;
+                        else continue;
+                    }
+                    value = handleResult.Data;
+                }
+                catch (Exception ex)
+                {
+                    if (strictMode) return "发生异常: " + ex.Message;
+                    else continue;
+                }
                 reader.ReadUntilNotIn(usingDelimitCharArray);
 
-                var value = handleResult.Data;
                 property.Property.SetValue(payload, value);
             }
 
@@ -487,7 +508,7 @@ namespace Common_Util.Data.Mechanisms.Impl
             {
                 return "未能取得类型判断结果信息";
             }
-            if (!getInfos.Value.ValidType(false))
+            if (!getInfos.Value.ValidType(false, strictMode))
             {
                 return $"类型不适用于此编解码器: {getInfos.Value.InvalidReason}";
             }
@@ -504,16 +525,27 @@ namespace Common_Util.Data.Mechanisms.Impl
                 }
                 if (value != null)
                 {
-                    var propertyHandleResult = property.TypeDetail.Category switch
+                    try
                     {
-                        TypeCategory.ShortData => _serializeTypeValue_ShortData(property.TypeDetail, value, channel),
-                        TypeCategory.String => _serializeTypeValue_String(property.TypeDetail, value, channel),
-                        TypeCategory.StringConveying => _serializeTypeValue_StringConveying(property.TypeDetail, value, channel),
-                        TypeCategory.StructureData => _serializePropertyValue_StructureData(property, value, channel),
-                        _ => $"取得的类型处理分类 ({property.TypeDetail.Category}) 无效"
-                    };
-                    if (!propertyHandleResult) 
-                        return propertyHandleResult.FailureReasonWithTitle($"属性 {property.Property.Name} 处理失败");
+                        var propertyHandleResult = property.TypeDetail.Category switch
+                        {
+                            TypeCategory.ShortData => _serializeTypeValue_ShortData(property.TypeDetail, value, channel),
+                            TypeCategory.String => _serializeTypeValue_String(property.TypeDetail, value, channel),
+                            TypeCategory.StringConveying => _serializeTypeValue_StringConveying(property.TypeDetail, value, channel),
+                            TypeCategory.StructureData => _serializePropertyValue_StructureData(property, value, channel),
+                            _ => $"取得的类型处理分类 ({property.TypeDetail.Category}) 无效"
+                        };
+                        if (!propertyHandleResult)
+                        {
+                            if (strictMode)
+                                return propertyHandleResult.FailureReasonWithTitle($"属性 {property.Property.Name} 处理失败");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        if (strictMode)
+                            return "发生异常: " + ex.Message;
+                    }
                 }
                 channel.Append(usingDelimitChar);
             }
@@ -601,12 +633,16 @@ namespace Common_Util.Data.Mechanisms.Impl
         {
             return Serialize(typeof(TPayload), payload, channel);
         }
-        public IOperationResult<string> Serialize<TPayload>([DisallowNull] TPayload payload)
+        public IOperationResult<string> Serialize(Type type, [DisallowNull] object payload)
         {
             StringBuilder builder = new();
-            var result = Serialize(payload, builder.AsWritableChannel());
+            var result = Serialize(type, payload, builder.AsWritableChannel());
             if (result.IsFailure) return OperationResult<string>.Failure(result.FailureReason);
             return OperationResult<string>.Success(builder.ToString());
+        }
+        public IOperationResult<string> Serialize<TPayload>([DisallowNull] TPayload payload)
+        {
+            return Serialize(typeof(TPayload), payload);
         }
         #endregion
 
