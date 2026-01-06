@@ -18,7 +18,9 @@ namespace Common_Wpf.Converter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return EnumHelper.GetDesc((Enum)value);
+            if (value is Enum @enum)
+                return EnumHelper.GetDesc(@enum);
+            else return value;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
