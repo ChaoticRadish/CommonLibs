@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Common_Util.Extensions.Boolean;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,16 +19,13 @@ namespace Common_Wpf.Converter
         public object Convert(object value, Type targetType, object parameter,
              System.Globalization.CultureInfo culture)
         {
-            if (targetType != typeof(bool))
-                throw new InvalidOperationException("The target must be a boolean");
-
-            return !(bool)value;
+            return !value.AsBool();
         }
 
         public object ConvertBack(object value, Type targetType, object parameter,
             System.Globalization.CultureInfo culture)
         {
-            throw new NotSupportedException();
+            return !value.AsBool();
         }
 
         #endregion
