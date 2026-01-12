@@ -68,16 +68,32 @@ namespace Common_Wpf.Converter
         {
         }
 
+        /// <summary>
+        /// 对布尔值取反
+        /// </summary>
+        /// <remarks>
+        /// <see langword="false"/> 时, <see langword="true"/> 表示可视 <br/>
+        /// <see langword="true"/> 时, <see langword="true"/> 表示不可视或收起
+        /// </remarks>
+        public bool Inverse { get; set; }
+
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             bool b = Convert(value);
+            if (Inverse)
+                b = !b;
             return b ? Visibility.Visible : FalseVisibility;
         }
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value == null)
-                return true;
-            return ((Visibility)value == Visibility.Visible);
+            if (value is Visibility visibility)
+            {
+                bool b = visibility == Visibility.Visible;  // 可视 => true
+                if (Inverse)
+                    b = !b;
+                return b;
+            }
+            else return Inverse ? false : true;   // null 或其他值, 不取反应该表示可视, 也就是对应 true
         }
     }
 
