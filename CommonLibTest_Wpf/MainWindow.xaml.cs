@@ -234,6 +234,8 @@ namespace CommonLibTest_Wpf
         string Page_Ui_Facility { get; set; } = "便利控件";
         [PageConfig(0x_01_09_0001, "键值对形式的容器.001")]
         TestPages.Ui.Facility.KeyValuePairContainer001 Page_Ui_KeyValuePairContainer001 { get; set; } = new();
+        [PageConfig(0x_01_09_0002, "分页控件.001")]
+        TestPages.Ui.Facility.PaginationControl001 Page_Ui_PaginationControl001 { get; set; } = new();
 
         // -------------- 布局/容器 --------------
         [PageConfig(0x_01_0A_0000)]
