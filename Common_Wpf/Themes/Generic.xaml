@@ -7,6 +7,7 @@
         <ResourceDictionary Source="pack://application:,,,/Common_Wpf;component/Controls/FeatureGroup/Log/LogFlowBoxItem.xaml"/>
         <ResourceDictionary Source="pack://application:,,,/Common_Wpf;component/Controls/FeatureGroup/Log/SimpleLogShower.xaml"/>
         <ResourceDictionary Source="pack://application:,,,/Common_Wpf;component/Controls/FeatureGroup/Facility/KeyValuePairContainer.xaml"/>
+        <ResourceDictionary Source="pack://application:,,,/Common_Wpf;component/Controls/FeatureGroup/Facility/PaginationControl.xaml"/>
 
         <ResourceDictionary Source="pack://application:,,,/Common_Wpf;component/Controls/LayoutPanel/RetractableContainer.xaml"/>
         <ResourceDictionary Source="pack://application:,,,/Common_Wpf;component/Controls/LayoutPanel/NullAwareContentControl.xaml"/>

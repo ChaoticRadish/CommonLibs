@@ -63,7 +63,7 @@ namespace Common_Wpf.CommonViewModel
         private bool switchCommandAction = false;
         private ICommand GetSwitchCommand(PageSwitcherItem item)
         {
-            return new SampleCommand(
+            return new SimpleCommand(
                 _ => 
                 {
                     lock (switchCommandLocker)
