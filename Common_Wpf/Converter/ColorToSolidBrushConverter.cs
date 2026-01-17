@@ -1,5 +1,6 @@
 ﻿using Common_Util.Data.Structure.Pair;
 using Common_Util.Extensions;
+using Common_Util.Extensions.NumberParsing;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -45,7 +46,7 @@ namespace Common_Wpf.Converter
                 return values.GetOrDefault(2, DependencyProperty.UnsetValue);
             }
             var opacityObj = values.GetOrDefault(1, 1d);
-            var opacity = opacityObj is double d ? d : 1d;
+            var opacity = opacityObj.AsDouble(1d);
             return new SolidColorBrush(color.Value)
             {
                 Opacity = opacity,
