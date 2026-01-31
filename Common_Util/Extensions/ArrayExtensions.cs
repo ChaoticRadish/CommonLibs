@@ -11,13 +11,22 @@ namespace Common_Util.Extensions
     public static class ArrayExtensions
     {
         /// <summary>
-        /// 判断数组是否为null或空(长度0)
+        /// 判断数组是否为 <see langword="null"/> 或空 (长度0)
         /// </summary>
         /// <param name="array"></param>
         /// <returns></returns>
         public static bool IsEmpty([NotNullWhen(false)] this Array? array) 
         {
             return array == null || array.Length == 0;
+        }
+        /// <summary>
+        /// 判断数组是否不为 <see langword="null"/> 或空 (长度0)
+        /// </summary>
+        /// <param name="array"></param>
+        /// <returns></returns>
+        public static bool IsNotEmpty([NotNullWhen(true)] this Array? array)
+        {
+            return array != null && array.Length > 0;
         }
 
         #region 结构体数组
