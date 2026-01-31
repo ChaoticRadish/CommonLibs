@@ -247,7 +247,9 @@ namespace CommonLibTest_Wpf
         [PageConfig(0x_01_0A_0012, "页面切换器 002 嵌套测试")]
         TestPages.Ui.Layouts.PageSwitch002 Page_Ui_PageSwitch002 { get; set; } = new();
         [PageConfig(0x_01_0A_0020, "Null 值感知内容容器 001")]
-        TestPages.Ui.Layouts.NullAware001 Page_Ui_NullAware001 { get; set; } = new();   
+        TestPages.Ui.Layouts.NullAware001 Page_Ui_NullAware001 { get; set; } = new();
+        [PageConfig(0x_01_0A_0030, "执行按钮面板 001")]
+        TestPages.Ui.Layouts.ActionButton001 Page_Ui_ActionButton001 { get; set; } = new();
 
 
         // =================== Log ========================

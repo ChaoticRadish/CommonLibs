@@ -5,6 +5,9 @@
     <Compile Update="TestPages\Ui\Facility\PaginationControl001.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="TestPages\Ui\Layouts\ActionButton001.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="TestPages\Ui\Layouts\NullAware001.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
