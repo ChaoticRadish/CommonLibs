@@ -113,6 +113,33 @@ namespace Common_Util.Data.Wrapper
         {
             return new ProviderObjectProxy<T>(providerFunc);
         }
+
+        /// <summary>
+        /// 创建一个具有降级方案的对象代理
+        /// </summary>
+        /// <remarks>
+        /// 会先从 <paramref name="proxy"/> 代理取值的对象代理, 当发生异常时, 将降级取代理 <paramref name="degradeProxy"/> 的值
+        /// </remarks>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="proxy">取值代理</param>
+        /// <param name="degradeProxy">降级取值代理</param>
+        /// <param name="whenException">如果出现了通过 <paramref name="proxy"/> 取值过程发生异常, 则会在通过 <paramref name="degradeProxy"/> 取值前调用这个委托. </param>
+        /// <returns></returns>
+        public static IObjectProxy<T> CreateDegrade<T>(IObjectProxy<T> proxy, IObjectProxy<T> degradeProxy, Action<Exception>? whenException = null)
+        {
+            return Create(() =>
+            {
+                try
+                {
+                    return proxy.Object;
+                }
+                catch (Exception ex)
+                {
+                    whenException?.Invoke(ex);
+                    return degradeProxy.Object;
+                }
+            });
+        }
     }
 
 }
