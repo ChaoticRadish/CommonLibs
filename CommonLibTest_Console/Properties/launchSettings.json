@@ -2,7 +2,7 @@
   "profiles": {
     "CommonLibTest_Console": {
       "commandName": "Project",
-      "commandLineArgs": "Text.DelimitedCodec001\r\n"
+      "commandLineArgs": "Operation.Result005\r\n"
     }
   }
 }

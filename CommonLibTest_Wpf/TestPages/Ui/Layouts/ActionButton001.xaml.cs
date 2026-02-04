@@ -37,7 +37,14 @@ namespace CommonLibTest_Wpf.TestPages.Ui.Layouts
         public ActionButton001()
         {
             InitializeComponent();
+
+            TestCommand = new SimpleCommand(() =>
+            {
+                Logger.Operation.Info("TestCommand");
+            });
         }
+
+        public ICommand TestCommand { get; init; }
     }
     public class ActionButton001TestButtonOption : DependencyObject
     {
