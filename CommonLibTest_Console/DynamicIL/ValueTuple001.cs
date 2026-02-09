@@ -14,9 +14,13 @@ namespace CommonLibTest_Console.DynamicIL
         {
             Type type;
             WritePair(type = typeof(ValueTuple<,>).MakeGenericType(typeof(string), typeof(int)));
+            WritePair(ValueTupleHelper.Unpack(type).FullInfoString());
             WritePair(type = typeof(ValueTuple<>).MakeGenericType(typeof(string)));
+            WritePair(ValueTupleHelper.Unpack(type).FullInfoString());
             WritePair(type = (1,2,3,4,5,6,7,8).GetType());
+            WritePair(ValueTupleHelper.Unpack(type).FullInfoString());
             WritePair(type = (1,2,3,4,5,6,7,8,9,10).GetType());
+            WritePair(ValueTupleHelper.Unpack(type).FullInfoString());
 
             List<Type> range = [typeof(string), typeof(int), typeof(byte), typeof(float), typeof(bool)];
             List<Type> types = new List<Type>();

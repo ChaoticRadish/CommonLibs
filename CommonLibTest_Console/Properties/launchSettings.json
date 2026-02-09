@@ -2,7 +2,7 @@
   "profiles": {
     "CommonLibTest_Console": {
       "commandName": "Project",
-      "commandLineArgs": "Operation.Result005\r\n"
+      "commandLineArgs": "DynamicIL.ValueTuple001\r\n"
     }
   }
 }
