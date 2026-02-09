@@ -57,5 +57,65 @@ namespace Common_Util.Module.Reflection
             }
         }
 
+        /// <summary>
+        /// 取得遍历元组元素类型的枚举器
+        /// </summary>
+        /// <remarks>
+        /// 当 <paramref name="valueTupleType"/> 不是元组类型时, 会返回仅包含其自身的结果集
+        /// </remarks>
+        /// <param name="valueTupleType"></param>
+        /// <returns></returns>
+        public static IEnumerable<Type> GetElementTypes(Type valueTupleType)
+        {
+            ArgumentNullException.ThrowIfNull(valueTupleType);
+
+            if (valueTupleType.IsGenericType)
+            {
+                Type _valueTupleType = valueTupleType;
+
+            StartFlag:
+                var definition = _valueTupleType.GetGenericTypeDefinition();
+                if (definition == typeof(ValueTuple<>)
+                    || definition == typeof(ValueTuple<,>)
+                    || definition == typeof(ValueTuple<,,>)
+                    || definition == typeof(ValueTuple<,,,>)
+                    || definition == typeof(ValueTuple<,,,,>)
+                    || definition == typeof(ValueTuple<,,,,,>)
+                    || definition == typeof(ValueTuple<,,,,,,>)
+                    )
+                {
+                    var gArgs = _valueTupleType.GetGenericArguments();
+                    for (int i = 0; i < gArgs.Length; i++)
+                    {
+                        yield return gArgs[i];
+                    }
+                }
+                else if (definition == typeof(ValueTuple<,,,,,,,>))
+                {
+                    var gArgs = _valueTupleType.GetGenericArguments();
+                    for (int i = 0; i < 7; i++)
+                    {
+                        yield return gArgs[i];
+                    }
+                    _valueTupleType = gArgs[7];
+                    goto StartFlag;
+                }
+                else goto ReturnSelf;
+
+                yield break;
+            }
+        ReturnSelf:
+            yield return valueTupleType;
+        }
+        /// <summary>
+        /// 取得所有元组元素构成的类型数组
+        /// </summary>
+        /// <remarks>
+        /// 当 <paramref name="valueTupleType"/> 不是元组类型时, 会返回仅包含其自身的结果集
+        /// </remarks>
+        /// <param name="valueTupleType"></param>
+        /// <returns></returns>
+        public static Type[] Unpack(Type valueTupleType) => GetElementTypes(valueTupleType).ToArray();
+
     }
 }
