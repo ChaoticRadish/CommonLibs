@@ -18,6 +18,7 @@
         <ResourceDictionary Source="pack://application:,,,/Common_Wpf;component/Controls/ValueBox/IntInputer001.xaml"/>
         <ResourceDictionary Source="pack://application:,,,/Common_Wpf;component/Controls/ValueBox/FloatInputer001.xaml"/>
         <ResourceDictionary Source="pack://application:,,,/Common_Wpf;component/Controls/ValueBox/DoubleInputer001.xaml"/>
+        <ResourceDictionary Source="pack://application:,,,/Common_Wpf;component/Controls/ValueBox/DecimalInputer001.xaml"/>
         <ResourceDictionary Source="pack://application:,,,/Common_Wpf;component/Controls/ValueBox/WrapLabel001.xaml"/>
         <ResourceDictionary Source="pack://application:,,,/Common_Wpf;component/Controls/ValueBox/DecFixedPointNumberInputer001.xaml"/>
 
