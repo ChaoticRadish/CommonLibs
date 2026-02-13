@@ -228,6 +228,8 @@ namespace CommonLibTest_Wpf
         TestPages.Ui.Inputer.IntInputer001 Page_Ui_IntInputer001 { get; set; } = new();
         [PageConfig(0x_01_08_0003, "Double 输入001")]
         TestPages.Ui.Inputer.DoubleInputer001 Page_Ui_DoubleInputer001 { get; set; } = new();
+        [PageConfig(0x_01_08_0004, "Decimal 输入001")]
+        TestPages.Ui.Inputer.DecimalInputer001 Page_Ui_DecimalInputer001 { get; set; } = new();
 
         // -------------- 便利控件 --------------
         [PageConfig(0x_01_09_0000)]
