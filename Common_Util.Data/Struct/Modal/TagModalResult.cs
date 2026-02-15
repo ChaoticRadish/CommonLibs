@@ -40,6 +40,7 @@ namespace Common_Util.Data.Struct.Modal
         public ModalResult Result { get; init; }
         public object? Tag { get; init; }
 
+        public static readonly TagModalResult None = new() { Result = ModalResult.Chaos, Tag = null };
         public static readonly TagModalResult Ok = new TagModalResult() { Result = ModalResult.Ok, Tag = null };
     }
 }
