@@ -3,23 +3,24 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms.Integration;
 
 namespace Common_WpfWinformMix.Wpf
 {
     public static class WindowExtensions
     {
         /// <summary>
-        /// 在 Win32 窗口 <paramref name="winform"/> 上显示 WPF 的模态窗口 <paramref name="window"/> 
+        /// 在 Win32 窗口 <paramref name="win32Window"/> 上显示 WPF 的模态窗口 <paramref name="window"/> 
         /// </summary>
         /// <param name="window"></param>
-        /// <param name="winform">Win32 窗口, 如果是 <see langword="null"/>, 则直接使用 <see cref="System.Windows.Window.ShowDialog"/></param>
+        /// <param name="win32Window">Win32 窗口, 如果是 <see langword="null"/>, 则直接使用 <see cref="System.Windows.Window.ShowDialog"/></param>
         /// <returns></returns>
-        public static bool? ShowDialog(this System.Windows.Window window, IWin32Window? winform)
+        public static bool? ShowDialog(this System.Windows.Window window, IWin32Window? win32Window)
         {
-            if (winform != null)
+            if (win32Window != null)
             {
                 var helper = new System.Windows.Interop.WindowInteropHelper(window);
-                helper.Owner = winform.Handle;
+                helper.Owner = win32Window.Handle;
             }
             return window.ShowDialog();
         }
@@ -36,6 +37,10 @@ namespace Common_WpfWinformMix.Wpf
             {
                 var helper = new System.Windows.Interop.WindowInteropHelper(window);
                 helper.Owner = win32Window.Handle;
+            }
+            if (System.Windows.Forms.Application.MessageLoop)
+            {
+                ElementHost.EnableModelessKeyboardInterop(window);  // 向当前的 WinForms 消息循环注册一个消息过滤器, 让 WPF 窗口可以在非模态下接收到键盘事件
             }
             window.Show();
         }
