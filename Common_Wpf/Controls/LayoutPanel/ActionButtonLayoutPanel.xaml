@@ -7,6 +7,7 @@
     xmlns:converter="clr-namespace:Common_Wpf.Converter"
     xmlns:commonViewModel="clr-namespace:Common_Wpf.CommonViewModel"
     xmlns:commonEnums="clr-namespace:Common_Util.Data.Enums;assembly=Common_Util.Data"
+    xmlns:proxy="clr-namespace:Common_Wpf.BindingProxy"
     xmlns:util="clr-namespace:Common_Wpf.Utility"
     mc:Ignorable="d"
     xmlns:local_LayoutPanel="clr-namespace:Common_Wpf.Controls.LayoutPanel">
@@ -38,6 +39,10 @@
 
                             <!-- 下半部分：按钮区域 -->
                             <Border Grid.Row="2" Padding="{Binding ButtonAreaPadding, RelativeSource={RelativeSource TemplatedParent}}">
+                                <Border.Resources>
+                                    <proxy:ObjectProxy x:Key="PanelProxy" Data="{Binding RelativeSource={RelativeSource AncestorType=local_LayoutPanel:ActionButtonLayoutPanel}}"/>
+
+                                </Border.Resources>
                                 <ItemsControl ItemsSource="{Binding DisplayButtons, RelativeSource={RelativeSource TemplatedParent}}">
                                     <ItemsControl.ItemsPanel>
                                         <ItemsPanelTemplate>
@@ -48,7 +53,7 @@
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
                                             <ContentControl Content="{Binding}" 
-                                                        ContentTemplate="{Binding RelativeSource={RelativeSource AncestorType=local_LayoutPanel:ActionButtonLayoutPanel}, Path=ControlButtonTemplate}" />
+                                                            ContentTemplate="{Binding Source={StaticResource PanelProxy}, Path=Data.ControlButtonTemplate}" />
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>

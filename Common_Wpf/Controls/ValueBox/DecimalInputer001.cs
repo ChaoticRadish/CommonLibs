@@ -141,7 +141,10 @@ namespace Common_Wpf.Controls.ValueBox
                             }
                             else if (e.NewValue is decimal d)
                             {
-                                inputer.SetCurrentValue(CurrentTextProperty, d.NoScientificNotationString());
+                                if (d == 0 && inputer.CurrentText.Trim() == "-0")
+                                { } // 忽略这种情况, 解决输入 "-0" 会转换为字符串 "0" 的问题
+                                else
+                                    inputer.SetCurrentValue(CurrentTextProperty, d.NoScientificNotationString());
                             }
                             inputer.OnPropertyChanged(nameof(Value));
                         }
