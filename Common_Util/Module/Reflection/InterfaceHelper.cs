@@ -23,12 +23,12 @@ namespace Common_Util.Module.Reflection
             /* 使用 AI 生成 */
 
             // 1. 获取当前接口声明的所有方法
-            var methodInfos = new List<MethodInfo>(interfaceType.GetMethods());
+            var methodInfos = new List<MethodInfo>(interfaceType.GetMethods().Where(m => m.IsAbstract));
 
             // 2. 递归获取所有父接口的方法并加入列表
             foreach (var parentInterface in interfaceType.GetInterfaces())
             {
-                methodInfos.AddRange(parentInterface.GetMethods());
+                methodInfos.AddRange(parentInterface.GetMethods().Where(m => m.IsAbstract));
             }
 
             // 3. 去重：按方法签名分组 (方法名 + 返回类型 + 参数类型)
