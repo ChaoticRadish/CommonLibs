@@ -14,6 +14,8 @@
     <StackPanel Orientation="Vertical">
         <commonFG:PaginationControl x:Name="PaginationBox" Height="30" 
                                     OnPageChanged="PaginationBox_OnPageChanged"
+                                    PageCode="{Binding ViewModel.PageCode, RelativeSource={RelativeSource AncestorType=local:PaginationControl001}}"
+                                    TotalPage="{Binding ViewModel.TotalPage, RelativeSource={RelativeSource AncestorType=local:PaginationControl001}}"
                                     ContentLoadCommand="{Binding PageContentLoadAsyncCommand}"/>
         <TextBlock Text="{Binding PageNumberButtonAreaActualPixelWidth, ElementName=PaginationBox}"></TextBlock>
         <TextBlock>PageCode</TextBlock>
@@ -22,5 +24,13 @@
         <commonVB:IntInputer001 Value="{Binding TotalPage, ElementName=PaginationBox}"></commonVB:IntInputer001>
         <TextBlock></TextBlock>
         <CheckBox IsChecked="{Binding IsEnabled, ElementName=PaginationBox}">Enable</CheckBox>
+
+        <TextBlock></TextBlock>
+        <Separator/>
+        <TextBlock>PageCode (Binding)</TextBlock>
+        <TextBlock Text="{Binding ViewModel.PageCode, RelativeSource={RelativeSource AncestorType=local:PaginationControl001}}"></TextBlock>
+        <TextBlock>TotalPage (Binding)</TextBlock>
+        <TextBlock Text="{Binding ViewModel.TotalPage, RelativeSource={RelativeSource AncestorType=local:PaginationControl001}}"></TextBlock>
+
     </StackPanel>
 </Page>
