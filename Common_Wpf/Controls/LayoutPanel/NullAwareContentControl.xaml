@@ -18,7 +18,7 @@
                         <!-- 
                             给 ContentControl 起个名字，以便 Trigger 可以引用它
                         -->
-                        <ContentPresenter x:Name="PART_ContentPresenter" Margin="{TemplateBinding Padding}"/>
+                        <ContentPresenter x:Name="PART_ContentPresenter" Margin="{TemplateBinding Padding}" Visibility="{TemplateBinding Visibility}"/>
                     </Border>
 
                     <!-- 核心：使用 Trigger 来控制模板 -->

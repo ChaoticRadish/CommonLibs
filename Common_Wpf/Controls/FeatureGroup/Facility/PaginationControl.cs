@@ -542,7 +542,7 @@ namespace Common_Wpf.Controls.FeatureGroup
         public static readonly DependencyProperty TotalPageProperty =
             DependencyProperty.Register(
                 nameof(TotalPage), typeof(int), 
-                typeof(PaginationControl), new PropertyMetadata(0, OnTotalPageChanged));
+                typeof(PaginationControl), new FrameworkPropertyMetadata(0, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnTotalPageChanged));
         private static void OnTotalPageChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             if (d is not PaginationControl control) return;
@@ -563,7 +563,7 @@ namespace Common_Wpf.Controls.FeatureGroup
         public static readonly DependencyProperty PageCodeProperty =
             DependencyProperty.Register(
                 nameof(PageCode), typeof(int), 
-                typeof(PaginationControl), new PropertyMetadata(0, OnPageCodeChanged));
+                typeof(PaginationControl), new FrameworkPropertyMetadata(0, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnPageCodeChanged));
         private static void OnPageCodeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             if (d is not PaginationControl control) return;
