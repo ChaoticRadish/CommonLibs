@@ -2,6 +2,7 @@
 using Microsoft.VisualBasic.FileIO;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
@@ -81,6 +82,20 @@ namespace Common_Util
         /// <returns></returns>
         public static IEnumerable<TEnum> All<TEnum>() where TEnum : Enum
         {
+            foreach (var enumObj in Enum.GetValues(typeof(TEnum)))
+            {
+                yield return (TEnum)enumObj;
+            }
+        }
+        /// <summary>
+        /// 遍历 <typeparamref name="TEnum"/> 类型的 <see langword="null"/> 值以及输入的枚举类型中的每一个枚举值
+        /// </summary>
+        /// <remarks>
+        /// 如果枚举类型包含了多个同数值的枚举值, 遍历过程中可能会出现重复! 
+        /// </remarks>
+        public static IEnumerable<TEnum?> NullAndAll<TEnum>() where TEnum : struct, Enum
+        {
+            yield return null;
             foreach (var enumObj in Enum.GetValues(typeof(TEnum)))
             {
                 yield return (TEnum)enumObj;
