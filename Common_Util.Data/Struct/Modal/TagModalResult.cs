@@ -43,4 +43,14 @@ namespace Common_Util.Data.Struct.Modal
         public static readonly TagModalResult None = new() { Result = ModalResult.Chaos, Tag = null };
         public static readonly TagModalResult Ok = new TagModalResult() { Result = ModalResult.Ok, Tag = null };
     }
+    public readonly struct TagModalResult<T> : ITagModalResult<T>
+    {
+        public T Tag { get; init; }
+
+        public ModalResult Result { get; init; }
+
+        public static TagModalResult<T> Ok(T tag) => new() { Result = ModalResult.Ok, Tag = tag };
+        public static TagModalResult<T> Cancel(T tag = default!) => new() { Result = ModalResult.Cancel, Tag = tag };
+        public static TagModalResult<T> Chaos(T tag = default!) => new() { Result = ModalResult.Cancel, Tag = tag };
+    }
 }
