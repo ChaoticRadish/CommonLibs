@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -89,19 +90,59 @@ namespace Common_Util.Data.Structure.Linear
 
         #region 操作
         /// <summary>
+        /// 尝试弹出栈顶的元素
+        /// </summary>
+        /// <param name="item"></param>
+        /// <returns></returns>
+        public bool TryPop(out T item)
+        {
+            if (Count == 0)
+            {
+                item = default!;
+                return false;
+            }
+            else
+            {
+                item = _pop();
+                return true;
+            }
+
+        }
+        /// <summary>
         /// 弹出并返回栈顶的元素
         /// </summary>
         public T Pop()
         {
             if (Count == 0)
                 throw new InvalidOperationException("栈为空");
+            return _pop();
+        }
+        private T _pop()
+        {
             var index = _indexConvert(Count - 1);
             var item = _items[index];
             _items[index] = default!;
             _stackElementCount--;
             return item;
         }
-
+        /// <summary>
+        /// 尝试返回栈顶的元素
+        /// </summary>
+        /// <param name="item"></param>
+        /// <returns></returns>
+        public bool TryPeek(out T item)
+        {
+            if (Count == 0)
+            {
+                item = default!;
+                return false;
+            }
+            else
+            {
+                item = _getItem(Count - 1);
+                return true;
+            }
+        }
         /// <summary>
         /// 返回栈顶的元素但不移除
         /// </summary>
