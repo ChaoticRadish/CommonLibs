@@ -17,6 +17,16 @@ namespace Common_Util
     public static class TypeHelper
     {
         /// <summary>
+        /// 判断是否自定义结构体
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public static bool IsCustomStruct(Type type)
+        {
+            return type.IsValueType && Type.GetTypeCode(type) == TypeCode.Object;
+        }
+
+        /// <summary>
         /// 判断是否内置类型
         /// </summary>
         /// <param name="type"></param>

@@ -152,6 +152,19 @@ namespace Common_Util.Random
             return min == max ? min : random.NextDouble() * (max - min) + min;
         }
         /// <summary>
+        /// 指定区间内的 <see langword="decimal"/>
+        /// </summary>
+        /// <param name="random"></param>
+        /// <param name="min"></param>
+        /// <param name="max"></param>
+        /// <returns></returns>
+        public static decimal GetDecimal(decimal min, decimal max, System.Random? random = null)
+        {
+            random ??= DefaultRandom;
+            if (min > max) (min, max) = (max, min);
+            return min == max ? min : ((decimal)random.NextDouble()) * (max - min) + min;
+        }
+        /// <summary>
         /// 指定区间内的 <see langword="float"/>
         /// </summary>
         /// <param name="random"></param>
