@@ -277,8 +277,10 @@ namespace Common_Util.Data.Structure.Tree.Extensions
         #region 转换为特定类型的多叉树
         /// <summary>
         /// 将一个多叉树结构转换为通用多叉树
-        /// <para>此转换可能导致可空性发生变化! </para>
         /// </summary>
+        /// <remarks>
+        /// 此转换可能导致可空性发生变化! 
+        /// </remarks>
         /// <typeparam name="TScope"></typeparam>
         /// <typeparam name="TValue"></typeparam>
         /// <param name="tree"></param>
@@ -289,6 +291,19 @@ namespace Common_Util.Data.Structure.Tree.Extensions
             GeneralTree<TScope, TValue> output = new();
             if (tree.Root == null) { return output; }
             output.BuildTree(tree.Root!,
+                i => i.Childrens.ToList(),
+                node => KeyValuePair.Create<TScope?, TValue?>(convert2Scope(node), node.NodeValue),
+                node => true);
+            return output;
+        }
+        /// <summary>
+        /// 将一个多叉树字数转换为通用多叉树
+        /// </summary>
+        /// <param name="convert2Scope">将一个节点的值转换为范围值</param>
+        public static GeneralTree<TScope, TValue> ToGeneralTree<TScope, TValue>(this IMultiTreeNode<TValue> node, Func<IMultiTreeNode<TValue>, TScope> convert2Scope)
+        {
+            GeneralTree<TScope, TValue> output = new();
+            output.BuildTree(node!,
                 i => i.Childrens.ToList(),
                 node => KeyValuePair.Create<TScope?, TValue?>(convert2Scope(node), node.NodeValue),
                 node => true);
