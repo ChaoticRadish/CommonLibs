@@ -282,6 +282,21 @@ namespace Common_Util.Extensions
         #endregion
 
         #region 遍历
+
+        /// <summary>
+        /// 取得顺序遍历传入集合的遍历器, 同时附带遍历索引
+        /// </summary>
+        /// <param name="enumerable"></param>
+        /// <param name="startIndex">起始索引</param>
+        /// <returns></returns>
+        public static IEnumerable<(int index, object? obj)> WithIndex(this IEnumerable enumerable, int startIndex = 0)
+        {
+            foreach (var item in enumerable)
+            {
+                yield return (startIndex, item);
+                startIndex++;
+            }
+        }
         /// <summary>
         /// 取得顺序遍历传入集合的遍历器, 同时附带遍历索引
         /// </summary>
