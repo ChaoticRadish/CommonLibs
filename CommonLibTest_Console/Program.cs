@@ -21,7 +21,7 @@ namespace CommonLibTest_Console
             AllocConsole();
 #endif
             var runner = new TestRunner();
-            foreach (var str in args.SelectMany(s => s.Split('\n', ' ')).Where(s => s.IsNotEmpty()))
+            foreach (var str in args.SelectMany(s => s.Split('\n', ' ')).Where(s => s.IsNotEmpty() && !s.StartsWith("//")))
             {
                 runner.Run(str);
             }
