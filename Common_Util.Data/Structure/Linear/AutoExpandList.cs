@@ -9,7 +9,7 @@ namespace Common_Util.Data.Structure.Linear
     /// <para>使用字典存储，支持任意非负索引访问</para>
     /// </summary>
     /// <typeparam name="T">元素类型</typeparam>
-    public class AutoExpandList<T> : IAutoExpandList<T>
+    public class AutoExpandList<T> : IAutoExpandList<T>, IList
     {
         private readonly Dictionary<int, T> _data;
         private int _maxIndex = -1;
@@ -52,7 +52,7 @@ namespace Common_Util.Data.Structure.Linear
         /// <param name="capacity">初始容量</param>
         public AutoExpandList(T defaultValue, int capacity)
         {
-            _data = new Dictionary<int, T>(capacity);
+            _data = capacity < 0 ? new() : new Dictionary<int, T>(capacity: capacity);
             DefaultValue = defaultValue;
         }
 
@@ -213,6 +213,74 @@ namespace Common_Util.Data.Structure.Linear
 
         /// <inheritdoc/>
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        #endregion
+
+        #region IList 实现
+
+        /// <inheritdoc/>
+        public bool IsFixedSize => false;
+
+        /// <inheritdoc/>
+        public bool IsSynchronized => false;
+
+        /// <inheritdoc/>
+        public object SyncRoot => _data;
+
+        /// <inheritdoc/>
+        object? IList.this[int index]
+        {
+            get => this[index];
+            set => this[index] = (T)value!;
+        }
+
+        /// <inheritdoc/>
+        int IList.Add(object? value)
+        {
+            Add((T)value!);
+            return _maxIndex;
+        }
+
+        /// <inheritdoc/>
+        bool IList.Contains(object? value)
+        {
+            return value is T t && Contains(t);
+        }
+
+        /// <inheritdoc/>
+        int IList.IndexOf(object? value)
+        {
+            return value is T t ? IndexOf(t) : -1;
+        }
+
+        /// <inheritdoc/>
+        void IList.Insert(int index, object? value)
+        {
+            Insert(index, (T)value!);
+        }
+
+        /// <inheritdoc/>
+        void IList.Remove(object? value)
+        {
+            if (value is T t)
+            {
+                Remove(t);
+            }
+        }
+
+        /// <inheritdoc/>
+        void ICollection.CopyTo(Array array, int index)
+        {
+            if (array == null)
+                throw new ArgumentNullException(nameof(array));
+            if (index < 0)
+                throw new ArgumentOutOfRangeException(nameof(index), "数组索引必须为非负数");
+
+            for (int i = 0; i <= _maxIndex; i++)
+            {
+                array.SetValue(this[i], index + i);
+            }
+        }
 
         #endregion
     }

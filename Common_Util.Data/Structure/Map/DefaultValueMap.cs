@@ -10,7 +10,7 @@ namespace Common_Util.Data.Structure.Map
     /// </summary>
     /// <typeparam name="TKey">键类型</typeparam>
     /// <typeparam name="TValue">值类型</typeparam>
-    public class DefaultValueMap<TKey, TValue> : IDefaultValueMap<TKey, TValue>
+    public class DefaultValueMap<TKey, TValue> : IDefaultValueMap<TKey, TValue>, IDictionary
         where TKey : notnull
     {
         private readonly Dictionary<TKey, TValue> _data;
@@ -164,6 +164,108 @@ namespace Common_Util.Data.Structure.Map
 
         /// <inheritdoc/>
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        #endregion
+
+        #region IDictionary 实现
+
+        /// <inheritdoc/>
+        public bool IsFixedSize => false;
+
+        /// <inheritdoc/>
+        public bool IsSynchronized => false;
+
+        /// <inheritdoc/>
+        public object SyncRoot => _data;
+
+        /// <inheritdoc/>
+        ICollection IDictionary.Keys => _data.Keys;
+
+        /// <inheritdoc/>
+        ICollection IDictionary.Values => _data.Values;
+
+        /// <inheritdoc/>
+        public bool Contains(object? key)
+        {
+            return key is TKey k && ContainsKey(k);
+        }
+
+        /// <inheritdoc/>
+        public void Add(object? key, object? value)
+        {
+            if (key == null)
+                throw new ArgumentNullException(nameof(key));
+
+            Add((TKey)key, (TValue)value!);
+        }
+
+        /// <inheritdoc/>
+        IDictionaryEnumerator IDictionary.GetEnumerator()
+        {
+            return new DictionaryEnumerator(_data.GetEnumerator());
+        }
+
+        /// <inheritdoc/>
+        public void Remove(object? key)
+        {
+            if (key is TKey k)
+            {
+                Remove(k);
+            }
+        }
+
+        /// <inheritdoc/>
+        object? IDictionary.this[object? key]
+        {
+            get
+            {
+                if (key == null)
+                    throw new ArgumentNullException(nameof(key));
+
+                return this[(TKey)key];
+            }
+            set
+            {
+                if (key == null)
+                    throw new ArgumentNullException(nameof(key));
+
+                this[(TKey)key] = (TValue)value!;
+            }
+        }
+
+        /// <inheritdoc/>
+        void ICollection.CopyTo(Array array, int index)
+        {
+            if (array == null)
+                throw new ArgumentNullException(nameof(array));
+
+            foreach (var kvp in _data)
+            {
+                array.SetValue(new DictionaryEntry(kvp.Key, kvp.Value), index++);
+            }
+        }
+
+        private class DictionaryEnumerator : IDictionaryEnumerator
+        {
+            private readonly IEnumerator<KeyValuePair<TKey, TValue>> _enumerator;
+
+            public DictionaryEnumerator(IEnumerator<KeyValuePair<TKey, TValue>> enumerator)
+            {
+                _enumerator = enumerator;
+            }
+
+            public DictionaryEntry Entry => new(_enumerator.Current.Key, _enumerator.Current.Value);
+
+            public object Key => _enumerator.Current.Key!;
+
+            public object? Value => _enumerator.Current.Value;
+
+            public object Current => Entry;
+
+            public bool MoveNext() => _enumerator.MoveNext();
+
+            public void Reset() => _enumerator.Reset();
+        }
 
         #endregion
     }
