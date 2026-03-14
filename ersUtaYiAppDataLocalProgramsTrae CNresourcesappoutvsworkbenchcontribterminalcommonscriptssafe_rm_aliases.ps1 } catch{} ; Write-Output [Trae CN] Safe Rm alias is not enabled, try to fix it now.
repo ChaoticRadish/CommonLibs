@@ -1,0 +1,219 @@
+warning: in the working copy of 'Common_Util.Data/Structure/Linear/AutoExpandList.cs', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/Common_Util.Data/Structure/Linear/AutoExpandList.cs b/Common_Util.Data/Structure/Linear/AutoExpandList.cs[m
+[1mindex be6094d..da5ea0a 100644[m
+[1m--- a/Common_Util.Data/Structure/Linear/AutoExpandList.cs[m
+[1m+++ b/Common_Util.Data/Structure/Linear/AutoExpandList.cs[m
+[36m@@ -9,7 +9,7 @@[m [mnamespace Common_Util.Data.Structure.Linear[m
+     /// <para>使用字典存储，支持任意非负索引访问</para>[m
+     /// </summary>[m
+     /// <typeparam name="T">元素类型</typeparam>[m
+[31m-    public class AutoExpandList<T> : IAutoExpandList<T>[m
+[32m+[m[32m    public class AutoExpandList<T> : IAutoExpandList<T>, IList[m
+     {[m
+         private readonly Dictionary<int, T> _data;[m
+         private int _maxIndex = -1;[m
+[36m@@ -52,7 +52,7 @@[m [mnamespace Common_Util.Data.Structure.Linear[m
+         /// <param name="capacity">初始容量</param>[m
+         public AutoExpandList(T defaultValue, int capacity)[m
+         {[m
+[31m-            _data = new Dictionary<int, T>(capacity);[m
+[32m+[m[32m            _data = capacity < 0 ? new() : new Dictionary<int, T>(capacity: capacity);[m
+             DefaultValue = defaultValue;[m
+         }[m
+ [m
+[36m@@ -215,5 +215,73 @@[m [mnamespace Common_Util.Data.Structure.Linear[m
+         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();[m
+ [m
+         #endregion[m
+[32m+[m
+[32m+[m[32m        #region IList 实现[m
+[32m+[m
+[32m+[m[32m        /// <inheritdoc/>[m
+[32m+[m[32m        public bool IsFixedSize => false;[m
+[32m+[m
+[32m+[m[32m        /// <inheritdoc/>[m
+[32m+[m[32m        public bool IsSynchronized => false;[m
+[32m+[m
+[32m+[m[32m        /// <inheritdoc/>[m
+[32m+[m[32m        public object SyncRoot => _data;[m
+[32m+[m
+[32m+[m[32m        /// <inheritdoc/>[m
+[32m+[m[32m        object? IList.this[int index][m
+[32m+[m[32m        {[m
+[32m+[m[32m            get => this[index];[m
+[32m+[m[32m            set => this[index] = (T)value!;[m
+[32m+[m[32m        }[m
+[32m+[m
+[32m+[m[32m        /// <inheritdoc/>[m
+[32m+[m[32m        int IList.Add(object? value)[m
+[32m+[m[32m        {[m
+[32m+[m[32m            Add((T)value!);[m
+[32m+[m[32m            return _maxIndex;[m
+[32m+[m[32m        }[m
+[32m+[m
+[32m+[m[32m        /// <inheritdoc/>[m
+[32m+[m[32m        bool IList.Contains(object? value)[m
+[32m+[m[32m        {[m
+[32m+[m[32m            return value is T t && Contains(t);[m
+[32m+[m[32m        }[m
+[32m+[m
+[32m+[m[32m        /// <inheritdoc/>[m
+[32m+[m[32m        int IList.IndexOf(object? value)[m
+[32m+[m[32m        {[m
+[32m+[m[32m            return value is T t ? IndexOf(t) : -1;[m
+[32m+[m[32m        }[m
+[32m+[m
+[32m+[m[32m        /// <inheritdoc/>[m
+[32m+[m[32m        void IList.Insert(int index, object? value)[m
+[32m+[m[32m        {[m
+[32m+[m[32m            Insert(index, (T)value!);[m
+[32m+[m[32m        }[m
+[32m+[m
+[32m+[m[32m        /// <inheritdoc/>[m
+[32m+[m[32m        void IList.Remove(object? value)[m
+[32m+[m[32m        {[m
+[32m+[m[32m            if (value is T t)[m
+[32m+[m[32m            {[m
+[32m+[m[32m                Remove(t);[m
+[32m+[m[32m            }[m
+[32m+[m[32m        }[m
+[32m+[m
+[32m+[m[32m        /// <inheritdoc/>[m
+[32m+[m[32m        void ICollection.CopyTo(Array array, int index)[m
+[32m+[m[32m        {[m
+[32m+[m[32m            if (array == null)[m
+[32m+[m[32m                throw new ArgumentNullException(nameof(array));[m
+[32m+[m[32m            if (index < 0)[m
+[32m+[m[32m                throw new ArgumentOutOfRangeException(nameof(index), "数组索引必须为非负数");[m
+[32m+[m
+[32m+[m[32m            for (int i = 0; i <= _maxIndex; i++)[m
+[32m+[m[32m            {[m
+[32m+[m[32m                array.SetValue(this[i], index + i);[m
+[32m+[m[32m            }[m
+[32m+[m[32m        }[m
+[32m+[m
+[32m+[m[32m        #endregion[m
+     }[m
+ }[m
+warning: in the working copy of 'Common_Util.Data/Structure/Map/DefaultValueMap.cs', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/Common_Util.Data/Structure/Map/DefaultValueMap.cs b/Common_Util.Data/Structure/Map/DefaultValueMap.cs[m
+[1mindex c97976e..02e0542 100644[m
+[1m--- a/Common_Util.Data/Structure/Map/DefaultValueMap.cs[m
+[1m+++ b/Common_Util.Data/Structure/Map/DefaultValueMap.cs[m
+[36m@@ -10,7 +10,7 @@[m [mnamespace Common_Util.Data.Structure.Map[m
+     /// </summary>[m
+     /// <typeparam name="TKey">键类型</typeparam>[m
+     /// <typeparam name="TValue">值类型</typeparam>[m
+[31m-    public class DefaultValueMap<TKey, TValue> : IDefaultValueMap<TKey, TValue>[m
+[32m+[m[32m    public class DefaultValueMap<TKey, TValue> : IDefaultValueMap<TKey, TValue>, IDictionary[m
+         where TKey : notnull[m
+     {[m
+         private readonly Dictionary<TKey, TValue> _data;[m
+[36m@@ -166,5 +166,107 @@[m [mnamespace Common_Util.Data.Structure.Map[m
+         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();[m
+ [m
+         #endregion[m
+[32m+[m
+[32m+[m[32m        #region IDictionary 实现[m
+[32m+[m
+[32m+[m[32m        /// <inheritdoc/>[m
+[32m+[m[32m        public bool IsFixedSize => false;[m
+[32m+[m
+[32m+[m[32m        /// <inheritdoc/>[m
+[32m+[m[32m        public bool IsSynchronized => false;[m
+[32m+[m
+[32m+[m[32m        /// <inheritdoc/>[m
+[32m+[m[32m        public object SyncRoot => _data;[m
+[32m+[m
+[32m+[m[32m        /// <inheritdoc/>[m
+[32m+[m[32m        ICollection IDictionary.Keys => _data.Keys;[m
+[32m+[m
+[32m+[m[32m        /// <inheritdoc/>[m
+[32m+[m[32m        ICollection IDictionary.Values => _data.Values;[m
+[32m+[m
+[32m+[m[32m        /// <inheritdoc/>[m
+[32m+[m[32m        public bool Contains(object? key)[m
+[32m+[m[32m        {[m
+[32m+[m[32m            return key is TKey k && ContainsKey(k);[m
+[32m+[m[32m        }[m
+[32m+[m
+[32m+[m[32m        /// <inheritdoc/>[m
+[32m+[m[32m        public void Add(object? key, object? value)[m
+[32m+[m[32m        {[m
+[32m+[m[32m            if (key == null)[m
+[32m+[m[32m                throw new ArgumentNullException(nameof(key));[m
+[32m+[m
+[32m+[m[32m            Add((TKey)key, (TValue)value!);[m
+[32m+[m[32m        }[m
+[32m+[m
+[32m+[m[32m        /// <inheritdoc/>[m
+[32m+[m[32m        IDictionaryEnumerator IDictionary.GetEnumerator()[m
+[32m+[m[32m        {[m
+[32m+[m[32m            return new DictionaryEnumerator(_data.GetEnumerator());[m
+[32m+[m[32m        }[m
+[32m+[m
+[32m+[m[32m        /// <inheritdoc/>[m
+[32m+[m[32m        public void Remove(object? key)[m
+[32m+[m[32m        {[m
+[32m+[m[32m            if (key is TKey k)[m
+[32m+[m[32m            {[m
+[32m+[m[32m                Remove(k);[m
+[32m+[m[32m            }[m
+[32m+[m[32m        }[m
+[32m+[m
+[32m+[m[32m        /// <inheritdoc/>[m
+[32m+[m[32m        object? IDictionary.this[object? key][m
+[32m+[m[32m        {[m
+[32m+[m[32m            get[m
+[32m+[m[32m            {[m
+[32m+[m[32m                if (key == null)[m
+[32m+[m[32m                    throw new ArgumentNullException(nameof(key));[m
+[32m+[m
+[32m+[m[32m                return this[(TKey)key];[m
+[32m+[m[32m            }[m
+[32m+[m[32m            set[m
+[32m+[m[32m            {[m
+[32m+[m[32m                if (key == null)[m
+[32m+[m[32m                    throw new ArgumentNullException(nameof(key));[m
+[32m+[m
+[32m+[m[32m                this[(TKey)key] = (TValue)value!;[m
+[32m+[m[32m            }[m
+[32m+[m[32m        }[m
+[32m+[m
+[32m+[m[32m        /// <inheritdoc/>[m
+[32m+[m[32m        void ICollection.CopyTo(Array array, int index)[m
+[32m+[m[32m        {[m
+[32m+[m[32m            if (array == null)[m
+[32m+[m[32m                throw new ArgumentNullException(nameof(array));[m
+[32m+[m
+[32m+[m[32m            foreach (var kvp in _data)[m
+[32m+[m[32m            {[m
+[32m+[m[32m                array.SetValue(new DictionaryEntry(kvp.Key, kvp.Value), index++);[m
+[32m+[m[32m            }[m
+[32m+[m[32m        }[m
+[32m+[m
+[32m+[m[32m        private class DictionaryEnumerator : IDictionaryEnumerator[m
+[32m+[m[32m        {[m
+[32m+[m[32m            private readonly IEnumerator<KeyValuePair<TKey, TValue>> _enumerator;[m
+[32m+[m
+[32m+[m[32m            public DictionaryEnumerator(IEnumerator<KeyValuePair<TKey, TValue>> enumerator)[m
+[32m+[m[32m            {[m
+[32m+[m[32m                _enumerator = enumerator;[m
+[32m+[m[32m            }[m
+[32m+[m
+[32m+[m[32m            public DictionaryEntry Entry => new(_enumerator.Current.Key, _enumerator.Current.Value);[m
+[32m+[m
+[32m+[m[32m            public object Key => _enumerator.Current.Key!;[m
+[32m+[m
+[32m+[m[32m            public object? Value => _enumerator.Current.Value;[m
+[32m+[m
+[32m+[m[32m            public object Current => Entry;[m
+[32m+[m
+[32m+[m[32m            public bool MoveNext() => _enumerator.MoveNext();[m
+[32m+[m
+[32m+[m[32m            public void Reset() => _enumerator.Reset();[m
+[32m+[m[32m        }[m
+[32m+[m
+[32m+[m[32m        #endregion[m
+     }[m
+ }[m
