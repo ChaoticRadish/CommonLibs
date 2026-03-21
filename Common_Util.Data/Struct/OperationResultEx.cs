@@ -178,6 +178,15 @@ namespace Common_Util.Data.Struct
                 Exception = obj.ex,
             };
         }
+        public static implicit operator OperationResultEx(OperationResult result)
+        {
+            return new OperationResultEx()
+            {
+                IsSuccess = result.IsSuccess,
+                FailureReason = result.FailureReason,
+                SuccessInfo = result.SuccessInfo,
+            };
+        }
         #endregion
     }
     /// <summary>
