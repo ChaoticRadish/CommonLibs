@@ -240,8 +240,8 @@ namespace Common_Wpf.Controls.LayoutPanel
         #endregion
 
         #region 指令
-        public ICommand RetractCommand => new SampleCommand(_ => Retract(), _ => true);
-        public ICommand ExpandCommand => new SampleCommand(_ => Expand(), _ => true);
+        public ICommand RetractCommand => new SimpleCommand(_ => Retract(), _ => true);
+        public ICommand ExpandCommand => new SimpleCommand(_ => Expand(), _ => true);
         #endregion
 
         #region 操作

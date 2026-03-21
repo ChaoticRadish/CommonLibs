@@ -1,4 +1,5 @@
 ﻿using Common_Util;
+using Common_Util.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -16,9 +17,23 @@ namespace Common_Wpf.Converter
     [ValueConversion(typeof(Enum), typeof(string))]
     public class EnumDescConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        /// <summary>
+        /// 输入 <see langword="null"/> 值时的描述内容, 如果是空值, 则不生效
+        /// </summary>
+        public string? NullValueDesc { get; set; }
+
+        public object? Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return EnumHelper.GetDesc((Enum)value);
+            if (value is Enum @enum)
+                return EnumHelper.GetDesc(@enum);
+            else 
+            {
+                if (value is null && NullValueDesc.IsNotEmpty())
+                {
+                    return NullValueDesc;
+                }
+                return value;
+            }
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

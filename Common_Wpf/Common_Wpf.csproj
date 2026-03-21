@@ -13,6 +13,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Page Update="Controls\FeatureGroup\Facility\PaginationControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Update="Controls\FeatureGroup\Log\SimpleLogShower.xaml">
       <SubType>Designer</SubType>
     </Page>
