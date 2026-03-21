@@ -209,6 +209,64 @@ namespace Common_Winform.Extensions
             // 调用有返回值的重载，只是返回一个固定的默认值
             return control.AutoInvokeAsync(() => { action(); return true; });
         }
+
+
+        /// <summary>
+        /// 异步地根据当前线程是否在 UI 线程上, 选择一种方式执行一个函数，并返回其结果。
+        /// </summary>
+        /// <typeparam name="TResult">函数的返回值类型。</typeparam>
+        /// <param name="control">用于封送回 UI 线程的控件。</param>
+        /// <param name="func">要在 UI 线程上执行的函数。</param>
+        /// <returns>一个 Task，其结果为函数的返回值。</returns>
+        public static Task<TResult> AutoInvokeAsync<TResult>(this Control control, Func<Task<TResult>> func)
+        {
+            // 1. 检查是否需要 Invoke
+            if (!control.InvokeRequired)
+            {
+                // 如果已经在 UI 线程上，不需要像同步版本那样包装成 Task.FromResult。
+                try
+                {
+                    var task = func();
+                    return task;
+                }
+                catch (Exception ex)
+                {
+                    return Task.FromException<TResult>(ex);
+                }
+            }
+
+            // 2. 如果不在 UI 线程，使用 TaskCompletionSource 来创建一个可手动控制的 Task
+            var tcs = new TaskCompletionSource<TResult>();
+
+            // 3. 使用 BeginInvoke 来异步调用
+            // BeginInvoke 不会阻塞当前的后台线程
+            control.BeginInvoke(new Action(async () =>
+            {
+                try
+                {
+                    // 这个 Action 会在 UI 线程上执行
+                    var result = await func().ConfigureAwait(false);
+                    tcs.SetResult(result); // 设置 Task 的成功结果
+                }
+                catch (Exception ex)
+                {
+                    tcs.SetException(ex); // 如果函数内部出错，设置 Task 的异常
+                }
+            }));
+
+            // 4. 返回我们创建的 Task
+            return tcs.Task;
+        }
+        /// <summary>
+        /// 异步地根据当前线程是否在 UI 线程上, 选择一种方式执行一个操作（无返回值）。
+        /// </summary>
+        /// <param name="control">用于封送回 UI 线程的控件。</param>
+        /// <param name="func">要在 UI 线程上执行的操作。</param>
+        /// <returns>一个表示操作完成的 Task。</returns>
+        public static Task AutoInvokeAsync(this Control control, Func<Task> func)
+        {
+            return control.AutoInvokeAsync(async () => { await func(); return true; });
+        }
         #endregion
 
         #endregion
