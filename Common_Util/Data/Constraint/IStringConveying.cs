@@ -62,6 +62,13 @@ namespace Common_Util.Data.Constraint
         {
             return obj == null ? null : _toStr(obj.GetType(), obj);
         }
+        [return: NotNullIfNotNull(nameof(obj))]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static string? ToString(Type type, object? obj)
+        {
+            return obj == null ? null : _toStr(type, obj);
+        }
+
 
         /// <summary>
         /// 判断一个类型是否允许与字符串互相转换
@@ -145,8 +152,8 @@ namespace Common_Util.Data.Constraint
 
         private static string _toStr(Type type, object obj)
         {
-            var method = type.GetMethods(BindingFlags.Public | BindingFlags.Static)
-                .Where(m => m.Name == "op_Explicit" && m.GetParameters().Length == 1 && m.GetParameters()[0].ParameterType == type)
+            var method = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)
+                .Where(m => _splitMethodName(m.Name) == "op_Explicit" && m.GetParameters().Length == 1 && m.GetParameters()[0].ParameterType == type)
                 .First();
             var result = method.Invoke(null, [obj]);
             if (obj != null && (result == null || result is not string))
@@ -155,13 +162,19 @@ namespace Common_Util.Data.Constraint
         }
         private static object _toObj(Type type, string str)
         {
-            var method = type.GetMethods(BindingFlags.Public | BindingFlags.Static)
-                .Where(m => m.Name == "op_Explicit" && m.GetParameters().Length == 1 && m.GetParameters()[0].ParameterType == typeof(string))
+            var method = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)
+                .Where(m => _splitMethodName(m.Name) == "op_Explicit" && m.GetParameters().Length == 1 && m.GetParameters()[0].ParameterType == typeof(string))
                 .First();
             var result = method.Invoke(null, [str]);
             if (str != null && (result == null || result.GetType() != type))
                 throw new Common_Util.Exceptions.General.ImplementationException($"显示转换接口未按预期返回非 null 值");
             return result!;
+        }
+        private static string _splitMethodName(string originName)
+        {
+            var index = originName.LastIndexOf('.');
+            if (index < 0) return originName;
+            return originName.Substring(index + 1);
         }
 
         #endregion

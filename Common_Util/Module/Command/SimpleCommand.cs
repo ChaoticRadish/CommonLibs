@@ -11,7 +11,7 @@ namespace Common_Util.Module.Command
     /// 最简单的命令类型
     /// <para>不触发 <see cref="CanExecuteChanged"/> </para>
     /// </summary>
-    public class SampleCommand : ICommand
+    public class SimpleCommand : ICommand
     {
         private readonly bool ignoreParamWhenExec;
         private readonly Action? execAction_noParam;
@@ -23,7 +23,7 @@ namespace Common_Util.Module.Command
         /// </summary>
         /// <param name="execAction"></param>
         /// <param name="changeFunc">如果该参数为 null, 则无论传入什么参数, <see cref="CanExecute"/> 都将返回 true </param>
-        public SampleCommand(Action execAction, Func<object?, bool>? changeFunc = null)
+        public SimpleCommand(Action execAction, Func<object?, bool>? changeFunc = null)
         {
             ignoreParamWhenExec = true;
             execAction_noParam = execAction;
@@ -35,7 +35,7 @@ namespace Common_Util.Module.Command
         /// </summary>
         /// <param name="execAction"></param>
         /// <param name="changeFunc">如果该参数为 null, 则无论传入什么参数, <see cref="CanExecute"/> 都将返回 true </param>
-        public SampleCommand(Action<object?> execAction, Func<object?, bool>? changeFunc = null)
+        public SimpleCommand(Action<object?> execAction, Func<object?, bool>? changeFunc = null)
         {
             ignoreParamWhenExec = false;
             this.execAction = execAction;

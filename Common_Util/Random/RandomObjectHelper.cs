@@ -48,6 +48,10 @@ namespace Common_Util.Random
             {
                 SetRandomDoubleValue(obj, propertyInfo, random);
             }
+            else if (typeof(decimal) == propertyInfo.PropertyType)
+            {
+                SetRandomDecimalValue(obj, propertyInfo, random);
+            }
             else if (typeof(float) == propertyInfo.PropertyType)
             {
                 SetRandomFloatValue(obj, propertyInfo, random);
@@ -64,7 +68,12 @@ namespace Common_Util.Random
             {
                 SetRandomListValue(obj, propertyInfo, random);
             }
-            else if (propertyInfo.PropertyType.IsClass)
+            else if (propertyInfo.PropertyType.IsEnum)
+            {
+
+            }
+            else if (propertyInfo.PropertyType.IsClass
+                || TypeHelper.IsCustomStruct(propertyInfo.PropertyType))
             {
                 propertyInfo.SetValue(obj, GetObject(propertyInfo.PropertyType, random), null);
             }
@@ -152,6 +161,19 @@ namespace Common_Util.Random
             }
             propertyInfo.SetValue(obj, RandomValueTypeHelper.GetDouble(min, max, random), null);
         }
+        private static void SetRandomDecimalValue(object obj, PropertyInfo propertyInfo, System.Random random)
+        {
+            decimal min = 0;
+            decimal max = 100;
+
+            DecimalRangeAttribute? range = propertyInfo.GetCustomAttribute<DecimalRangeAttribute>();
+            if (range != null)
+            {
+                min = range.Min;
+                max = range.Max;
+            }
+            propertyInfo.SetValue(obj, RandomValueTypeHelper.GetDecimal(min, max, random), null);
+        }
         /// <summary>
         /// 为对象的指定属性赋随机值, 不会判断, 需要确保输入的参数不为空
         /// </summary>
@@ -170,12 +192,20 @@ namespace Common_Util.Random
                 min = range.Min;
                 max = range.Max;
             }
+            IEnumerable<char> charPickRange;
+            CharPickRangeAttribute? charPickRangeAttribute = propertyInfo.GetCustomAttribute<CharPickRangeAttribute>();
+            if (charPickRangeAttribute != null && charPickRangeAttribute.Chars.IsNotEmpty())
+            {
+                charPickRange = charPickRangeAttribute.Chars;
+            }
+            else
+            {
+                charPickRange = RandomStringHelper.EnglishLetters;
+            }
             propertyInfo.SetValue(
-            obj,
-            RandomStringHelper.GetRandomEnglishString(
-            RandomValueTypeHelper.RandomInt(min, max, random),
-            random),
-            null);
+                obj,
+                new RandomCharSplicer(charPickRange, random).Get(RandomValueTypeHelper.RandomInt(min, max, random)),
+                null);
         }
         /// <summary>
         /// 为对象的指定属性赋随机值, 不会判断, 需要确保输入的参数不为空
@@ -201,6 +231,26 @@ namespace Common_Util.Random
 
         #endregion
         /// <summary>
+        /// 设置随机值到 <paramref name="target"/> 的公共属性
+        /// </summary>
+        /// <param name="target"></param>
+        /// <param name="random"></param>
+        public static void SetTo(object target, System.Random? random = null)
+        {
+            ArgumentNullException.ThrowIfNull(target);
+            random ??= new System.Random();
+
+            Type type = target.GetType();
+            foreach (PropertyInfo propertyInfo in type.GetProperties())
+            {
+                if (!propertyInfo.CanRead) continue;
+                if (!propertyInfo.ExistCustomAttribute<IgnoreRandomAttribute>())
+                {
+                    SetRandomValue(target, propertyInfo, random);
+                }
+            }
+        }
+        /// <summary>
         /// 取得随机的指定类型的对象
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -216,14 +266,16 @@ namespace Common_Util.Random
             }
             else
             {
-                if (type.IsValueType)
+                if (TypeHelper.IsBuiltInType(type))
                 {
                     return RandomValueTypeHelper.Random(type, random);
                 }
                 else
                 {
-                    if (TypeHelper.ExistNonParamPublicConstructor(type))
-                    {// 检查是否有无参构造函数
+                    if (TypeHelper.ExistNonParamPublicConstructor(type) // 拥有无参构造函数
+                        || TypeHelper.IsCustomStruct(type)  // 自定义结构体不需要无参构造函数也可以创建实例
+                        )
+                    {
                         object output = CreateInstance(type);
 
                         foreach (PropertyInfo propertyInfo in type.GetProperties())

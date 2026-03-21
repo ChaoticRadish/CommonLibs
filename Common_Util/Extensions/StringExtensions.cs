@@ -67,7 +67,7 @@ namespace Common_Util.Extensions
         }
 
         /// <summary>
-        /// 判断字符串是否为null或空字符串
+        /// 判断字符串是否为 <see langword="null"/> 或空字符串
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
@@ -77,7 +77,7 @@ namespace Common_Util.Extensions
             return string.IsNullOrEmpty(value);
         }
         /// <summary>
-        /// 判断字符串是否不为null或空字符串
+        /// 判断字符串是否不为 <see langword="null"/> 或空字符串
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
@@ -86,6 +86,27 @@ namespace Common_Util.Extensions
         {
             return !string.IsNullOrEmpty(value);
         }
+        /// <summary>
+        /// 判断字符串是否为 <see langword="null"/> 或空白字符串
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsWhiteSpace([NotNullWhen(false)] this string? value)
+        {
+            return string.IsNullOrWhiteSpace(value);
+        }
+        /// <summary>
+        /// 判断字符串是否不为 <see langword="null"/> 或空白字符串
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsNotWhiteSpace([NotNullWhen(true)] this string? value)
+        {
+            return !string.IsNullOrWhiteSpace(value);
+        }
+
 
         /// <summary>
         /// 检查字符串是不是null或者空字符串, 如果是则不通过, 返回false
@@ -142,7 +163,8 @@ namespace Common_Util.Extensions
         /// <param name="str"></param>
         /// <param name="defaultValue"></param>
         /// <returns></returns>
-        public static string WhenWhiteSpaceDefault(this string? str, string defaultValue)
+        [return: NotNullIfNotNull(nameof(defaultValue))]
+        public static string? WhenWhiteSpaceDefault(this string? str, string? defaultValue)
         {
             if (string.IsNullOrWhiteSpace(str))
             {

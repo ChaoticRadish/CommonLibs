@@ -125,6 +125,7 @@ namespace Common_Util.Extensions
         }
         #endregion
 
+        #region 插入
         /// <summary>
         /// 将新项添加到列表尾部
         /// </summary>
@@ -183,6 +184,8 @@ namespace Common_Util.Extensions
             }
         }
 
+        #endregion
+
         /// <summary>
         /// 创建输入类型的一个列表, 并把输入对象放进去
         /// </summary>
@@ -225,6 +228,24 @@ namespace Common_Util.Extensions
         }
 
         /// <summary>
+        /// 创建一个只有重复值 <paramref name="obj"/> 的长度为 <paramref name="length"/> 的数组
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="obj"></param>
+        /// <param name="times"></param>
+        /// <returns></returns>
+        public static T[] RepeatToArray<T>(this T obj, int length)
+        {
+            if (length <= 0) return [];
+            T[] output = new T[length];
+            for (int i = 0; i < length; i++) 
+            {
+                output[i] = obj;
+            }
+            return output;
+        }
+
+        /// <summary>
         /// 释放所有项并清空
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -238,6 +259,8 @@ namespace Common_Util.Extensions
             }
             objs.Clear();
         }
+
+        #region 排序
 
         /// <summary>
         /// 检查列表内的元素是否顺序排列, 忽略相邻值相等的情况
@@ -316,6 +339,8 @@ namespace Common_Util.Extensions
                 }
             }
         }
+
+        #endregion
 
 
 
@@ -440,6 +465,22 @@ namespace Common_Util.Extensions
                 }
                 list[0] = item;
             }
+        }
+        #endregion
+
+        #region 转换 / 适配
+        /// <summary>
+        /// 将 <paramref name="list"/> 适配为数组
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="list"></param>
+        /// <returns></returns>
+        [return: NotNullIfNotNull(nameof(list))]
+        public static T[]? AsArray<T>(this IList<T>? list)
+        {
+            if (list == null) return null;
+            if (list is T[] arr) return arr;
+            else return list.ToArray();
         }
         #endregion
     }

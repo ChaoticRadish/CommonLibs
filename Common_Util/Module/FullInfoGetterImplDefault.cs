@@ -265,7 +265,7 @@ namespace Common_Util.Module
             {
                 Properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
 
-                if (type.IsPrimitive || type.IsEnum)
+                if (TypeHelper.IsBuiltInType(type))
                 {
                     DealType = DealTypeEnum.ToString;
                 }

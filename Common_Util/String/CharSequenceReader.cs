@@ -251,6 +251,78 @@ namespace Common_Util.String
             }
             SubmitAllBuffer();
         }
+        /// <summary>
+        /// 从当前位置开始读取, 直到读取到不在 <paramref name="chars"/> 中的字符, 或读取到读取器源序列的终点
+        /// </summary>
+        /// <param name="chars"></param>
+        public void ReadUntilNotIn(IEnumerable<char> chars)
+        {
+            var charSet = chars.ToHashSet();
+            if (!chars.Any()) return;
+
+            int startIndex = LogicLocation;
+            int index = 0;
+            while (TryReadSaveWhereLocation(startIndex + index, out char readed))
+            {
+                if (charSet.Contains(readed))
+                {
+                    SubmitReaded(startIndex + index + 1 - ReadBufferStart);
+                }
+                else
+                {
+                    return;
+                }
+
+                index++;
+            }
+            SubmitAllBuffer();
+        }
+
+
+        /// <summary>
+        /// 从当前位置开始读取, 直到读取器源序列的终点
+        /// </summary>
+        /// <param name="stringBuilder"></param>
+        public void ReadUntilEnd(StringBuilder stringBuilder)
+        {
+            int startIndex = LogicLocation;
+            int index = 0;
+            while (TryReadSaveWhereLocation(startIndex + index, out char readed))
+            {
+                stringBuilder.Append(readed);
+                index++;
+            }
+            SubmitAllBuffer();
+        }
+
+        /// <summary>
+        /// 从当前位置开始读取, 直到读取到不在 <paramref name="chars"/> 中的字符, 或读取到读取器源序列的终点
+        /// </summary>
+        /// <param name="chars"></param>
+        /// <param name="stringBuilder"></param>
+        public void ReadUntilNotIn(IEnumerable<char> chars, StringBuilder stringBuilder)
+        {
+            var charSet = chars.ToHashSet();
+            if (!chars.Any()) return;
+
+            int startIndex = LogicLocation;
+            int index = 0;
+            while (TryReadSaveWhereLocation(startIndex + index, out char readed))
+            {
+                if (charSet.Contains(readed))
+                {
+                    stringBuilder.Append(readed);
+                    SubmitReaded(startIndex + index + 1 - ReadBufferStart);
+                }
+                else
+                {
+                    return;
+                }
+
+                index++;
+            }
+            SubmitAllBuffer();
+        }
 
         /// <summary>
         /// 从当前位置开始读取, 直到遇到指定的字符串
