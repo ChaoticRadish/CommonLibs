@@ -21,9 +21,17 @@ namespace CommonLibTest_Console
             AllocConsole();
 #endif
             var runner = new TestRunner();
-            foreach (var str in args.SelectMany(s => s.Split('\n', ' ')).Where(s => s.IsNotEmpty() && !s.StartsWith("//")))
+            var tests = args.SelectMany(s => s.Split('\n', ' ')).Where(s => s.IsNotEmpty() && !s.StartsWith("//"));
+            if (!tests.Any())
             {
-                runner.Run(str);
+                throw new InvalidOperationException("未指定测试项");
+            }
+            else
+            {
+                foreach (var str in tests)
+                {
+                    runner.Run(str);
+                }
             }
 
 #if DEBUG
