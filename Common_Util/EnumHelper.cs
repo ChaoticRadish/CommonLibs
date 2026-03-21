@@ -2,6 +2,7 @@
 using Microsoft.VisualBasic.FileIO;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
@@ -81,6 +82,20 @@ namespace Common_Util
         /// <returns></returns>
         public static IEnumerable<TEnum> All<TEnum>() where TEnum : Enum
         {
+            foreach (var enumObj in Enum.GetValues(typeof(TEnum)))
+            {
+                yield return (TEnum)enumObj;
+            }
+        }
+        /// <summary>
+        /// 遍历 <typeparamref name="TEnum"/> 类型的 <see langword="null"/> 值以及输入的枚举类型中的每一个枚举值
+        /// </summary>
+        /// <remarks>
+        /// 如果枚举类型包含了多个同数值的枚举值, 遍历过程中可能会出现重复! 
+        /// </remarks>
+        public static IEnumerable<TEnum?> NullAndAll<TEnum>() where TEnum : struct, Enum
+        {
+            yield return null;
             foreach (var enumObj in Enum.GetValues(typeof(TEnum)))
             {
                 yield return (TEnum)enumObj;
@@ -192,8 +207,8 @@ namespace Common_Util
         /// 将字符串转换为枚举 (优先通过枚举名, 不匹配再通过描述)
         /// </summary>
         /// <param name="str"></param>
-        /// <returns>null时表示转换失败</returns>
-        public static object? Convert(Type type, string str)
+        /// <returns><see langword="null"/> 时表示转换失败</returns>
+        public static object? Convert(Type type, string str, bool onlyDefined = true)
         {
             string[] names = Enum.GetNames(type);
 
@@ -219,75 +234,56 @@ namespace Common_Util
 
             }
             // 通过数值判断
+            object? value = null;
             if (Enum.GetUnderlyingType(type) == typeof(int))
             {
                 if (int.TryParse(str, out int val))
-                {
-                    if (Enum.IsDefined(type, val))
-                    {
-                        return val;
-                    }
-                }
+                    value = val;
             }
             else if (Enum.GetUnderlyingType(type) == typeof(uint))
             {
                 if (uint.TryParse(str, out uint val))
-                {
-                    if (Enum.IsDefined(type, val))
-                    {
-                        return val;
-                    }
-                }
+                    value = val;
             }
             else if (Enum.GetUnderlyingType(type) == typeof(short))
             {
                 if (short.TryParse(str, out short val))
-                {
-                    if (Enum.IsDefined(type, val))
-                    {
-                        return val;
-                    }
-                }
+                    value = val;
             }
             else if (Enum.GetUnderlyingType(type) == typeof(ushort))
             {
                 if (ushort.TryParse(str, out ushort val))
-                {
-                    if (Enum.IsDefined(type, val))
-                    {
-                        return val;
-                    }
-                }
+                    value = val;
             }
             else if (Enum.GetUnderlyingType(type) == typeof(long))
             {
                 if (long.TryParse(str, out long val))
-                {
-                    if (Enum.IsDefined(type, val))
-                    {
-                        return val;
-                    }
-                }
+                    value = val;
             }
             else if (Enum.GetUnderlyingType(type) == typeof(ulong))
             {
                 if (long.TryParse(str, out long val))
-                {
-                    if (Enum.IsDefined(type, val))
-                    {
-                        return val;
-                    }
-                }
+                    value = val;
             }
             else if (Enum.GetUnderlyingType(type) == typeof(byte))
             {
                 if (byte.TryParse(str, out byte val))
+                    value = val;
+            }
+            else if (Enum.GetUnderlyingType(type) == typeof(sbyte))
+            {
+                if (sbyte.TryParse(str, out sbyte val))
+                    value = val;
+            }
+            // 数值转换为枚举对象
+            if (value != null) 
+            {
+                if (onlyDefined)
                 {
-                    if (Enum.IsDefined(type, val))
-                    {
-                        return val;
-                    }
+                    if (Enum.IsDefined(type, value))
+                        return Enum.ToObject(type, value);
                 }
+                else return Enum.ToObject(type, value);
             }
 
             return null;

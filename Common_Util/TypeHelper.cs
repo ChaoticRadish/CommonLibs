@@ -17,6 +17,16 @@ namespace Common_Util
     public static class TypeHelper
     {
         /// <summary>
+        /// 判断是否自定义结构体
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public static bool IsCustomStruct(Type type)
+        {
+            return type.IsValueType && Type.GetTypeCode(type) == TypeCode.Object;
+        }
+
+        /// <summary>
         /// 判断是否内置类型
         /// </summary>
         /// <param name="type"></param>
@@ -24,6 +34,31 @@ namespace Common_Util
         public static bool IsBuiltInType(Type type)
         {
             return (type == typeof(object) || Type.GetTypeCode(type) != TypeCode.Object);
+        }
+
+        /// <summary>
+        /// 判断一个类型是否基础类型
+        /// </summary>
+        /// <remarks>
+        /// 包括枚举类型 <see langword="int"/>, <see langword="float"/>, <see langword="DateTime"/>, <see langword="decimal"/>, <see langword="string"/> ... 等 <br/>
+        /// 不包含 <see cref="DBNull"/>, <see langword="object"/> 以及其他复杂类型. <br/>
+        /// <see cref="Nullable{T}"/> 会视为非基础类型, 返回 <see langword="false"/>
+        /// </remarks>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public static bool IsSimpleType(Type type)
+        {
+            return type switch
+            {
+                Type t when t == typeof(Guid) => true,
+                Type t when t == typeof(DateTimeOffset) => true,
+                _ => Type.GetTypeCode(type) switch
+                {
+                    TypeCode.DBNull => false,
+                    TypeCode.Object => false,
+                    _ => true,
+                }
+            };
         }
 
 
