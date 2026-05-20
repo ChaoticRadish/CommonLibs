@@ -245,7 +245,7 @@ namespace Common_Winform.Extensions
                 try
                 {
                     // 这个 Action 会在 UI 线程上执行
-                    var result = await func().ConfigureAwait(false);
+                    var result = await func().ConfigureAwait(true);
                     tcs.SetResult(result); // 设置 Task 的成功结果
                 }
                 catch (Exception ex)
