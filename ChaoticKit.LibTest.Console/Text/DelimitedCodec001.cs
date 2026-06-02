@@ -1,0 +1,108 @@
+﻿using ChaoticKit.Attributes.General;
+using ChaoticKit.Data.Constraint;
+using ChaoticKit.Data.Mechanisms.Impl;
+using ChaoticKit.Extensions;
+using ChaoticKit.Random;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ChaoticKit.LibTest.Console.Text
+{
+    internal class DelimitedCodec001() : TestBase("测试分隔符编解码器 DelimitedCodec")
+    {
+        protected override void RunImpl()
+        {
+            DelimitedCodec codec = new();
+
+            DateTime min = new DateTime(2025, 1, 1);
+            DateTime max = new DateTime(2026, 1, 1);
+
+            TestModel1 test = new()
+            {
+                Name = "ABCDE",
+                Age = 123,
+                Date = RandomValueTypeHelper.GetDateTime(min, max),
+                Model = new TestModel2() { TestInt = -1, TestString = "Model1", TestDate = RandomValueTypeHelper.GetDateTime(min, max), },
+                Enumerable = [
+                    new TestModel2() { TestInt = 1, TestString = "Enumerable1", TestDate = RandomValueTypeHelper.GetDateTime(min, max), },
+                    new TestModel2() { TestInt = 2, TestString = "Enumerable2", TestDate = RandomValueTypeHelper.GetDateTime(min, max), },
+                    ],
+                Collection = [
+                    new TestModel2() { TestInt = 3, TestString = "Collection1", TestDate = RandomValueTypeHelper.GetDateTime(min, max), },
+                    new TestModel2() { TestInt = 4, TestString = "Collection2", TestDate = RandomValueTypeHelper.GetDateTime(min, max), },
+                    ],
+                List = [
+                    new TestModel2() { TestInt = 5, TestString = "List1", TestDate = RandomValueTypeHelper.GetDateTime(min, max), },
+                    new TestModel2() { TestInt = 6, TestString = "List2", TestDate = RandomValueTypeHelper.GetDateTime(min, max), },
+                    ],
+                Array = [
+                    new TestModel2() { TestInt = 7, TestString = "Array1", TestDate = RandomValueTypeHelper.GetDateTime(min, max), },
+                    new TestModel2() { TestInt = 8, TestString = "Array2", TestDate = RandomValueTypeHelper.GetDateTime(min, max), },
+                    ],
+            };
+
+            var result1 = codec.Serialize(test);
+            WritePair(result1.FullInfoString(), split: ": \n");
+
+            WriteLine();
+
+            var result2 = codec.Deserialize<TestModel1>(result1.Data ?? string.Empty);
+            WritePair(result2.FullInfoString(), split: ": \n");
+        }
+
+        private struct TestModel1
+        {
+            [SequenceFlag(0)]
+            public string Name { get; set; }
+
+            [SequenceFlag(3)]
+            public int Age { get; set; }
+
+            [SequenceFlag(5)]
+            public TestModel2 Model { get; set; }
+
+            [SequenceFlag(6)]
+            public DateTime? Date { get; set; }
+
+            [SequenceFlag(4)]
+            public IEnumerable<TestModel2> Enumerable { get; set; }
+
+            [SequenceFlag]
+            public ICollection<TestModel2> Collection { get; set; }
+
+            [SequenceFlag]
+            public List<TestModel2> List { get; set; }
+
+            [SequenceFlag]
+            public TestModel2[] Array { get; set; }
+        }
+
+        public struct TestModel2 : IStringConveying<TestModel2>
+        {
+            [SequenceFlag(5)]
+            public string TestString { get; set; }
+            [SequenceFlag(2)]
+            public int TestInt { get; set; }
+            [SequenceFlag(6)]
+            public DateTime TestDate { get; set; } 
+
+            static explicit IStringConveying<TestModel2>.operator TestModel2(string s)
+            {
+                if (s.StartsWith('"'))
+                    s = s[1..];
+                if (s.EndsWith('"'))
+                    s = s[..^1];
+                return DelimitedCodec.Shared.Deserialize<TestModel2>(s).Data;
+            }
+
+            static explicit IStringConveying<TestModel2>.operator string(TestModel2 t)
+            {
+                var output = $"\"{DelimitedCodec.Shared.Serialize(t).Data ?? string.Empty}\"";
+                return output;
+            }
+        }
+    }
+}

@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.13.12" />
+    <PackageReference Include="MSTest.TestFramework" Version="3.9.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ChaoticKit.Data\ChaoticKit.Data.csproj" />
+    <ProjectReference Include="..\ChaoticKit.NewtonsoftJson\ChaoticKit.NewtonsoftJson.csproj" />
+    <ProjectReference Include="..\ChaoticKit.Test.Console\ChaoticKit.Test.Console.csproj" />
+    <ProjectReference Include="..\ChaoticKit\ChaoticKit.csproj" />
+  </ItemGroup>
+
+</Project>

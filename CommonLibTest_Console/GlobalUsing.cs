@@ -1,1 +1,0 @@
-﻿global using Common_Util.Test.Console;

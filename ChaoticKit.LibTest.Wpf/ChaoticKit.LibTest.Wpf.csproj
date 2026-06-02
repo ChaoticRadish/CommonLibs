@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ChaoticKit.Data\ChaoticKit.Data.csproj" />
+    <ProjectReference Include="..\ChaoticKit\ChaoticKit.csproj" />
+    <ProjectReference Include="..\ChaoticKit.Wpf\ChaoticKit.Wpf.csproj" />
+  </ItemGroup>
+
+</Project>

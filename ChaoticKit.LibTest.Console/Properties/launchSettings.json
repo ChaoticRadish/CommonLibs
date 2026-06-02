@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ChaoticKit.LibTest.Console": {
+      "commandName": "Project",
+      "commandLineArgs": "DynamicIL.ValueTuple001\r\n"
+    }
+  }
+}

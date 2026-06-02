@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows7.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ChaoticKit.Data\ChaoticKit.Data.csproj" />
+    <ProjectReference Include="..\ChaoticKit\ChaoticKit.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Update="Controls\FeatureGroup\Facility\PaginationControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Controls\FeatureGroup\Log\SimpleLogShower.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
+
+</Project>

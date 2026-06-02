@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "CommonLibTest_Console": {
-      "commandName": "Project",
-      "commandLineArgs": "DynamicIL.ValueTuple001\r\n"
-    }
-  }
-}
