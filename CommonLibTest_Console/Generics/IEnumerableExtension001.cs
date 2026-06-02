@@ -52,6 +52,6 @@ namespace CommonLibTest_Console.Generics
             }
             WriteEmptyLine();
         }
-
+        
     }
 }
