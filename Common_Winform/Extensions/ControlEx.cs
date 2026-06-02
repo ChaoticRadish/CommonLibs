@@ -209,6 +209,7 @@ namespace Common_Winform.Extensions
             // 调用有返回值的重载，只是返回一个固定的默认值
             return control.AutoInvokeAsync(() => { action(); return true; });
         }
+        #endregion
 
 
         /// <summary>
@@ -245,7 +246,7 @@ namespace Common_Winform.Extensions
                 try
                 {
                     // 这个 Action 会在 UI 线程上执行
-                    var result = await func().ConfigureAwait(false);
+                    var result = await func().ConfigureAwait(true);
                     tcs.SetResult(result); // 设置 Task 的成功结果
                 }
                 catch (Exception ex)
@@ -269,7 +270,6 @@ namespace Common_Winform.Extensions
         }
         #endregion
 
-        #endregion
 
         /// <summary>
         /// 自动设置是否可用
@@ -488,6 +488,25 @@ namespace Common_Winform.Extensions
             int currentDpi = control.DeviceDpi;
             float dpiScale = currentDpi / 96f; // 计算 DPI 缩放比例
             return dpiScale;
+        }
+        #endregion
+
+        #region 访问
+        /// <summary>
+        /// 获取指定控件及其所有子级控件（递归查找所有层级的子控件）
+        /// </summary>
+        /// <param name="control">起始控件</param>
+        /// <returns>包含控件及其所有子级控件的列表</returns>
+        public static IEnumerable<Control> GetAllControls(this Control control)
+        {
+            yield return control;
+            foreach (Control childControl in control.Controls)
+            {
+                foreach (Control subControl in childControl.GetAllControls())
+                {
+                    yield return subControl;
+                }
+            }
         }
         #endregion
     }

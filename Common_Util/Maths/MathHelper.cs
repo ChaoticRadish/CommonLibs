@@ -80,7 +80,7 @@ namespace Common_Util.Maths
                 return (float)Math.Pow(1 / baseValue, value);
             }
         }
-
+        #region 最小值
         /// <summary>
         /// 返回 <paramref name="inputs"/> 中的最小值, 如果 <paramref name="inputs"/> 是空的, 则返回 0
         /// </summary>
@@ -102,5 +102,55 @@ namespace Common_Util.Maths
             }
             return output;
         }
+
+        /// <summary>
+        /// 返回 <paramref name="inputs"/> 中的最小值, 如果 <paramref name="inputs"/> 是空的, 则返回 0
+        /// </summary>
+        /// <param name="inputs"></param>
+        /// <returns></returns>
+        public static uint Min(params uint[] inputs)
+        {
+            uint output = 0;
+            if (inputs != null && inputs.Length > 0)
+            {
+                output = inputs[0];
+                foreach (uint input in inputs)
+                {
+                    if (output > input)
+                    {
+                        output = input;
+                    }
+                }
+            }
+            return output;
+
+        }
+
+        #endregion
+        #region 最大值
+
+        /// <summary>
+        /// 返回 <paramref name="inputs"/> 中的最大值, 如果 <paramref name="inputs"/> 是空的, 则返回 0
+        /// </summary>
+        /// <param name="inputs"></param>
+        /// <returns></returns>
+        public static uint Max(params uint[] inputs)
+        {
+            uint output = 0;
+            if (inputs != null && inputs.Length > 0)
+            {
+                output = inputs[0];
+                foreach (uint input in inputs)
+                {
+                    if (output < input)
+                    {
+                        output = input;
+                    }
+                }
+            }
+            return output;
+
+        }
+        #endregion
     }
 }

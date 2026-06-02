@@ -47,41 +47,38 @@ namespace Common_Util.Data.Structure.Tree.Extensions
         /// </summary>
         /// <typeparam name="TValue"></typeparam>
         /// <param name="node"></param>
+        /// <param name="shouldVisitChildren">判断节点是否应该访问其子节点，返回 <see langword="true"/> 则遍历子节点，返回 <see langword="false"/> 则跳过子节点遍历。默认为访问所有节点的子节点。</param>
         /// <returns></returns>
-        public static IEnumerable<IMultiTreeNode<TValue>> PreorderNode<TValue>(this IMultiTreeNode<TValue> node)
+        public static IEnumerable<IMultiTreeNode<TValue>> PreorderNode<TValue>(this IMultiTreeNode<TValue> node, Func<IMultiTreeNode<TValue>, bool>? shouldVisitChildren = null)
         {
+            shouldVisitChildren ??= _ => true;
+
             Stack<(IMultiTreeNode<TValue>, IEnumerator<IMultiTreeNode<TValue>>)> nodeStack = new();
 
             yield return node;
-            nodeStack.Push((node, node.Childrens.GetEnumerator()));
-
-            // bool push = true;
+            if (shouldVisitChildren(node))
+            {
+                nodeStack.Push((node, node.Childrens.GetEnumerator()));
+            }
 
             while (nodeStack.Count != 0)
             {
                 (var currentNode, var childrenEnumerator) = nodeStack.Peek();
-
-                // if (push)
-                // {
-                //     yield return currentNode;
-                // }
 
                 if (childrenEnumerator.MoveNext())
                 {
                     var nextNode = childrenEnumerator.Current;
 
                     yield return nextNode;
-                    nodeStack.Push((nextNode, nextNode.Childrens.GetEnumerator()));
-                    // push = true;
+                    if (shouldVisitChildren(nextNode))
+                    {
+                        nodeStack.Push((nextNode, nextNode.Childrens.GetEnumerator()));
+                    }
                 }
                 else
                 {
-                    // 当前节点的子项枚举器已结束
                     nodeStack.Pop();
-                    // push = false;
                 }
-
-
             }
         }
 

@@ -2,27 +2,45 @@
 # 此 .gitignore 文件已由 Microsoft(R) Visual Studio 自动创建。
 ################################################################################
 
-/CommonLibTest_Console/bin
+# 本地文件目录 - 放置保存在本地、仅在本地有意义的文件，包括临时文件
+.local/
+
+# Visual Studio 配置目录
 /.vs
+
+# 以下是各项目的编译输出目录
+
+# 测试项目
+/CommonLibTest_Console/bin
 /CommonLibTest_Console/obj
 /CommonLibTest_Wpf/bin
 /CommonLibTest_Wpf/obj
+/CommonLibTest_Winform/bin
+/CommonLibTest_Winform/obj
+/Common_Util.Test.Console/bin
+/Common_Util.Test.Console/obj
+
+# 核心库项目
 /Common_Maui/bin
 /Common_Maui/obj
 /Common_Util/bin
 /Common_Util/obj
 /Common_Util.Data/bin
 /Common_Util.Data/obj
+/Common_Util.GDI/bin
+/Common_Util.GDI/obj
+/Common_Util.NewtonsoftJson/bin
+/Common_Util.NewtonsoftJson/obj
+
+# Excel 相关项目
 /Common_Util.Excel.NPOI/bin
 /Common_Util.Excel.NPOI/obj
 /Common_Util.Excel.NPOI.GDI/bin
 /Common_Util.Excel.NPOI.GDI/obj
 /Common_Util.Excel.NPOI.SkiaSharp/bin
 /Common_Util.Excel.NPOI.SkiaSharp/obj
-/Common_Util.GDI/bin
-/Common_Util.GDI/obj
-/Common_Util.NewtonsoftJson/bin
-/Common_Util.NewtonsoftJson/obj
+
+# UI 框架项目
 /Common_Winform/bin
 /Common_Winform/obj
 /Common_Wpf/bin
