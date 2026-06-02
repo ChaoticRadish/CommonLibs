@@ -490,5 +490,24 @@ namespace Common_Winform.Extensions
             return dpiScale;
         }
         #endregion
+
+        #region 访问
+        /// <summary>
+        /// 获取指定控件及其所有子级控件（递归查找所有层级的子控件）
+        /// </summary>
+        /// <param name="control">起始控件</param>
+        /// <returns>包含控件及其所有子级控件的列表</returns>
+        public static IEnumerable<Control> GetAllControls(this Control control)
+        {
+            yield return control;
+            foreach (Control childControl in control.Controls)
+            {
+                foreach (Control subControl in childControl.GetAllControls())
+                {
+                    yield return subControl;
+                }
+            }
+        }
+        #endregion
     }
 }
