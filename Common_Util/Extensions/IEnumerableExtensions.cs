@@ -437,7 +437,6 @@ namespace Common_Util.Extensions
                 if (!e1End && e1.MoveNext())
                 {
                     t1 = e1.Current;
-                    index1++;
                 }
                 else
                 {
@@ -447,7 +446,6 @@ namespace Common_Util.Extensions
                 if (!e2End && e2.MoveNext())
                 {
                     t2 = e2.Current;
-                    index2++;
                 }
                 else
                 {
@@ -457,6 +455,9 @@ namespace Common_Util.Extensions
 
                 if (e1End && e2End) yield break;
                 else yield return ((index1, t1), (index2, t2));
+
+                if (index1 >= 0) index1++;
+                if (index2 >= 0) index2++;
 
             } while (!e1End || !e2End);
         }

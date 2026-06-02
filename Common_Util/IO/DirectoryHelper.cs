@@ -10,6 +10,20 @@ namespace Common_Util.IO
 {
     public static class DirectoryHelper
     {
+        /// <summary>
+        /// 检查目标文件路径所处的文件夹是否存在，不存在则创建
+        /// </summary>
+        /// <param name="filePath"></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void MakeDirectoryExists(string filePath)
+        {
+            FileInfo file = new FileInfo(filePath);
+            if (file.Directory == null) throw new InvalidOperationException("未能取得文件路径的目录信息");
+            if (!file.Directory.Exists)
+            {
+                file.Directory.Create();
+            }
+        }
 
         /// <summary>
         /// 删除目标文件夹下的所有文件与目录
