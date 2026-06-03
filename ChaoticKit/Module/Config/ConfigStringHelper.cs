@@ -68,6 +68,10 @@ namespace ChaoticKit.Module.Config
                 else
                     return enumValue.ToString("D");
             }
+            if (obj is Guid guid)
+            {
+                return guid.ToString();
+            }
             if (typeof(IEnumerable<string>).IsAssignableFrom(objType))
             {
                 return StringHelper.Concat(((IEnumerable<string>)obj).ToList(), "; ", false);
