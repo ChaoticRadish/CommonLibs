@@ -10,6 +10,20 @@ namespace Common_Util.IO
 {
     public static class DirectoryHelper
     {
+        /// <summary>
+        /// 检查目标文件路径所处的文件夹是否存在，不存在则创建
+        /// </summary>
+        /// <param name="filePath"></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void MakeDirectoryExists(string filePath)
+        {
+            FileInfo file = new FileInfo(filePath);
+            if (file.Directory == null) throw new InvalidOperationException("未能取得文件路径的目录信息");
+            if (!file.Directory.Exists)
+            {
+                file.Directory.Create();
+            }
+        }
 
         /// <summary>
         /// 删除目标文件夹下的所有文件与目录
@@ -98,6 +112,36 @@ namespace Common_Util.IO
                 foreach (FileInfo file in dir.GetFiles())
                 {
                     yield return file;
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// 清理最后写入时间在 <paramref name="days"/> 天前的文件 (仅清理输入目录下的文件, 不会清理子目录中的文件)
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="days"></param>
+        public static void ClearOld(string path, double days)
+        {
+            ClearOld(path, DateTime.Now - TimeSpan.FromDays(days));
+        }
+        /// <summary>
+        /// 清理最后写入时间小于输入日期的文件 (仅清理输入目录下的文件, 不会清理子目录中的文件)
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="date"></param>
+        public static void ClearOld(string path, DateTime date)
+        {
+            DirectoryInfo info = new DirectoryInfo(path);
+            if (info.Exists)
+            {
+                foreach (FileInfo file in info.GetFiles())
+                {
+                    if (file.LastWriteTime <= date)
+                    {
+                        file.Delete();
+                    }
                 }
             }
         }

@@ -188,7 +188,7 @@ namespace Common_Util.Extensions
         /// </summary>
         /// <param name="builder"></param>
         /// <param name="condition"></param>
-        /// <param name="sth"></param>
+        /// <param name="sths"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static StringBuilder AppendWhen(this StringBuilder builder, bool condition, params object?[] sths)
@@ -200,6 +200,40 @@ namespace Common_Util.Extensions
                     builder.Append(sth);
                 }
             }
+            return builder;
+        }
+
+        /// <summary>
+        /// 将多个值用分隔符连接后追加到 <paramref name="builder"/>
+        /// </summary>
+        /// <remarks>
+        /// 类似于 <see cref="string.Join(char, IEnumerable{T})"/>，但直接追加到 <paramref name="builder"/> 中，并支持自定义追加方式
+        /// </remarks>
+        /// <typeparam name="T">值的类型</typeparam>
+        /// <param name="builder"></param>
+        /// <param name="separator">分隔符</param>
+        /// <param name="values">要连接的值集合</param>
+        /// <param name="appendValue">自定义追加值的方法</param>
+        /// <returns>返回传入的 <paramref name="builder"/></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static StringBuilder AppendJoin<T>(this StringBuilder builder, char separator, IEnumerable<T> values, Action<StringBuilder, T> appendValue)
+        {
+            if (values == null)
+            {
+                return builder;
+            }
+
+            int index = 0;
+            foreach (var value in values)
+            {
+                if (index > 0)
+                {
+                    builder.Append(separator);
+                }
+                appendValue(builder, value);
+                index++;
+            }
+
             return builder;
         }
     }

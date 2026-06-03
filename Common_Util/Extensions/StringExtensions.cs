@@ -67,7 +67,7 @@ namespace Common_Util.Extensions
         }
 
         /// <summary>
-        /// 判断字符串是否为null或空字符串
+        /// 判断字符串是否为 <see langword="null"/> 或空字符串
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
@@ -77,7 +77,7 @@ namespace Common_Util.Extensions
             return string.IsNullOrEmpty(value);
         }
         /// <summary>
-        /// 判断字符串是否不为null或空字符串
+        /// 判断字符串是否不为 <see langword="null"/> 或空字符串
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
@@ -86,6 +86,27 @@ namespace Common_Util.Extensions
         {
             return !string.IsNullOrEmpty(value);
         }
+        /// <summary>
+        /// 判断字符串是否为 <see langword="null"/> 或空白字符串
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsWhiteSpace([NotNullWhen(false)] this string? value)
+        {
+            return string.IsNullOrWhiteSpace(value);
+        }
+        /// <summary>
+        /// 判断字符串是否不为 <see langword="null"/> 或空白字符串
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsNotWhiteSpace([NotNullWhen(true)] this string? value)
+        {
+            return !string.IsNullOrWhiteSpace(value);
+        }
+
 
         /// <summary>
         /// 检查字符串是不是null或者空字符串, 如果是则不通过, 返回false
@@ -124,7 +145,8 @@ namespace Common_Util.Extensions
         /// <param name="str"></param>
         /// <param name="defaultValue"></param>
         /// <returns></returns>
-        public static string WhenEmptyDefault(this string? str, string defaultValue)
+        [return: NotNullIfNotNull(nameof(defaultValue))]
+        public static string? WhenEmptyDefault(this string? str, string? defaultValue)
         {
             if (string.IsNullOrEmpty(str))
             {
@@ -141,7 +163,8 @@ namespace Common_Util.Extensions
         /// <param name="str"></param>
         /// <param name="defaultValue"></param>
         /// <returns></returns>
-        public static string WhenWhiteSpaceDefault(this string? str, string defaultValue)
+        [return: NotNullIfNotNull(nameof(defaultValue))]
+        public static string? WhenWhiteSpaceDefault(this string? str, string? defaultValue)
         {
             if (string.IsNullOrWhiteSpace(str))
             {
@@ -226,26 +249,38 @@ namespace Common_Util.Extensions
         }
         #endregion
 
-        #region 数值
-        private static readonly string _format_fixed_point = "0." + "#".Repeat(339);
+        #region 包含 C# 字符串值的解析, 实现上是直接调用了 StringAnalysis 的相关方法, 详细见该类型
+
         /// <summary>
-        /// 使用非科学计数法将一个 float 转换为字符串
+        /// 将字符串分割成子字符串，忽略 C# 字符串值。
         /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public static string NoScientificNotationString(this float value)
-        {
-            return value.ToString(_format_fixed_point);
-        }
+        /// <remarks>
+        /// 支持使用反斜杠 \ 来转义引号字符。
+        /// </remarks>
+        /// <param name="input">要分割的字符串。</param>
+        /// <param name="delimiter">用作分隔符的字符。</param>
+        public static IEnumerable<string> SplitIgnoreStringValue(this string input, char delimiter, 
+            StringSplitOptions splitOptions = StringSplitOptions.None)
+            => Common_Util.String.StringAnalysis.SplitIgnoreStringValue(input, delimiter, splitOptions);
+
         /// <summary>
-        /// 使用非科学计数法将一个 double 转换为字符串
+        /// 报告指定字符在此字符串中的第一个匹配项的索引，忽略 C# 字符串值。
         /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public static string NoScientificNotationString(this double value)
-        {
-            return value.ToString(_format_fixed_point);
-        }
+        /// <param name="input">要搜索的字符串。</param>
+        /// <param name="value">要查找的字符。</param>
+        /// <returns>如果找到该字符，则为 value 的从零开始的索引位置；如果未找到，则为 -1。</returns>
+        public static int IndexOfIgnoreStringValue(this string input, char value)
+            => Common_Util.String.StringAnalysis.IndexOfIgnoreStringValue(input, value);
+
+
+        /// <summary>
+        /// 报告指定字符在此字符串中的最后一个匹配项的索引，忽略 C# 字符串值。
+        /// </summary>
+        /// <param name="input">要搜索的字符串。</param>
+        /// <param name="value">要查找的字符。</param>
+        /// <returns>如果找到该字符，则为 value 的从零开始的索引位置；如果未找到，则为 -1。</returns>
+        public static int LastIndexOfIgnoreStringValue(this string input, char value)
+            => Common_Util.String.StringAnalysis.LastIndexOfIgnoreStringValue(input, value);
         #endregion
     }
 }

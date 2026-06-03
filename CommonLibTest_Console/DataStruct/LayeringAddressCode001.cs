@@ -3,6 +3,7 @@ using Common_Util.Data.Structure.Value;
 using Common_Util.Extensions;
 using Common_Util.String;
 using CommonLibTest_Console.Text;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -67,7 +68,7 @@ namespace CommonLibTest_Console.DataStruct
 
         }
 
-        private struct TestLayerMark : IStringConveying
+        private struct TestLayerMark : IStringConveying<TestLayerMark>
         {
             public string ValueA { get; set; }
 
@@ -119,12 +120,30 @@ namespace CommonLibTest_Console.DataStruct
             #region 隐式转换
             public static implicit operator TestLayerMark(string value)
             {
-                return StringConveyingHelper.FromString<TestLayerMark>(value);
+                TestLayerMark output = new();
+                output.ChangeValue(value);
+                return output;
             }
             public static implicit operator string(TestLayerMark value)
             {
                 return value.ConvertToString();
             }
+
+            #endregion
+
+            #region 显式转换
+            static explicit IStringConveying<TestLayerMark>.operator TestLayerMark(string s)
+            {
+                TestLayerMark output = new();
+                output.ChangeValue(s);
+                return output;
+            }
+
+            static explicit IStringConveying<TestLayerMark>.operator string(TestLayerMark t)
+            {
+                return t.ConvertToString();
+            }
+
             #endregion
         }
     }

@@ -12,7 +12,7 @@ namespace CommonLibTest_Console.DataStruct
     internal class Dict002() : TestBase("测试双向字典, 不同类型下的测试")
     {
         private ILevelLogger _logger => __logger ?? GetLevelLogger("测试");
-        private ILevelLogger? __logger;
+        private ILevelLogger? __logger = null;
 
         protected override void RunImpl()
         {

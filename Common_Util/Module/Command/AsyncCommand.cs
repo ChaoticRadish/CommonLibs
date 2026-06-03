@@ -12,7 +12,7 @@ namespace Common_Util.Module.Command
     /// 无返回值的异步指令
     /// <para>不触发 <see cref="CanExecuteChanged"/> </para>
     /// </summary>
-    public class AsyncCommand : ICommand
+    public class AsyncCommand : IAsyncCommand
     {
         private readonly Func<CancellationToken, object?, Task> execute;
         private readonly Func<object?, bool> canExecute;
@@ -64,7 +64,7 @@ namespace Common_Util.Module.Command
             return (CommandTask == null || CommandTask.IsCompleted) && this.canExecute.Invoke(parameter);
         }
 
-        public async void Execute(object? parameter)
+        public async Task ExecuteAsync(object? parameter)
         {
             CancellationTokenSource = new CancellationTokenSource();
             CommandTask = execute.Invoke(CancellationTokenSource.Token, parameter);
@@ -76,7 +76,10 @@ namespace Common_Util.Module.Command
             notify.Completed += (o, e) => OnCanExecuteChanged();
 
             await CommandTask;
-
+        }
+        public async void Execute(object? parameter)
+        {
+            await ExecuteAsync(parameter);
         }
 
     }

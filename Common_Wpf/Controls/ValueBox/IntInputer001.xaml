@@ -9,6 +9,11 @@
         <Setter Property="Foreground" Value="{DynamicResource DefaultButtonForeColor0}"></Setter>
         <Setter Property="BorderColor0" Value="{DynamicResource DefaultButtonBorderColor0}"></Setter>
         <Setter Property="BorderColor1" Value="{DynamicResource DefaultButtonBorderColor1}"></Setter>
+        <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        <Setter Property="VerticalAlignment" Value="Stretch"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Padding" Value="0"/>
         <!--<Setter Property="Focusable" Value="False"></Setter>-->
         <Setter Property="Template">
             <Setter.Value>
@@ -17,6 +22,7 @@
                              Text="{Binding Path=CurrentText, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
                              HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
                              VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                             Padding="{TemplateBinding Padding}"
                              >
                         
                     </TextBox>

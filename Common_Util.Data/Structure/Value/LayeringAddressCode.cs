@@ -58,7 +58,7 @@ namespace Common_Util.Data.Structure.Value
     /// </summary>
     /// <typeparam name="TLayer"></typeparam>
     public interface IStringConveyingLayeringAddressCode<TLayer> : ILayeringAddressCode<TLayer>
-        where TLayer : IStringConveying
+        where TLayer : IStringConveying<TLayer>
     {
 
     }
@@ -162,8 +162,8 @@ namespace Common_Util.Data.Structure.Value
     /// <para>层级标识转换为字符串时, 需要对部分字符作转义处理</para>
     /// </summary>
     /// <typeparam name="TLayer"></typeparam>
-    public struct LayeringAddressCode<TLayer> : IStringConveyingLayeringAddressCode<TLayer>, IStringConveying, IComparable<ILayeringAddressCode<TLayer>>, IComparable
-        where TLayer : IStringConveying, new()
+    public struct LayeringAddressCode<TLayer> : IStringConveyingLayeringAddressCode<TLayer>, IStringConveying<LayeringAddressCode<TLayer>>, IComparable<ILayeringAddressCode<TLayer>>, IComparable
+        where TLayer : IStringConveying<TLayer>, new()
     {
         public LayeringAddressCode() : this(true, []) { }
         public LayeringAddressCode(bool isRange, TLayer[] layerValues)
@@ -236,7 +236,7 @@ namespace Common_Util.Data.Structure.Value
                 return;
             }
             var (splitStrs, isRange) = LayeringAddressCodeHelper.AnalysisString(value, EscapeChar, SplitChar, ItemMarkChar);
-            LayerValues = splitStrs.Select(StringConveyingHelper.FromString<TLayer>).ToArray();
+            LayerValues = splitStrs.Select(s => (TLayer)s).ToArray();
             IsRange = isRange;
 
         }
@@ -260,14 +260,16 @@ namespace Common_Util.Data.Structure.Value
         {
             return LayeringAddressCodeHelper.ConvertToString(
                 LayerValues, IsRange, 
-                i => i.ConvertToString(), 
+                i => (string)i, 
                 EscapeChar, SplitChar, ItemMarkChar);
         }
 
         #region 隐式转换
         public static implicit operator LayeringAddressCode<TLayer>(string value)
         {
-            return StringConveyingHelper.FromString<LayeringAddressCode<TLayer>>(value);
+            LayeringAddressCode<TLayer> output = new();
+            output.ChangeValue(value);
+            return output;
         }
         public static implicit operator LayeringAddressCode<TLayer>(string[] layerAddress)
         {
@@ -281,7 +283,7 @@ namespace Common_Util.Data.Structure.Value
         {
             return new LayeringAddressCode<TLayer>()
             {
-                LayerValues = obj.layerAddress.Select(StringConveyingHelper.FromString<TLayer>).ToArray(),
+                LayerValues = obj.layerAddress.Select(s => (TLayer)s).ToArray(),
                 IsRange = obj.isRange,
             };
         }
@@ -301,6 +303,21 @@ namespace Common_Util.Data.Structure.Value
         {
             return value.ConvertToString();
         }
+        #endregion
+
+        #region 显式转换
+        static explicit IStringConveying<LayeringAddressCode<TLayer>>.operator LayeringAddressCode<TLayer>(string value)
+        {
+            LayeringAddressCode<TLayer> output = new();
+            output.ChangeValue(value);
+            return output;
+        }
+
+        static explicit IStringConveying<LayeringAddressCode<TLayer>>.operator string(LayeringAddressCode<TLayer> value)
+        {
+            return value.ConvertToString();
+        }
+
         #endregion
 
 
@@ -350,7 +367,7 @@ namespace Common_Util.Data.Structure.Value
     /// <summary>
     /// 可与字符串互相转换的分层次的类似地址的编码
     /// </summary>
-    public struct LayeringAddressCode : ILayeringAddressCode<string>, IStringConveying, IComparable<ILayeringAddressCode<string>>, IComparable
+    public struct LayeringAddressCode : ILayeringAddressCode<string>, IStringConveying<LayeringAddressCode>, IComparable<ILayeringAddressCode<string>>, IComparable
     {
         public LayeringAddressCode() : this(true, []) { }
         public LayeringAddressCode(bool isRange, string[] layerValues)
@@ -462,7 +479,9 @@ namespace Common_Util.Data.Structure.Value
         #region 隐式转换
         public static implicit operator LayeringAddressCode(string value)
         {
-            return StringConveyingHelper.FromString<LayeringAddressCode>(value);
+            LayeringAddressCode output = new();
+            output.ChangeValue(value);
+            return output;
         }
         public static implicit operator LayeringAddressCode(string[] layerAddress)
         {
@@ -488,6 +507,21 @@ namespace Common_Util.Data.Structure.Value
         {
             return value.ConvertToString();
         }
+        #endregion
+
+        #region 显式转换
+        static explicit IStringConveying<LayeringAddressCode>.operator LayeringAddressCode(string value)
+        {
+            LayeringAddressCode output = new();
+            output.ChangeValue(value);
+            return output;
+        }
+
+        static explicit IStringConveying<LayeringAddressCode>.operator string(LayeringAddressCode value)
+        {
+            return value.ConvertToString();
+        }
+
         #endregion
 
         public override string ToString()
@@ -711,7 +745,7 @@ namespace Common_Util.Data.Structure.Value
         /// <param name="code"></param>
         /// <returns></returns>
         public static LayeringAddressCode<TLayer> Convert<TLayer>(ILayeringAddressCode<TLayer> inputValue)
-            where TLayer : IStringConveying, new()
+            where TLayer : IStringConveying<TLayer>, new()
         {
             TLayer[] newLayers = new TLayer[inputValue.LayerCount];
             Array.Copy(inputValue.LayerValues, newLayers, newLayers.Length);

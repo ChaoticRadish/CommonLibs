@@ -11,7 +11,7 @@ namespace CommonLibTest_Console.DataStruct
     internal class Dict001() : TestBase("测试双向字典, 基础功能测试与多线程测试")
     {
         private ILevelLogger _logger => __logger ?? GetLevelLogger("测试");
-        private ILevelLogger? __logger;
+        private ILevelLogger? __logger = null;
         protected override void RunImpl()
         {
             _logger.Info("Starting BidirectionalDictionary tests");

@@ -207,7 +207,15 @@ namespace Common_Util.IO
         {
             if (tempFiles.TryRemove(id, out var exist))
             {
-                File.Delete(exist.Path);
+                try
+                {
+                    File.Delete(exist.Path);
+                }
+                catch (Exception ex)
+                {
+                    Logger?.Error($"释放临时文件发生异常: [{exist.Id}] {exist.Path}", ex);
+                    throw;
+                }
                 Logger?.Info($"释放临时文件: [{exist.Id}] {exist.Path}");
             }
             

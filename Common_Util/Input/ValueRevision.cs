@@ -177,5 +177,43 @@ namespace Common_Util.Input
             }
         }
         #endregion
+
+
+        #region 文件名
+        private const string WINDOW_FILEPATH_ILLEGAL_CHARS = "/\\:*?\"<>|";
+
+        /// <summary>
+        /// 将输入字符串中的window系统文件名不可用字符替换为输入的字符
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="toChar"></param>
+        /// <returns></returns>
+        public static string ReplaceWindowIllegalChar(string input, char toChar = ' ')
+        {
+            if (string.IsNullOrEmpty(input)) return input;
+            StringBuilder builder = new StringBuilder(input);
+            foreach (char c in WINDOW_FILEPATH_ILLEGAL_CHARS)
+            {
+                builder.Replace(c, toChar);
+            }
+            return builder.ToString();
+        }
+        /// <summary>
+        /// 将输入字符串中的window系统文件名不可用字符替换为输入的字符串
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="toString"></param>
+        /// <returns></returns>
+        public static string ReplaceWindowIllegalChar(string input, string toString = " ")
+        {
+            if (string.IsNullOrEmpty(input)) return input;
+            StringBuilder builder = new StringBuilder(input);
+            foreach (char c in WINDOW_FILEPATH_ILLEGAL_CHARS)
+            {
+                builder.Replace(c.ToString(), toString);
+            }
+            return builder.ToString();
+        }
+        #endregion
     }
 }

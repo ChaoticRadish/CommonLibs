@@ -228,12 +228,16 @@ namespace CommonLibTest_Wpf
         TestPages.Ui.Inputer.IntInputer001 Page_Ui_IntInputer001 { get; set; } = new();
         [PageConfig(0x_01_08_0003, "Double 输入001")]
         TestPages.Ui.Inputer.DoubleInputer001 Page_Ui_DoubleInputer001 { get; set; } = new();
+        [PageConfig(0x_01_08_0004, "Decimal 输入001")]
+        TestPages.Ui.Inputer.DecimalInputer001 Page_Ui_DecimalInputer001 { get; set; } = new();
 
         // -------------- 便利控件 --------------
         [PageConfig(0x_01_09_0000)]
         string Page_Ui_Facility { get; set; } = "便利控件";
         [PageConfig(0x_01_09_0001, "键值对形式的容器.001")]
         TestPages.Ui.Facility.KeyValuePairContainer001 Page_Ui_KeyValuePairContainer001 { get; set; } = new();
+        [PageConfig(0x_01_09_0002, "分页控件.001")]
+        TestPages.Ui.Facility.PaginationControl001 Page_Ui_PaginationControl001 { get; set; } = new();
 
         // -------------- 布局/容器 --------------
         [PageConfig(0x_01_0A_0000)]
@@ -244,6 +248,10 @@ namespace CommonLibTest_Wpf
         TestPages.Ui.Layouts.PageSwitch001 Page_Ui_PageSwitch001 { get; set; } = new();
         [PageConfig(0x_01_0A_0012, "页面切换器 002 嵌套测试")]
         TestPages.Ui.Layouts.PageSwitch002 Page_Ui_PageSwitch002 { get; set; } = new();
+        [PageConfig(0x_01_0A_0020, "Null 值感知内容容器 001")]
+        TestPages.Ui.Layouts.NullAware001 Page_Ui_NullAware001 { get; set; } = new();
+        [PageConfig(0x_01_0A_0030, "执行按钮面板 001")]
+        TestPages.Ui.Layouts.ActionButton001 Page_Ui_ActionButton001 { get; set; } = new();
 
 
         // =================== Log ========================

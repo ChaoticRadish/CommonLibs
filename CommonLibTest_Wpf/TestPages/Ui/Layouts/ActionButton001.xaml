@@ -1,0 +1,50 @@
+﻿<Page x:Class="CommonLibTest_Wpf.TestPages.Ui.Layouts.ActionButton001"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:CommonLibTest_Wpf.TestPages.Ui.Layouts"
+      xmlns:commonLayouts="clr-namespace:Common_Wpf.Controls.LayoutPanel;assembly=Common_Wpf"
+      xmlns:converter="clr-namespace:Common_Wpf.Converter;assembly=Common_Wpf"
+      xmlns:proxy="clr-namespace:Common_Wpf.BindingProxy;assembly=Common_Wpf"
+      mc:Ignorable="d" 
+      d:DesignHeight="450" d:DesignWidth="800"
+      Title="ActionButton001">
+
+    <Page.Resources>
+        <converter:IsNullConverter x:Key="isNullConverter"/>
+        <proxy:ObjectProxy x:Key="TestCommand" Data="{Binding TestCommand, RelativeSource={RelativeSource AncestorType=local:ActionButton001}}"/>
+    </Page.Resources>
+    
+    <commonLayouts:ActionButtonLayoutPanel 
+        x:Name="buttons"
+        BorderThickness="1" 
+        BorderBrush="Green"
+        ButtonAreaPadding="10">
+        <commonLayouts:ActionButtonLayoutPanel.RawButtons>
+            <commonLayouts:ActionButtonOption Label="测试1" IsDefault="True"/>
+            <commonLayouts:ActionButtonOption Label="测试2" Command="{Binding Data, Source={StaticResource TestCommand}}"/>
+            <commonLayouts:ActionButtonOption Label="测试3" IsCancel="True"/>
+            <local:ActionButton001TestButtonOption Key="自定义1"/>
+            <local:ActionButton001TestButtonOption Key="自定义2"/>
+        </commonLayouts:ActionButtonLayoutPanel.RawButtons>
+
+        <commonLayouts:ActionButtonLayoutPanel.ControlButtonTemplate>
+            <DataTemplate DataType="commonLayouts:ActionButtonOption">
+                <Button Command="{Binding Command}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="测试: "></TextBlock>
+                        <TextBlock Text="{Binding Label}"></TextBlock>
+                    </StackPanel>
+                </Button>
+                
+            </DataTemplate>
+        </commonLayouts:ActionButtonLayoutPanel.ControlButtonTemplate>
+
+        <Grid>
+
+            <Label HorizontalAlignment="Center" VerticalAlignment="Center">主体内容</Label>
+        </Grid>
+        
+    </commonLayouts:ActionButtonLayoutPanel>
+</Page>

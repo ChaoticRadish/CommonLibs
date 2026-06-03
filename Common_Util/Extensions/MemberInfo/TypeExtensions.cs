@@ -82,6 +82,27 @@ namespace Common_Util.Extensions
         {
             return !type.IsValueType || NullableTarget(type) != null;
         }
+        /// <summary>
+        /// 判断传入类型是否可以是 <see langword="null"/> 值
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="underlyingType">底层类型. 如果不是 <see cref="Nullable{T}"/>, 会输出 <paramref name="type"/> 自身</param>
+        /// <returns></returns>
+        public static bool CanBeNull(this Type type, out Type underlyingType)
+        {
+            underlyingType = type;
+            if (!type.IsValueType)
+            {
+                return true;
+            }
+            var tryGetUnderlying = NullableTarget(type);
+            if (tryGetUnderlying != null)
+            {
+                underlyingType = tryGetUnderlying;
+                return true;
+            }
+            return false;
+        }
 
         /// <summary>
         /// 判断传入类型是否可空类型 <see cref="Nullable{T}"/>

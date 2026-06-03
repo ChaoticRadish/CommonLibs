@@ -12,7 +12,7 @@ namespace Common_Util.Data.Structure.Pair
     /// <summary>
     /// 由组号与ID两个值构成的数据
     /// </summary>
-    public struct GroupIdPair : IStringConveying
+    public struct GroupIdPair : IStringConveying<GroupIdPair>
     {
         #region 数据
 
@@ -128,6 +128,20 @@ namespace Common_Util.Data.Structure.Pair
                 Group = pair.Key,
                 Id = pair.Value
             };
+        }
+        #endregion
+
+        #region 显示转换
+        public static explicit operator GroupIdPair(string s)
+        {
+            GroupIdPair output = new();
+            output.ChangeValue(s);
+            return output;
+        }
+
+        public static explicit operator string(GroupIdPair t)
+        {
+            return t.ConvertToString();
         }
         #endregion
 

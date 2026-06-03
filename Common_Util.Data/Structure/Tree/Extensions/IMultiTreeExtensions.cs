@@ -47,41 +47,38 @@ namespace Common_Util.Data.Structure.Tree.Extensions
         /// </summary>
         /// <typeparam name="TValue"></typeparam>
         /// <param name="node"></param>
+        /// <param name="shouldVisitChildren">判断节点是否应该访问其子节点，返回 <see langword="true"/> 则遍历子节点，返回 <see langword="false"/> 则跳过子节点遍历。默认为访问所有节点的子节点。</param>
         /// <returns></returns>
-        public static IEnumerable<IMultiTreeNode<TValue>> PreorderNode<TValue>(this IMultiTreeNode<TValue> node)
+        public static IEnumerable<IMultiTreeNode<TValue>> PreorderNode<TValue>(this IMultiTreeNode<TValue> node, Func<IMultiTreeNode<TValue>, bool>? shouldVisitChildren = null)
         {
+            shouldVisitChildren ??= _ => true;
+
             Stack<(IMultiTreeNode<TValue>, IEnumerator<IMultiTreeNode<TValue>>)> nodeStack = new();
 
             yield return node;
-            nodeStack.Push((node, node.Childrens.GetEnumerator()));
-
-            // bool push = true;
+            if (shouldVisitChildren(node))
+            {
+                nodeStack.Push((node, node.Childrens.GetEnumerator()));
+            }
 
             while (nodeStack.Count != 0)
             {
                 (var currentNode, var childrenEnumerator) = nodeStack.Peek();
-
-                // if (push)
-                // {
-                //     yield return currentNode;
-                // }
 
                 if (childrenEnumerator.MoveNext())
                 {
                     var nextNode = childrenEnumerator.Current;
 
                     yield return nextNode;
-                    nodeStack.Push((nextNode, nextNode.Childrens.GetEnumerator()));
-                    // push = true;
+                    if (shouldVisitChildren(nextNode))
+                    {
+                        nodeStack.Push((nextNode, nextNode.Childrens.GetEnumerator()));
+                    }
                 }
                 else
                 {
-                    // 当前节点的子项枚举器已结束
                     nodeStack.Pop();
-                    // push = false;
                 }
-
-
             }
         }
 
@@ -123,15 +120,16 @@ namespace Common_Util.Data.Structure.Tree.Extensions
             int nextIndex = 0;
             const int nullNodeIndex = -1;   // 不存在的节点, 其索引用此值表示
 
-
             yield return new NodeIndexData<TValue>()
             {
                 Node = node,
                 ParentIndex = nullNodeIndex,
                 NodeIndex = nextIndex,
                 NodeValue = node.NodeValue,
+                Depth = nodeStack.Count,
             };
             nodeStack.Push((node, node.Childrens.GetEnumerator(), nextIndex, nullNodeIndex));
+            nextIndex++;
 
             // bool push = true;
 
@@ -161,8 +159,10 @@ namespace Common_Util.Data.Structure.Tree.Extensions
                         ParentIndex = nodeIndex,
                         NodeIndex = nextIndex,
                         NodeValue = nextNode.NodeValue,
+                        Depth = nodeStack.Count,
                     };
                     nodeStack.Push((nextNode, nextNode.Childrens.GetEnumerator(), nextIndex, nodeIndex));
+                    nextIndex++;
                     // push = true;
                 }
                 else
@@ -264,14 +264,20 @@ namespace Common_Util.Data.Structure.Tree.Extensions
             /// 当前节点的值
             /// </summary>
             public TValue NodeValue { get; set; }
+            /// <summary>
+            /// 节点深度 (根节点为 0, 根节点的子节点为 1, 再下一级子节点为 2, 以此类推)
+            /// </summary>
+            public int Depth { get; set; }
         }
         #endregion
 
         #region 转换为特定类型的多叉树
         /// <summary>
         /// 将一个多叉树结构转换为通用多叉树
-        /// <para>此转换可能导致可空性发生变化! </para>
         /// </summary>
+        /// <remarks>
+        /// 此转换可能导致可空性发生变化! 
+        /// </remarks>
         /// <typeparam name="TScope"></typeparam>
         /// <typeparam name="TValue"></typeparam>
         /// <param name="tree"></param>
@@ -282,6 +288,19 @@ namespace Common_Util.Data.Structure.Tree.Extensions
             GeneralTree<TScope, TValue> output = new();
             if (tree.Root == null) { return output; }
             output.BuildTree(tree.Root!,
+                i => i.Childrens.ToList(),
+                node => KeyValuePair.Create<TScope?, TValue?>(convert2Scope(node), node.NodeValue),
+                node => true);
+            return output;
+        }
+        /// <summary>
+        /// 将一个多叉树字数转换为通用多叉树
+        /// </summary>
+        /// <param name="convert2Scope">将一个节点的值转换为范围值</param>
+        public static GeneralTree<TScope, TValue> ToGeneralTree<TScope, TValue>(this IMultiTreeNode<TValue> node, Func<IMultiTreeNode<TValue>, TScope> convert2Scope)
+        {
+            GeneralTree<TScope, TValue> output = new();
+            output.BuildTree(node!,
                 i => i.Childrens.ToList(),
                 node => KeyValuePair.Create<TScope?, TValue?>(convert2Scope(node), node.NodeValue),
                 node => true);
@@ -313,11 +332,7 @@ namespace Common_Util.Data.Structure.Tree.Extensions
                     if (item.ParentIndex >= 0)
                     {
                         var parentNode = newNodes[item.ParentIndex];
-                        if (parentNode.Childrens == null)
-                        {
-                            parentNode.Childrens = [];
-                        }
-                        parentNode.Childrens.Add(newNode);
+                        parentNode.AddNode(newNode);
                     }
                     newNodes.Add(newNode);
                 }
@@ -326,6 +341,94 @@ namespace Common_Util.Data.Structure.Tree.Extensions
                 return newTree;
             }
         }
+
+        /// <summary>
+        /// 将简易多叉树保留原有结构, 转换成另一种不同类型的简易多叉树
+        /// </summary>
+        /// <typeparam name="TSimpleMultiTree1"></typeparam>
+        /// <typeparam name="TValue1"></typeparam>
+        /// <typeparam name="TNode1"></typeparam>
+        /// <typeparam name="TSimpleMultiTree2"></typeparam>
+        /// <typeparam name="TValue2"></typeparam>
+        /// <typeparam name="TNode2"></typeparam>
+        /// <param name="tree1"></param>
+        /// <param name="createTree2Func">初始创建输出树实例的方法</param>
+        /// <param name="convertNodeValueFunc">转换节点值为目标节点值类型的方法</param>
+        /// <param name="createNode2Func">通过目标节点值类型创建目标节点对象</param>
+        /// <returns></returns>
+        public static TSimpleMultiTree2 Convert<TSimpleMultiTree1, TValue1, TNode1, TSimpleMultiTree2, TValue2, TNode2>(
+            this TSimpleMultiTree1 tree1, 
+            Func<TSimpleMultiTree2> createTree2Func, 
+            Func<TValue1, TValue2> convertNodeValueFunc,
+            Func<TValue2, TNode2> createNode2Func)
+            where TSimpleMultiTree1 : SimpleMultiTree<TValue1, TNode1>
+            where TNode1 : SimpleMultiTreeNode<TValue1, TNode1>
+            where TSimpleMultiTree2 : SimpleMultiTree<TValue2, TNode2>
+            where TNode2 : SimpleMultiTreeNode<TValue2, TNode2>
+        {
+            var tree2 = createTree2Func();
+            if (tree1.Root == null) return tree2;
+
+            List<TNode2> tree2Nodes = [];
+
+            foreach (var tree1NodeInfo in IndexPreorder(tree1))
+            {
+                var nodeValue2 = convertNodeValueFunc(tree1NodeInfo.NodeValue);
+                var node2 = createNode2Func(nodeValue2);
+                if (tree1NodeInfo.ParentIndex >= 0)
+                {
+                    var parentNode = tree2Nodes[tree1NodeInfo.ParentIndex];
+                    parentNode.AddNode(node2);
+                }
+                tree2Nodes.Add(node2);
+            }
+            tree2.Root = tree2Nodes.FirstOrDefault();
+
+            return tree2;
+        }
+
+        /// <summary>
+        /// 将简易多叉树保留原有结构, 转换成另一种不同类型的简易多叉树
+        /// </summary>
+        /// <typeparam name="TSimpleMultiTree1"></typeparam>
+        /// <typeparam name="TValue1"></typeparam>
+        /// <typeparam name="TNode1"></typeparam>
+        /// <typeparam name="TSimpleMultiTree2"></typeparam>
+        /// <typeparam name="TValue2"></typeparam>
+        /// <typeparam name="TNode2"></typeparam>
+        /// <param name="tree1"></param>
+        /// <param name="createTree2Func">初始创建输出树实例的方法</param>
+        /// <param name="convertNodeFunc">通过目标节点值创建目标节点对象</param>
+        /// <returns></returns>
+        public static TSimpleMultiTree2 Convert<TSimpleMultiTree1, TValue1, TNode1, TSimpleMultiTree2, TValue2, TNode2>(
+            this TSimpleMultiTree1 tree1,
+            Func<TSimpleMultiTree2> createTree2Func,
+            Func<IMultiTreeNode<TValue1>, TNode2> convertNodeFunc)
+            where TSimpleMultiTree1 : SimpleMultiTree<TValue1, TNode1>
+            where TNode1 : SimpleMultiTreeNode<TValue1, TNode1>
+            where TSimpleMultiTree2 : SimpleMultiTree<TValue2, TNode2>
+            where TNode2 : SimpleMultiTreeNode<TValue2, TNode2>
+        {
+            var tree2 = createTree2Func();
+            if (tree1.Root == null) return tree2;
+
+            List<TNode2> tree2Nodes = [];
+
+            foreach (var tree1NodeInfo in IndexPreorder(tree1))
+            {
+                var node2 = convertNodeFunc(tree1NodeInfo.Node);
+                if (tree1NodeInfo.ParentIndex >= 0)
+                {
+                    var parentNode = tree2Nodes[tree1NodeInfo.ParentIndex];
+                    parentNode.AddNode(node2);
+                }
+                tree2Nodes.Add(node2);
+            }
+            tree2.Root = tree2Nodes.FirstOrDefault();
+
+            return tree2;
+        }
+
 
         /// <summary>
         /// 如果传入的树是 <see cref="ObservableMultiTree{TValue}"/> 则将其返回, 如果不是, 则实例化一个 <see cref="ObservableMultiTree{TValue}"/>
@@ -370,6 +473,13 @@ namespace Common_Util.Data.Structure.Tree.Extensions
                 return newTree;
             }
         }
+
+
+        public static LinearizedTree<TValue> Linearize<TValue>(this IMultiTree<TValue> multiTree)
+        {
+            return new(multiTree);
+        }
+
         #endregion
 
 
@@ -430,11 +540,7 @@ namespace Common_Util.Data.Structure.Tree.Extensions
                 if (item.ParentIndex >= 0)
                 {
                     var parentNode = newNodes[item.ParentIndex];
-                    if (parentNode.Childrens == null)
-                    {
-                        parentNode.Childrens = [];
-                    }
-                    parentNode.Childrens.Add(newNode);
+                    parentNode.AddNode(newNode);
                 }
                 newNodes.Add(newNode);
             }

@@ -113,6 +113,112 @@ namespace Common_Winform.Extensions
                 }
             };
         }
+        /// <summary>
+        /// 快速设置右键点击单元格以打开菜单的方法到dgv
+        /// </summary>
+        /// <typeparam name="TRowDate"></typeparam>
+        /// <param name="dgv"></param>
+        /// <param name="menu">指定的菜单</param>
+        /// <param name="onlySelectOneRow">是否仅选中一行</param>
+        /// <param name="doSomeAfterShowMenu">
+        /// 右键点击某一单元格后, 在显示菜单之前做点什么. <br/>
+        /// 参数0: 行对应数据, 参数1: 列Index, 参数2: 行Index
+        /// </param>
+        /// <param name="applyToNoCellArea">右键菜单应用于非单元格区域</param>
+        /// <param name="doSthAfterShowMenuOnNoCell">右键非单元格区域后, 在显示菜单之前做点什么</param>
+        /// <param name="setRowItemToTag">将行Item设置到右键菜单的Tag上</param>
+        public static void SetRightButtonMenu<TRowDate>(
+            this DataGridView dgv, ContextMenuStrip menu,
+            Action<TRowDate, int, int>? doSomeAfterShowMenu = null, bool onlySelectOneRow = true,
+            bool applyToNoCellArea = false, Action? doSthAfterShowMenuOnNoCell = null,
+            bool setRowItemToTag = false)
+        {
+            if (applyToNoCellArea)
+            {
+                dgv.MouseDown += (sender, e) =>
+                {
+                    if (e.Button == MouseButtons.Right)
+                    {
+                        var c = dgv.GetChildAtPoint(e.Location);
+                        if (c == null)
+                        {// 非单元格区域
+                            doSthAfterShowMenuOnNoCell?.Invoke();
+                            Form? form = dgv.FindForm();
+                            if (form == null)
+                            {
+                                menu.Show(Control.MousePosition);
+                            }
+                            else
+                            {
+                                menu.Show(form, form.PointToClient(Control.MousePosition));
+                            }
+                        }
+                    }
+                };
+            }
+            dgv.CellMouseDown += (sender, e) =>
+            {
+                if (e.Button == MouseButtons.Right)
+                {
+                    if (e.RowIndex >= 0 && e.RowIndex < dgv.RowCount
+                        && e.ColumnIndex >= 0 && e.ColumnIndex < dgv.ColumnCount)
+                    {// 单元格区域
+                        if (dgv.Rows[e.RowIndex].DataBoundItem is TRowDate data)
+                        {
+                            doSomeAfterShowMenu?.Invoke(data, e.ColumnIndex, e.RowIndex);
+
+                            // 仅选中一行
+                            if (onlySelectOneRow)
+                            {
+                                dgv.ClearSelection();
+                            }
+                            else
+                            {
+                                if (dgv.SelectedRows.Count == 1)
+                                {// 非仅选中一行的情况下, 如果已选择的只有另外的一行, 就也给他清空
+                                    dgv.ClearSelection();
+                                }
+                            }
+
+                            dgv.Rows[e.RowIndex].Selected = true;
+                            if (setRowItemToTag)
+                            {
+                                // 只有右键点击单元格, 切单元格类型与输入泛型参数相同, 才将其设置到菜单的Tag上
+                                menu.Tag = data;
+                            }
+                            Form? form = dgv.FindForm();
+                            if (form == null)
+                            {
+                                menu.Show(Control.MousePosition);
+                            }
+                            else
+                            {
+                                menu.Show(form, form.PointToClient(Control.MousePosition));
+                            }
+                            return;
+                        }
+                    }
+                    else if (applyToNoCellArea)
+                    {// 非单元格区域
+                        doSthAfterShowMenuOnNoCell?.Invoke();
+                        Form? form = dgv.FindForm();
+                        if (form == null)
+                        {
+                            menu.Show(Control.MousePosition);
+                        }
+                        else
+                        {
+                            menu.Show(form, form.PointToClient(Control.MousePosition));
+                        }
+                    }
+                    if (setRowItemToTag)
+                    {
+                        // 其他情况需要将菜单的Tag设为null
+                        menu.Tag = null;
+                    }
+                }
+            };
+        }
 
 
         /// <summary>
