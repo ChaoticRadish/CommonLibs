@@ -182,7 +182,7 @@ namespace Common_Wpf.Controls.LayoutPanel
         #endregion
 
         #region 命令
-        public ICommand ClearSelectedPageCommand => new SampleCommand(_ => ViewModel.ClearShowing(), _ => true);
+        public ICommand ClearSelectedPageCommand => new SimpleCommand(_ => ViewModel.ClearShowing(), _ => true);
         #endregion
 
         #region 模板

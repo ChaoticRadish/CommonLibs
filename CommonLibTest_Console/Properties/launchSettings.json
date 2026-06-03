@@ -2,7 +2,7 @@
   "profiles": {
     "CommonLibTest_Console": {
       "commandName": "Project",
-      "commandLineArgs": "Check.CRC001\r\nCompaper.IEnumerable001"
+      "commandLineArgs": "DynamicIL.ValueTuple001\r\n"
     }
   }
 }

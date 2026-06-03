@@ -4,6 +4,9 @@ using Common_Util.String;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -29,46 +32,78 @@ namespace Common_Util.Module.Config
         {
             if (obj == null) return null;
 
+            var objType = obj.GetType();
+
+            string? baseValueConverted = obj switch
+            {
+                bool v => v.ToString(CultureInfo.InvariantCulture),
+                sbyte v => v.ToString(CultureInfo.InvariantCulture),
+                byte v => v.ToString(CultureInfo.InvariantCulture),
+                short v => v.ToString(CultureInfo.InvariantCulture),
+                ushort v => v.ToString(CultureInfo.InvariantCulture),
+                int v => v.ToString(CultureInfo.InvariantCulture),
+                uint v => v.ToString(CultureInfo.InvariantCulture),
+                long v => v.ToString(CultureInfo.InvariantCulture),
+                ulong v => v.ToString(CultureInfo.InvariantCulture),
+                float v => v.ToString(CultureInfo.InvariantCulture),
+                double v => v.ToString(CultureInfo.InvariantCulture),
+                decimal v => v.ToString(CultureInfo.InvariantCulture),
+                Guid v => v.ToString(),
+                DateTime v => v.ToString("o", CultureInfo.InvariantCulture),
+                DateTimeOffset v => v.ToString("o", CultureInfo.InvariantCulture),
+                DBNull v => "<null>",
+                _ => null,
+            };
+            if (baseValueConverted != null) return baseValueConverted;
+
             if (obj is Type _type)
             {
                 return _type.FullName;
+            }
+            if (objType.IsEnum)
+            {
+                Enum enumValue = (Enum)obj;
+                if (Enum.IsDefined(objType, enumValue))
+                    return enumValue.ToString();
+                else
+                    return enumValue.ToString("D");
             }
             if (obj is Guid guid)
             {
                 return guid.ToString();
             }
-            if (typeof(IEnumerable<string>).IsAssignableFrom(obj.GetType()))
+            if (typeof(IEnumerable<string>).IsAssignableFrom(objType))
             {
                 return StringHelper.Concat(((IEnumerable<string>)obj).ToList(), "; ", false);
             }
-            if (typeof(IEnumerable<int>).IsAssignableFrom(obj.GetType()))
+            if (typeof(IEnumerable<int>).IsAssignableFrom(objType))
             {
                 return StringHelper.Concat(((IEnumerable<int>)obj).Select(i => i.ToString()).ToList(), "; ", false);
             }
-            if (obj is IStringConveying conveying)
+            if (StringConveyingHelper.ToStringIfConvertible(objType, obj, out var convertResult))
             {
-                return conveying.ConvertToString();
+                return convertResult;
             }
-            if ((obj.GetType().IsEnumerable() || obj.GetType().IsList())
-                && obj.GetType().GenericTypeArguments.Length == 1
-                && typeof(IStringConveying).IsAssignableFrom(obj.GetType().GenericTypeArguments[0]))
+            if ((objType.IsEnumerable() || objType.IsList())
+                && objType.GenericTypeArguments.Length == 1
+                && StringConveyingHelper.ConvertibleCheck(objType.GenericTypeArguments[0]))
             {
                 IEnumerable list = (IEnumerable)obj;
                 List<string> valueStrings = new List<string>();
-                Type type = obj.GetType().GenericTypeArguments[0];
+                Type type = objType.GenericTypeArguments[0];
                 foreach (object item in list)
                 {
-                    valueStrings.Add(((IStringConveying)item).ConvertToString());
+                    valueStrings.Add(item == null ? string.Empty : StringConveyingHelper.ToString(item));
                 }
                 return StringHelper.Concat(valueStrings, COLLECTION_SPLIT, false);
             }
-            else if ((obj.GetType().IsEnumerable() || obj.GetType().IsList())
-                && obj.GetType().GenericTypeArguments.Length == 1
-                && obj.GetType().GenericTypeArguments[0].IsEnum)
+            else if ((objType.IsEnumerable() || objType.IsList())
+                && objType.GenericTypeArguments.Length == 1
+                && objType.GenericTypeArguments[0].IsEnum)
             {
                 IEnumerable list = (IEnumerable)obj;
                 List<string> valueStrings = new List<string>();
-                Type type = obj.GetType().GenericTypeArguments[0];
+                Type type = objType.GenericTypeArguments[0];
                 foreach (object item in list)
                 {
                     string? str = Enum.GetName(type, item);
@@ -85,7 +120,7 @@ namespace Common_Util.Module.Config
             }
         }
         /// <summary>
-        /// 字符串配置值转换为对象
+        /// 字符串配置值转换为 <typeparamref name="T"/> 对象
         /// </summary>
         /// <typeparam name="T">目标类型</typeparam>
         /// <param name="str"></param>
@@ -95,6 +130,27 @@ namespace Common_Util.Module.Config
             object? obj = ConfigValue2Obj(str, typeof(T));
             if (obj == null) return default;
             else return (T)obj;
+        }
+        /// <summary>
+        /// 尝试将字符串配置值转换为 <typeparamref name="T"/> 对象 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="str"></param>
+        /// <param name="convertResult"></param>
+        /// <returns></returns>
+        public static bool TryConfigValue2Obj<T>(string str, [NotNullWhen(true)] out T? convertResult)
+        {
+            object? obj = ConfigValue2Obj(str, typeof(T));
+            if (obj == null)
+            {
+                convertResult = default;
+                return false;
+            }
+            else
+            {
+                convertResult = (T)obj;
+                return true;
+            }
         }
         /// <summary>
         /// 字符串配置值转换为对象
@@ -126,10 +182,20 @@ namespace Common_Util.Module.Config
                 targetType = nullableTarget!;
             }
 
-            if (targetType == typeof(string))
+            if (targetType == typeof(DBNull))
+                return DBNull.Value;
+            else if (targetType.IsEnum)
             {
-                return str;
+                object? temp = null;
+                if (targetType.IsDefined(typeof(FlagsAttribute), false))
+                    temp = EnumHelper.Convert(targetType, str, false);
+                else
+                    temp = EnumHelper.Convert(targetType, str, true);
+                if (temp == null) goto ReturnDefault;
+                else return temp;
             }
+            else if (targetType == typeof(string))
+                return str;
             else if (targetType == typeof(bool))
             {
                 if (ValueHelper.TryLooselyParse(str, out var val)) return val;
@@ -165,6 +231,11 @@ namespace Common_Util.Module.Config
                 if (double.TryParse(str, out var val)) return val;
                 else goto ReturnDefault;
             }
+            else if (targetType == typeof(sbyte))
+            {
+                if (sbyte.TryParse(str, out var val)) return val;
+                else goto ReturnDefault;
+            }
             else if (targetType == typeof(byte))
             {
                 if (byte.TryParse(str, out var val)) return val;
@@ -195,15 +266,19 @@ namespace Common_Util.Module.Config
                 if (DateTime.TryParse(str, out var val)) return val;
                 else goto ReturnDefault;
             }
+            else if (targetType == typeof(DateTimeOffset))
+            {
+                if (DateTimeOffset.TryParse(str, out var val)) return val;
+                else goto ReturnDefault;
+            }
             else if (targetType == typeof(Guid))
             {
                 if (Guid.TryParse(str, out var val)) return val;
                 else goto ReturnDefault;
             }
-            else if (targetType.IsAssignableTo(typeof(IStringConveying)))
+            else if (StringConveyingHelper.ToObjectIfConvertible(targetType, str, out var convertResult))
             {
-                if (StringConveyingHelper.TryFromString(targetType, str, out var val)) return val;
-                else goto ReturnDefault;
+                return convertResult;
             }
             else if (targetType.IsEnum)
             {

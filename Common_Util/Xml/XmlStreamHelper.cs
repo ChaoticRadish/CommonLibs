@@ -16,7 +16,6 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace Common_Util.Xml
 {
@@ -863,7 +862,7 @@ namespace Common_Util.Xml
                 if (type.IsPrimitive) return true;
                 if (type == typeof(string)) return true;
                 else if (type == typeof(byte[])) return true;
-                else if (type.IsAssignableTo(typeof(IStringConveying))) return true;
+                else if (StringConveyingHelper.ConvertibleCheck(type)) return true;
                 else if (type.IsEnum) return true;
                 else return false;
             }
@@ -871,9 +870,9 @@ namespace Common_Util.Xml
 
         private static string? asString(object obj)
         {
-            if (obj is IStringConveying stringConveying)
+            if (obj != null && StringConveyingHelper.ToStringIfConvertible(obj.GetType(), obj, out var convertResult))
             {
-                return stringConveying.ConvertToString();
+                return convertResult;
             }
             else if (obj is byte[] bs)
             {
@@ -881,7 +880,7 @@ namespace Common_Util.Xml
             }
             else
             {
-                return obj.ToString();
+                return obj?.ToString();
             }
         }
         private static object? fromString(Type type, string str)
@@ -892,7 +891,7 @@ namespace Common_Util.Xml
 
                 type = targetType!;
             }
-            if (type.IsAssignableTo(typeof(IStringConveying)))
+            if (StringConveyingHelper.ConvertibleCheck(type))
             {
                 return StringConveyingHelper.FromString(type, str);
             }

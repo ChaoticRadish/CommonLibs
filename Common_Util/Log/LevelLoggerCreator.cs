@@ -76,6 +76,7 @@ namespace Common_Util.Log
         {
             return LevelLoggerHelper.LogTo(innerLogger, new LevelLoggerHelper.LogToLoggerConfig()
             {
+                TraceLevel = LevelConfig.TraceLevel,
                 DebugLevel = LevelConfig.DebugLevel,
                 ErrorLevel = LevelConfig.ErrorLevel,
                 FatalLevel = LevelConfig.FatalLevel,
@@ -90,6 +91,8 @@ namespace Common_Util.Log
 
         public struct LevelConfigStruct : ILevelConfig
         {
+            public string TraceLevel { get; set; }
+
             public string DebugLevel { get; set; }
 
             public string ErrorLevel { get; set; }
@@ -102,6 +105,7 @@ namespace Common_Util.Log
 
             public static LevelConfigStruct Default { get; private set; } = new LevelConfigStruct()
             {
+                TraceLevel = "Trace",
                 DebugLevel = "Debug",
                 ErrorLevel = "Error",
                 FatalLevel = "Fatal",

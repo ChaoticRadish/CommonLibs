@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Common_Util.Module.Concurrency;
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -36,12 +37,11 @@ namespace Common_Util.Log
         private BlockingCollection<LogData> _queue = new();
 
         private ManualResetEventSlim _pauseSignal = new(true);
-        private SemaphoreSlim _emptySignal = new(1, 1);
 
         private CancellationTokenSource? _cts;
         private CancellationToken _token;
 
-        private int _currentCount = 0;
+        private AsyncCounter _counter = new();
 
         private void loop()
         {
@@ -56,23 +56,14 @@ namespace Common_Util.Log
                     {
                         _pauseSignal.Wait(_token);
                         Output(data);
-                        if (Interlocked.Decrement(ref _currentCount) == 0)
-                        {
-                            _emptySignal.Release();
-                        }
                     }
+                    _counter.Decrement();
                 }
-                if (_emptySignal.CurrentCount > 0)
-                {
-                    _emptySignal.Release();
-                }
+                _counter.Set(0);
             }
             catch (OperationCanceledException)
             {
-                if (_emptySignal.CurrentCount > 0)
-                {
-                    _emptySignal.Release();
-                }
+                _counter.Set(0);
             }
         }
         #endregion
@@ -81,10 +72,7 @@ namespace Common_Util.Log
         public void Log(LogData log)
         {
             _queue.Add(log);
-            if (Interlocked.Increment(ref _currentCount) == 1)
-            {
-                _emptySignal.Wait();
-            }
+            _counter.Increment();
         }
         #endregion
 
@@ -124,8 +112,7 @@ namespace Common_Util.Log
         {
             try
             {
-                _emptySignal.Wait(_token);
-                _emptySignal.Release();
+                _counter.WaitNonpositive(-1, _token);
             }
             catch (OperationCanceledException)
             {
@@ -144,15 +131,7 @@ namespace Common_Util.Log
             var usingCancellationToken = linkedCts.Token;
             try
             {
-                if (_emptySignal.Wait(timeout, usingCancellationToken))
-                {
-                    _emptySignal.Release();
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
+                return _counter.WaitNonpositive(timeout, usingCancellationToken);
             }
             catch (OperationCanceledException)
             {
@@ -171,15 +150,7 @@ namespace Common_Util.Log
             var usingCancellationToken = linkedCts.Token;
             try
             {
-                if (await _emptySignal.WaitAsync(timeout, usingCancellationToken))
-                {
-                    _emptySignal.Release();
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
+                return await _counter.WaitNonpositiveAsync(timeout, usingCancellationToken);
             }
             catch (OperationCanceledException)
             {

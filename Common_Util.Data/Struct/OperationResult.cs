@@ -1,6 +1,7 @@
 ﻿using Common_Util.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Text;
 
@@ -126,16 +127,6 @@ namespace Common_Util.Data.Struct
         {
             return Failure(failureReason);
         }
-        public static implicit operator OperationResultEx(OperationResult result)
-        {
-            return new OperationResultEx()
-            {
-                Exception = null,
-                IsSuccess = result.IsSuccess,
-                FailureReason = result.FailureReason,
-                SuccessInfo = result.SuccessInfo,
-            };
-        }
         public static implicit operator OperationResult(OperationResultEx result)
         {
             return new OperationResult()
@@ -159,6 +150,17 @@ namespace Common_Util.Data.Struct
         public string? SuccessInfo { get; set; }
         public string? FailureReason { get; set; }
         public T? Data { get; set; }
+
+
+        /// <summary>
+        /// 断言操作结果数据 <see cref="Data"/> 不可能是 <see langword="null"/>, 如果出现了 <see langword="null"/>, 则抛出 <see cref="Common_Util.Exceptions.General.ImplementationException"/>
+        /// </summary>
+        /// <param name="dataDesc">数据 <see cref="Data"/> 的描述信息, 会填充到异常描述里</param>
+        [MemberNotNull(nameof(Data))]
+        public readonly void DataImpossibleNull(string? dataDesc = null)
+        {
+            if (Data == null) throw new Common_Util.Exceptions.General.ImplementationException($"{(dataDesc ?? "结果数据")}此处不应该是 null 值");
+        }
 
         public override readonly string ToString()
         {

@@ -78,6 +78,32 @@ namespace Common_Util.Random
             return min == max ? min : random.Next(min, max);
         }
         /// <summary>
+        /// 指定区间内的整数
+        /// </summary>
+        /// <param name="random"></param>
+        /// <param name="min"></param>
+        /// <param name="max"></param>
+        /// <returns></returns>
+        public static ushort GetUshort(ushort min, ushort max, System.Random? random = null)
+        {
+            random ??= DefaultRandom;
+            if (min > max) (min, max) = (max, min);
+            return min == max ? min : (ushort)random.Next(min, max);
+        }
+        /// <summary>
+        /// 指定区间内的整数
+        /// </summary>
+        /// <param name="random"></param>
+        /// <param name="min"></param>
+        /// <param name="max"></param>
+        /// <returns></returns>
+        public static short GetShort(short min, short max, System.Random? random = null)
+        {
+            random ??= DefaultRandom;
+            if (min > max) (min, max) = (max, min);
+            return min == max ? min : (short)random.Next(min, max);
+        }
+        /// <summary>
         /// 指定区间内的非负整数
         /// </summary>
         /// <param name="random"></param>
@@ -100,7 +126,7 @@ namespace Common_Util.Random
         }
 
         /// <summary>
-        /// 指定区间内的long
+        /// 指定区间内的 <see langword="long"/>
         /// </summary>
         /// <param name="random"></param>
         /// <param name="min"></param>
@@ -113,7 +139,7 @@ namespace Common_Util.Random
             return min == max ? min : min + (long)((max - min) * random.NextDouble());
         }
         /// <summary>
-        /// 指定区间内的double
+        /// 指定区间内的 <see langword="double"/>
         /// </summary>
         /// <param name="random"></param>
         /// <param name="min"></param>
@@ -126,7 +152,20 @@ namespace Common_Util.Random
             return min == max ? min : random.NextDouble() * (max - min) + min;
         }
         /// <summary>
-        /// 指定区间内的float
+        /// 指定区间内的 <see langword="decimal"/>
+        /// </summary>
+        /// <param name="random"></param>
+        /// <param name="min"></param>
+        /// <param name="max"></param>
+        /// <returns></returns>
+        public static decimal GetDecimal(decimal min, decimal max, System.Random? random = null)
+        {
+            random ??= DefaultRandom;
+            if (min > max) (min, max) = (max, min);
+            return min == max ? min : ((decimal)random.NextDouble()) * (max - min) + min;
+        }
+        /// <summary>
+        /// 指定区间内的 <see langword="float"/>
         /// </summary>
         /// <param name="random"></param>
         /// <param name="min"></param>
@@ -137,6 +176,21 @@ namespace Common_Util.Random
             random ??= DefaultRandom;
             if (min > max) (min, max) = (max, min);
             return min == max ? min : (float)random.NextDouble() * (max - min) + min;
+        }
+        /// <summary>
+        /// 指定区间内的 <see cref="DateTime"/>
+        /// </summary>
+        /// <param name="min"></param>
+        /// <param name="max"></param>
+        /// <param name="random"></param>
+        /// <returns></returns>
+        public static DateTime GetDateTime(DateTime min, DateTime max, System.Random? random = null)
+        {
+            random ??= DefaultRandom;
+            if (min > max) (min, max) = (max, min);
+            if (min == max) return min;
+            double detailDays = (max - min).TotalDays;
+            return min + TimeSpan.FromDays(random.NextDouble() * detailDays);
         }
 
 

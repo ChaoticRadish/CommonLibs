@@ -124,6 +124,27 @@ namespace Common_Util.Data.Struct
                 return;
             }
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Match<T>(this IOperationResult<T> result, 
+            Action<T>? successAction, Action? successButNullAction, Action<IOperationResult<T>>? failureAction)
+        {
+            if (successAction != null && result.IsSuccess && result.Data != null)
+            {
+                successAction(result.Data);
+                return;
+            }
+            if (successButNullAction != null && result.IsSuccess && result.Data == null)
+            {
+                successButNullAction();
+                return;
+            }
+            if (failureAction != null && result.IsFailure)
+            {
+                failureAction(result);
+                return;
+            }
+        }
+
         /// <summary>
         /// 根据操作结果的成功与否, 执行对应的方法
         /// </summary>
@@ -132,7 +153,8 @@ namespace Common_Util.Data.Struct
         /// <param name="successButNullAction">操作成功, 但附带了 <see langword="null"/> 数据</param>
         /// <param name="failureAction"></param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static TResult Match<T, TResult>(this IOperationResult<T> result, Func<T, TResult> successAction, Func<TResult> successButNullAction, Func<TResult> failureAction)
+        public static TResult Match<T, TResult>(this IOperationResult<T> result, 
+            Func<T, TResult> successAction, Func<TResult> successButNullAction, Func<TResult> failureAction)
         {
             TResult output;
             if (result.IsSuccess)
@@ -165,7 +187,8 @@ namespace Common_Util.Data.Struct
         /// <param name="successButNullAction">操作成功, 但附带了 <see langword="null"/> 数据</param>
         /// <param name="failureAction"></param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static TResult Match<T, TResult>(this IOperationResult<T> result, Func<T, TResult> successAction, Func<TResult> successButNullAction, Func<IOperationResult<T>, TResult> failureAction)
+        public static TResult Match<T, TResult>(this IOperationResult<T> result, 
+            Func<T, TResult> successAction, Func<TResult> successButNullAction, Func<IOperationResult<T>, TResult> failureAction)
         {
             TResult output;
             if (result.IsSuccess)
@@ -271,8 +294,18 @@ namespace Common_Util.Data.Struct
         }
 
 
-
-
+        /// <summary>
+        /// 如果操作结果为失败, 则抛出异常
+        /// </summary>
+        /// <param name="result"></param>
+        /// <exception cref="OperationFailureException"></exception>
+        public static void ThrowIfFailure(this IOperationResult result)
+        {
+            if (result.IsFailure)
+            {
+                throw new OperationFailureException(result);
+            }
+        }
         /// <summary>
         /// 取得操作结果的数据, 否则抛出异常
         /// </summary>
@@ -294,7 +327,7 @@ namespace Common_Util.Data.Struct
             {
                 if (result.Data == null)
                 {
-                    throw new ImpossibleForkException("操作结果是成功的, 当时其数据却为 null! ");
+                    throw new ImpossibleForkException("操作结果是成功的, 但是其数据却为 null! ");
                 }
                 else
                 {

@@ -285,7 +285,7 @@ namespace Common_Util.Data.Structure.Value.Extensions
         /// <param name="collection"></param>
         /// <returns></returns>
         public static IEnumerable<LayeringAddressCode<TLayer>> ToDefaultImpl<TLayer>(this IEnumerable<ILayeringAddressCode<TLayer>> collection)
-            where TLayer : IStringConveying, new()
+            where TLayer : IStringConveying<TLayer>, new()
         {
             foreach (var code in collection)
             {

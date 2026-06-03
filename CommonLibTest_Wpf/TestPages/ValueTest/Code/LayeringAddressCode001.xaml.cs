@@ -57,7 +57,7 @@ namespace CommonLibTest_Wpf.TestPages.ValueTest.Code
 
                 try
                 {
-                    CurrentInput = StringConveyingHelper.FromString<LayeringAddressCode>(inputText);
+                    CurrentInput = (LayeringAddressCode)inputText;
                 }
                 catch
                 {
@@ -98,7 +98,7 @@ namespace CommonLibTest_Wpf.TestPages.ValueTest.Code
             new(){ Code = "aa.bb" },
             ];
 
-        public ICommand AddToListCommand => new SampleCommand(addToList);
+        public ICommand AddToListCommand => new SimpleCommand(addToList);
         private void addToList()
         {
             if (!Items.Any(i => i.Code == CurrentInput))
@@ -110,7 +110,7 @@ namespace CommonLibTest_Wpf.TestPages.ValueTest.Code
             }
         }
 
-        public ICommand SortCommand => new SampleCommand(sort);
+        public ICommand SortCommand => new SimpleCommand(sort);
         private void sort() 
         {
             var newList = Items.ToList();
@@ -123,9 +123,9 @@ namespace CommonLibTest_Wpf.TestPages.ValueTest.Code
         #region 树
 
         #region 增改删操作
-        public ICommand AddToTreeCommand => new SampleCommand(addToTree);
-        public ICommand AddToTreeAscCommand => new SampleCommand(addToTreeAsc);
-        public ICommand AddToTreeDescCommand => new SampleCommand(addToTreeDesc);
+        public ICommand AddToTreeCommand => new SimpleCommand(addToTree);
+        public ICommand AddToTreeAscCommand => new SimpleCommand(addToTreeAsc);
+        public ICommand AddToTreeDescCommand => new SimpleCommand(addToTreeDesc);
 
         private void addToTree(object? obj)
         {
@@ -189,7 +189,7 @@ namespace CommonLibTest_Wpf.TestPages.ValueTest.Code
         }
 
 
-        public ICommand AddMiniForkCommand => new SampleCommand(addMiniFork);
+        public ICommand AddMiniForkCommand => new SimpleCommand(addMiniFork);
         private void addMiniFork(object? obj)
         {
             LayeringAddressCode? code = null;
@@ -232,7 +232,7 @@ namespace CommonLibTest_Wpf.TestPages.ValueTest.Code
         }
 
 
-        public ICommand RemoveNodeCommand => new SampleCommand(removeNode);
+        public ICommand RemoveNodeCommand => new SimpleCommand(removeNode);
 
         private void removeNode(object? obj)
         {
@@ -268,7 +268,7 @@ namespace CommonLibTest_Wpf.TestPages.ValueTest.Code
             }
         }
 
-        public ICommand RemoveRootNodeCommand => new SampleCommand(removeRootNode);
+        public ICommand RemoveRootNodeCommand => new SimpleCommand(removeRootNode);
 
         private void removeRootNode()
         {
@@ -277,7 +277,7 @@ namespace CommonLibTest_Wpf.TestPages.ValueTest.Code
             OnPropertyChanged(nameof(TreeRootLayer));
         }
 
-        public ICommand SetRandomRootNodeCommand => new SampleCommand(setRandomRootNode);
+        public ICommand SetRandomRootNodeCommand => new SimpleCommand(setRandomRootNode);
 
         private void setRandomRootNode()
         {
@@ -297,11 +297,11 @@ namespace CommonLibTest_Wpf.TestPages.ValueTest.Code
         #endregion
 
         #region 排序操作
-        public ICommand TreeSordAsc1Command => new SampleCommand(treeSordAsc1);
-        public ICommand TreeSordDesc1Command => new SampleCommand(treeSordDesc1);
+        public ICommand TreeSordAsc1Command => new SimpleCommand(treeSordAsc1);
+        public ICommand TreeSordDesc1Command => new SimpleCommand(treeSordDesc1);
 
-        public ICommand TreeSordAsc2Command => new SampleCommand(treeSordAsc2);
-        public ICommand TreeSordDesc2Command => new SampleCommand(treeSordDesc2);
+        public ICommand TreeSordAsc2Command => new SimpleCommand(treeSordAsc2);
+        public ICommand TreeSordDesc2Command => new SimpleCommand(treeSordDesc2);
 
         void treeSordAsc1()
         {
@@ -342,7 +342,7 @@ namespace CommonLibTest_Wpf.TestPages.ValueTest.Code
         }
         public ObservableCollection<ObservableMultiTreeNode<ListItem>> TreeRootLayer => Tree.Root == null ? [] : [Tree.Root];
 
-        public ICommand BuildTreeCommand => new SampleCommand(buildTree);
+        public ICommand BuildTreeCommand => new SimpleCommand(buildTree);
         private void buildTree()
         {
             var tree = Items.AsMultiTree(

@@ -103,7 +103,7 @@ namespace CommonLibTest_Wpf.TestPages.Ui.Layouts
         public double ValueC { get => valueC; set { valueC = value; OnPropertyChanged(); } }
         private double valueC;
 
-        public ICommand ValueCCommand => new SampleCommand((obj) => _valueCCommand(), _ => true);
+        public ICommand ValueCCommand => new SimpleCommand((obj) => _valueCCommand(), _ => true);
         private void _valueCCommand()
         {
             ValueC = RandomValueTypeHelper.GetDouble(0, 100);

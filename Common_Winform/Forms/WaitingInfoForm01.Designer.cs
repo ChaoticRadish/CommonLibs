@@ -46,11 +46,11 @@
             WaitingBox.Size = new Size(207, 59);
             WaitingBox.TabIndex = 0;
             // 
-            // CancelButton
+            // CancelWaitingButton
             // 
             CancelWaitingButton.Anchor = AnchorStyles.None;
             CancelWaitingButton.Location = new Point(140, 70);
-            CancelWaitingButton.Name = "CancelButton";
+            CancelWaitingButton.Name = "CancelWaitingButton";
             CancelWaitingButton.Size = new Size(75, 22);
             CancelWaitingButton.TabIndex = 1;
             CancelWaitingButton.Text = "取消等待";
