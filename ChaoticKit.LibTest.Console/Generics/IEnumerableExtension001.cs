@@ -52,6 +52,6 @@ namespace ChaoticKit.LibTest.Console.Generics
             }
             WriteEmptyLine();
         }
-
+        
     }
 }
