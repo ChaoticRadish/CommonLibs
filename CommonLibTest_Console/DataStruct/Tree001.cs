@@ -132,7 +132,7 @@ namespace CommonLibTest_Console.DataStruct
             if (code == null)
             {
                 return "<null>";
-            }
+            } 
             if (code.IsAll())
             {
                 return "<ALL>";

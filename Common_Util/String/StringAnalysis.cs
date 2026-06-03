@@ -438,7 +438,7 @@ namespace Common_Util.String
             bool needReturnToEnd = false;
 
             int useStartIndex = startIndex < 0 ? 0 : startIndex;
-            if ((input.Length - useStartIndex) < findStr.Length) needReturnToEnd = true; 
+            if ((input.Length - useStartIndex) < findStr.Length) needReturnToEnd = true;
             int _maxReadLength;
             if (maxReadLength != null)
             {
@@ -656,5 +656,245 @@ namespace Common_Util.String
             foundStr = null;
             return true;
         }
+
+
+        /* 
+         * 解析过程中会将字符串值作为一个整体略过的解析方式
+         * 例如: "mytest=\"plan=123\"" 用这里的分割方法分割后会得到: ["mytest", "\"plan=123\""], 而不是 ["mytest", "\"plan", "123\""]
+         */
+        #region 包含 C# 字符串值的解析
+
+        /// <summary>
+        /// 将字符串分割成子字符串，忽略 C# 字符串值。
+        /// </summary>
+        /// <remarks>
+        /// 支持使用反斜杠 \ 来转义引号字符。
+        /// </remarks>
+        /// <param name="input">要分割的字符串。</param>
+        /// <param name="delimiter">用作分隔符的字符。</param>
+        public static IEnumerable<string> SplitIgnoreStringValue(string input, char delimiter, StringSplitOptions splitOptions = StringSplitOptions.None)
+        {
+            if (string.IsNullOrEmpty(input))
+            {
+                yield break;
+            }
+            static bool handleReturnValue(StringBuilder sb, StringSplitOptions splitOptions, out string value)
+            {
+                if (sb.Length == 0)
+                {
+                    value = string.Empty;
+                    if ((splitOptions & StringSplitOptions.RemoveEmptyEntries) > 0)
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    value = sb.ToString();
+                    if ((splitOptions & StringSplitOptions.TrimEntries) > 0)
+                    {
+                        value = value.Trim();
+                        if (value.Length == 0)
+                        {
+                            if ((splitOptions & StringSplitOptions.RemoveEmptyEntries) > 0)
+                            {
+                                return false;
+                            }
+                        }
+                    }
+                }
+                return true;
+            }
+
+            var currentSegment = new StringBuilder();
+
+            var flagMap = IgnoreStringValueFlagMap(input);
+
+            string returnValue;
+            for (int i = 0; i < input.Length; i++)
+            {
+                char c = input[i];
+                if (!flagMap[i])
+                {
+                    currentSegment.Append(c);
+                }
+                else
+                {
+                    if (c == delimiter)
+                    {
+                        if (handleReturnValue(currentSegment, splitOptions, out returnValue))
+                        {
+                            yield return returnValue;
+                        }
+                        currentSegment.Clear();
+                        continue;
+                    }
+                    else
+                    {
+                        currentSegment.Append(c);
+                    }
+                }
+
+            }
+
+            // 返回最后一个段
+            if (handleReturnValue(currentSegment, splitOptions, out returnValue))
+            {
+                yield return returnValue;
+            }
+        }
+
+        /// <summary>
+        /// 报告指定字符在此字符串中的第一个匹配项的索引，忽略 C# 字符串值。
+        /// </summary>
+        /// <param name="input">要搜索的字符串。</param>
+        /// <param name="value">要查找的字符。</param>
+        /// <returns>如果找到该字符，则为 value 的从零开始的索引位置；如果未找到，则为 -1。</returns>
+        public static int IndexOfIgnoreStringValue(string input, char value)
+        {
+            if (input == null) return -1;
+            return IndexOfIgnoreStringValue(input.AsSpan(), value);
+        }
+        /// <summary>
+        /// 报告指定字符在此字符串中的第一个匹配项的索引，忽略 C# 字符串值。
+        /// </summary>
+        /// <param name="input">要搜索的字符串。</param>
+        /// <param name="value">要查找的字符。</param>
+        /// <returns>如果找到该字符，则为 value 的从零开始的索引位置；如果未找到，则为 -1。</returns>
+        public static int IndexOfIgnoreStringValue(ReadOnlySpan<char> input, char value)
+        {
+            if (input.Length == 0)
+            {
+                return -1;
+            }
+            // 判定范围的标记表, true 为需判断的字符
+            var flagMap = IgnoreStringValueFlagMap(input);
+
+            // 第二次遍历查找字符
+            for (int i = 0; i < input.Length; i++)
+            {
+                if (!flagMap[i]) continue;
+                char c = input[i];
+
+                if (c == value)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        /// <summary>
+        /// 报告指定字符在此字符串中的最后一个匹配项的索引，忽略 C# 字符串值。
+        /// </summary>
+        /// <param name="input">要搜索的字符串。</param>
+        /// <param name="value">要查找的字符。</param>
+        /// <returns>如果找到该字符，则为 value 的从零开始的索引位置；如果未找到，则为 -1。</returns>
+        public static int LastIndexOfIgnoreStringValue(string input, char value)
+        {
+            if (input == null)
+            {
+                return -1;
+            }
+            return LastIndexOfIgnoreStringValue(input.AsSpan(), value);
+        }
+        /// <summary>
+        /// 报告指定字符在此字符串中的最后一个匹配项的索引，忽略 C# 字符串值。
+        /// </summary>
+        /// <param name="input">要搜索的字符串。</param>
+        /// <param name="value">要查找的字符。</param>
+        /// <returns>如果找到该字符，则为 value 的从零开始的索引位置；如果未找到，则为 -1。</returns>
+        public static int LastIndexOfIgnoreStringValue(ReadOnlySpan<char> input, char value)
+        {
+            if (input.Length == 0)
+            {
+                return -1;
+            }
+            // 判定范围的标记表, true 为需判断的字符
+            var flagMap = IgnoreStringValueFlagMap(input);
+
+            // 第二次遍历查找字符
+            // 从后往前遍历
+            for (int i = input.Length - 1; i >= 0; i--)
+            {
+                if (!flagMap[i]) continue;
+                char c = input[i];
+
+                if (c == value)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+        private static bool[] IgnoreStringValueFlagMap(string input)
+            => IgnoreStringValueFlagMap(input.AsSpan());
+        private static bool[] IgnoreStringValueFlagMap(ReadOnlySpan<char> input)
+        {
+            bool[] flagMap = new bool[input.Length];
+
+            const char quoteChar = '"';
+            const char escapeChar = '\\';
+            bool inQuotes = false;
+            for (int i = 0; i < input.Length; i++)
+            {
+                char c = input[i];
+                if (inQuotes)
+                {
+                    switch (c)
+                    {
+                        case quoteChar:
+                            inQuotes = false;
+                            break;
+                        case escapeChar:
+                            i++;
+                            break;
+                    }
+                }
+                else
+                {
+                    switch (c)
+                    {
+                        case quoteChar:
+                            inQuotes = true;
+                            break;
+                        default:
+                            flagMap[i] = true;
+                            break;
+                    }
+                }
+            }
+            if (inQuotes)
+                throw new InvalidOperationException("字符串内的双引号未正确闭合! ");
+            return flagMap;
+        }
+
+        #endregion
+
+
+        #region 键值对
+        /// <summary>
+        /// 按顺序尝试使用 <paramref name="splitChars"/> 中的字符去拆分 <paramref name="str"/> 为键值对
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="splitChars"></param>
+        /// <returns></returns>
+        public static KeyValuePair<string, string>? ReadAsKeyValuePair(string str, string splitChars = ":：-")
+        {
+            int index = -1;
+            foreach (char c in splitChars)
+            {
+                index = str.IndexOf(c);
+                if (index >= 0) break;
+            }
+
+            if (index < 0) return null;
+            string key = str.Substring(0, index);
+            string value = str.Substring(index + 1);
+            return new KeyValuePair<string, string>(key.Trim(), value.Trim());
+        }
+        #endregion
     }
 }

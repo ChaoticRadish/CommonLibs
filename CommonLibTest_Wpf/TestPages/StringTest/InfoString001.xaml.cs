@@ -39,7 +39,7 @@ namespace CommonLibTest_Wpf.TestPages.StringTest
     {
         public ObservableCollection<Models.TestModel001> TestItems { get; set; } = [];
 
-        public ICommand CreateRandomsCommand => new SampleCommand(_ => CreateRandoms(), _ => true);
+        public ICommand CreateRandomsCommand => new SimpleCommand(_ => CreateRandoms(), _ => true);
         private void CreateRandoms() 
         {
             TestItems.Clear();
@@ -53,7 +53,7 @@ namespace CommonLibTest_Wpf.TestPages.StringTest
 
         }
 
-        public ICommand ClickListItemCommand => new SampleCommand(ClickListItem, _ => true);
+        public ICommand ClickListItemCommand => new SimpleCommand(ClickListItem, _ => true);
 
         private void ClickListItem(object? obj)
         {

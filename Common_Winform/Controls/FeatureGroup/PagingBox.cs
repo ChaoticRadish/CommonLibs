@@ -19,9 +19,18 @@ namespace Common_Winform.Controls.FeatureGroup
         public PagingBox()
         {
             InitializeComponent();
+
+            _synchronizationContext = SynchronizationContext.Current;
         }
 
-
+        #region 上下文
+        private readonly SynchronizationContext? _synchronizationContext;
+        private void UiSyncPost(Action action)
+        {
+            if (_synchronizationContext == null) action();
+            else _synchronizationContext.Post(_ => action(), null);
+        }
+        #endregion
 
         #region 属性
 
@@ -116,7 +125,7 @@ namespace Common_Winform.Controls.FeatureGroup
                 {
                     if (!settingShowingCurrentIndex)
                     {
-                        OnPageIndexChanged?.Invoke(currentIndex, pageSize);
+                        UiSyncPost(() => OnPageIndexChanged?.Invoke(currentIndex, pageSize));
                     }
                     UpdatePageInputUi(currentIndex);
                 }

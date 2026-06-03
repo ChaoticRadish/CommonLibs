@@ -12,6 +12,12 @@ namespace Common_Util.Data.Exceptions
     /// </summary>
     public class OperationFailureException : Exception
     {
+        /// <summary>
+        /// 使用失败原因字符串创建失败结果实例, 再用其创建异常实例
+        /// </summary>
+        /// <param name="failureMsg"></param>
+        public OperationFailureException(string failureMsg) : this((OperationResult)failureMsg) { }
+
         public OperationFailureException(IOperationResult result) 
             : base(
                   result.FailureReason,

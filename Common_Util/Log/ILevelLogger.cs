@@ -12,7 +12,8 @@ namespace Common_Util.Log
     /// </summary>
     public interface ILevelLogger
     {
-        void Info(string message);  
+        void Info(string message);
+        void Trace(string message);
         void Debug(string message);
         void Warning(string message, Exception? ex = null, bool logTrack = false);
         void Error(string message, Exception? ex = null);
@@ -21,6 +22,8 @@ namespace Common_Util.Log
 
     public interface ILevelConfig
     {
+        public string TraceLevel { get; set; }
+
         public string DebugLevel { get; set; }
 
         public string ErrorLevel { get; set; }
@@ -73,6 +76,10 @@ namespace Common_Util.Log
             {
             }
 
+            public void Trace(string message)
+            {
+            }
+
             public void Warning(string message, Exception? ex = null, bool logTrack = false)
             {
             }
@@ -121,6 +128,8 @@ namespace Common_Util.Log
                 return new(DateTime.Now, level, msg, ex, frames);
             }
 
+            public void Trace(string message) => Handle(CreateItem(nameof(Trace), message, null, false));
+
             public void Debug(string message) => Handle(CreateItem(nameof(Debug), message, null, false));
 
             public void Error(string message, Exception? ex = null) => Handle(CreateItem(nameof(Error), message, ex, true));
@@ -130,6 +139,7 @@ namespace Common_Util.Log
             public void Info(string message) => Handle(CreateItem(nameof(Info), message, null, false));
 
             public void Warning(string message, Exception? ex = null, bool logTrack = false) => Handle(CreateItem(nameof(Warning), message, ex, logTrack));
+
         }
         #endregion
 
@@ -156,7 +166,12 @@ namespace Common_Util.Log
         {
             public T EnumValue { get; private set; } = @enum;
 
-            public void Debug(string message)
+            public void Trace(string message)
+            {
+                EnumLogExtensions.Trace(EnumValue, message);
+            }
+
+        public void Debug(string message)
             {
                 EnumLogExtensions.Debug(EnumValue, message);
             }
@@ -236,6 +251,8 @@ namespace Common_Util.Log
 
             public string SubCategory;
 
+            public string TraceLevel { get; set; }
+
             public string DebugLevel { get; set; }
 
             public string ErrorLevel { get; set; }
@@ -256,6 +273,7 @@ namespace Common_Util.Log
             {
                 return new LogToLoggerConfig
                 {
+                    TraceLevel = "Trace",
                     DebugLevel = "Debug",
                     ErrorLevel = "Error",
                     FatalLevel = "Fatal",
@@ -279,6 +297,15 @@ namespace Common_Util.Log
             /// 堆栈信息深度的设置
             /// </summary>
             public int FrameDepthLimit { get; init; } = -1;
+
+            public void Trace(string message)
+            {
+                var logData = createLogData(message, config.TraceLevel, null, false);
+                foreach (var logger in targets)
+                {
+                    logger.Log(logData);
+                }
+            }
 
             public void Debug(string message)
             {

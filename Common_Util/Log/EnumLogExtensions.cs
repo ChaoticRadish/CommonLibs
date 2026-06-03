@@ -238,6 +238,18 @@ namespace Common_Util.Log
                 GlobalLoggerManager.Log(data);
             }
         }
+        public static void Trace<T>(this T @enum, string message)
+            where T : Enum
+        {
+            EnumLogConfig<T>? config = EnumLogHelper<T>.GetConfig(@enum);
+            if (config == null || !config.Value.Enable) return;
+            LogData? data = LogData.CreateNonTrace(nameof(Trace), config.Value.Category, config.Value.SubCategory, message, null);
+            data = Deal(@enum, data);
+            if (data != null)
+            {
+                GlobalLoggerManager.Log(data);
+            }
+        }
         public static void Debug<T>(this T @enum, string message)
             where T : Enum
         {

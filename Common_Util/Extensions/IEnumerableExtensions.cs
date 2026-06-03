@@ -146,7 +146,7 @@ namespace Common_Util.Extensions
         /// <param name="equalityComparer"></param>
         /// <returns></returns>
         public static (IEnumerable<T> ThisOneExclusion, IEnumerable<T> OtherOneExclusion) ExcludeDisorderEquals<T>(
-            this IEnumerable<T> thisOne, IEnumerable<T> otherOne, 
+            this IEnumerable<T> thisOne, IEnumerable<T> otherOne,
             IEqualityComparer<T>? equalityComparer = null)
         {
             var arr1 = thisOne.ToArray();
@@ -173,7 +173,7 @@ namespace Common_Util.Extensions
                 int index = 0;
                 foreach (T? item in arr)
                 {
-                    if (item is null) 
+                    if (item is null)
                     {
                         nullIndexMaskArr[index] = true;
                         nullCount++;
@@ -257,8 +257,46 @@ namespace Common_Util.Extensions
         }
         #endregion
 
+        #region 查找
+
+        /// <summary>
+        /// 寻找集合内的首个符合条件 <paramref name="condition"/> 的东西, 返回其相对起始位置的偏移量
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="enumerable"></param>
+        /// <returns>
+        /// -1: 未找到符合条件的东西 <br/>
+        /// 非负数: 符合条件的东西相对起始位置的偏移量
+        /// </returns>
+        public static int OffsetOfFirst<T>(this IEnumerable<T> enumerable, Func<T, bool> condition)
+        {
+            int offset = 0;
+            foreach (T t in enumerable)
+            {
+                if (condition(t)) return offset;
+                offset++;
+            }
+            return -1;
+        }
+
+        #endregion
 
         #region 遍历
+
+        /// <summary>
+        /// 取得顺序遍历传入集合的遍历器, 同时附带遍历索引
+        /// </summary>
+        /// <param name="enumerable"></param>
+        /// <param name="startIndex">起始索引</param>
+        /// <returns></returns>
+        public static IEnumerable<(int index, object? obj)> WithIndex(this IEnumerable enumerable, int startIndex = 0)
+        {
+            foreach (var item in enumerable)
+            {
+                yield return (startIndex, item);
+                startIndex++;
+            }
+        }
         /// <summary>
         /// 取得顺序遍历传入集合的遍历器, 同时附带遍历索引
         /// </summary>
@@ -343,6 +381,38 @@ namespace Common_Util.Extensions
 
             } while (!e1End || !e2End);
         }
+        /// <summary>
+        /// 遍历两个可枚举的对象, 直到都结束. 其中一方结束后, 如果另一方未结束, 会取得 <see langword="null"/> 值
+        /// </summary>
+        /// <remarks>如果传入了不可为空的类型, 取得的值将会是 <see langword="default"/></remarks>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public static IEnumerable<(object?, object?)> UntilAllAway(this (IEnumerable, IEnumerable) obj)
+        {
+            IEnumerator e1 = obj.Item1.GetEnumerator();
+            IEnumerator e2 = obj.Item2.GetEnumerator();
+            bool e1End = false;
+            bool e2End = false;
+            do
+            {
+                object? t1 = default;
+                object? t2 = default;
+                if (!e1End && e1.MoveNext())
+                {
+                    t1 = e1.Current;
+                }
+                else { e1End = true; }
+                if (!e2End && e2.MoveNext())
+                {
+                    t2 = e2.Current;
+                }
+                else { e2End = true; }
+
+                if (e1End && e2End) yield break;
+                else yield return (t1, t2);
+
+            } while (!e1End || !e2End);
+        }
 
         /// <summary>
         /// 遍历两个可枚举的对象, 同时附带从 0 起的索引值, 直到都结束. 其中一方结束后, 如果另一方未结束, 会取得 -1 与 <see langword="null"/> 值
@@ -367,6 +437,52 @@ namespace Common_Util.Extensions
                 if (!e1End && e1.MoveNext())
                 {
                     t1 = e1.Current;
+                }
+                else
+                {
+                    e1End = true;
+                    index1 = -1;
+                }
+                if (!e2End && e2.MoveNext())
+                {
+                    t2 = e2.Current;
+                }
+                else
+                {
+                    e2End = true;
+                    index2 = -1;
+                }
+
+                if (e1End && e2End) yield break;
+                else yield return ((index1, t1), (index2, t2));
+
+                if (index1 >= 0) index1++;
+                if (index2 >= 0) index2++;
+
+            } while (!e1End || !e2End);
+        }
+
+        /// <summary>
+        /// 遍历两个可枚举的对象, 同时附带从 0 起的索引值, 直到都结束. 其中一方结束后, 如果另一方未结束, 会取得 -1 与 <see langword="null"/> 值
+        /// </summary>
+        /// <remarks>如果传入了不可为空的类型, 取得的值将会是 <see langword="default"/></remarks>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public static IEnumerable<((int Index, object? Value), (int Index, object? Value))> UntilAllAwayWithIndex(this (IEnumerable, IEnumerable) obj)
+        {
+            IEnumerator e1 = obj.Item1.GetEnumerator();
+            IEnumerator e2 = obj.Item2.GetEnumerator();
+            bool e1End = false;
+            int index1 = 0;
+            bool e2End = false;
+            int index2 = 0;
+            do
+            {
+                object? t1 = default;
+                object? t2 = default;
+                if (!e1End && e1.MoveNext())
+                {
+                    t1 = e1.Current;
                     index1++;
                 }
                 else
@@ -379,7 +495,7 @@ namespace Common_Util.Extensions
                     t2 = e2.Current;
                     index2++;
                 }
-                else 
+                else
                 {
                     e2End = true;
                     index2 = -1;
@@ -412,6 +528,24 @@ namespace Common_Util.Extensions
             }
         }
 
+        /// <summary>
+        /// 遍历两个可枚举的对象, 直到任意一方结束. 
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public static IEnumerable<(object, object)> UntilAnyAway(this (IEnumerable, IEnumerable) obj)
+        {
+            IEnumerator e1 = obj.Item1.GetEnumerator();
+            IEnumerator e2 = obj.Item2.GetEnumerator();
+            while (true)
+            {
+                if (e1.MoveNext() && e2.MoveNext())
+                {
+                    yield return (e1.Current, e2.Current);
+                }
+                else yield break;
+            }
+        }
 
         #endregion
 
@@ -455,7 +589,7 @@ namespace Common_Util.Extensions
                     yield return file;
                 }
             }
-        } 
+        }
 
         #endregion
 

@@ -391,7 +391,8 @@ namespace Common_Util.Data.Structure.Tree
             string leftStr = "[", string rightStr = "]", 
             string splitHoz = "-", string splitVer = "|", 
             string splitStartCross = "┬", string splitCross = "├", string splitEndCross = "└", string splitSingleCross = "-",
-            bool showScopeWhenNullValue = false, string nullValueStr = "<null>")
+            bool showScopeWhenNullValue = false, string nullValueStr = "<null>", 
+            Func<GeneralTreeNode<Scope?, Value?>, string>? customGetTextLogic = null)
         {
             // 层的最长字符串长度
             Dictionary<int, int> layerStringMaxLength = new Dictionary<int, int>();
@@ -404,24 +405,28 @@ namespace Common_Util.Data.Structure.Tree
                 TreeNodeInfoStruct info = new TreeNodeInfoStruct()
                 {
                     Text
-                    = input.NodeValue == null ?
-                        (
-                            showScopeWhenNullValue && input.NodeScope != null ?
-                                (
-                                    getScopeStringFunc == null ?
-                                        input.NodeScope.ToString() ?? string.Empty
-                                        :
-                                        getScopeStringFunc.Invoke(input.NodeScope)
-                                )
-                                :
-                                nullValueStr
-                        )
+                    = customGetTextLogic != null ?
+                        customGetTextLogic(input)
                         :
-                        (
-                            getValueStringFunc == null ?
-                                input.NodeValue.ToString() ?? string.Empty 
-                                :
-                                getValueStringFunc.Invoke(input.NodeValue)
+                        (input.NodeValue == null ?
+                            (
+                                showScopeWhenNullValue && input.NodeScope != null ?
+                                    (
+                                        getScopeStringFunc == null ?
+                                            input.NodeScope.ToString() ?? string.Empty
+                                            :
+                                            getScopeStringFunc.Invoke(input.NodeScope)
+                                    )
+                                    :
+                                    nullValueStr
+                            )
+                            :
+                            (
+                                getValueStringFunc == null ?
+                                    input.NodeValue.ToString() ?? string.Empty 
+                                    :
+                                    getValueStringFunc.Invoke(input.NodeValue)
+                            )
                         ),
 
                     ChildrenCount

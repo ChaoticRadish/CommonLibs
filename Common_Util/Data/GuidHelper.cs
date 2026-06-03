@@ -88,8 +88,9 @@ namespace Common_Util.Data
                 CurrentIndex++;
             }
             /// <summary>
-            /// 添加输入字节到当前索引处, 并推进索引位置
+            /// 按索引顺序添加输入字节到当前索引处, 并推进索引位置
             /// </summary>
+            /// <remarks>相当于小端序</remarks>
             /// <param name="bs"></param>
             public void Add(params byte[] bs)
             {
@@ -99,6 +100,29 @@ namespace Common_Util.Data
                 for (int i = 0; i < addCount; i++)
                 {
                     SetByte(CurrentIndex, bs[i]);
+                    CurrentIndex++;
+                }
+            }
+            /// <summary>
+            /// 按执行顺序添加输入字节到当前索引处, 并推进索引位置
+            /// </summary>
+            /// <param name="bs"></param>
+            /// <param name="bigEndian">是否使用大端序</param>
+            public void Add(ReadOnlySpan<byte> bs, bool bigEndian)
+            {
+                if (CurrentIndex >= Size) return;
+                if (bs == null || bs.Length == 0) return;
+                int addCount = NeedAddCount(bs.Length);
+                for (int i = 0; i < addCount; i++)
+                {
+                    if (bigEndian)
+                    {
+                        SetByte(CurrentIndex, bs[addCount - i - 1]);
+                    }
+                    else
+                    {
+                        SetByte(CurrentIndex, bs[i]);
+                    }
                     CurrentIndex++;
                 }
             }
@@ -148,6 +172,31 @@ namespace Common_Util.Data
                     for (int index = 0; index < addCount; index++)
                     {
                         SetByte(CurrentIndex, (byte)(l >> (index * 8)));
+                        CurrentIndex++;
+                    }
+                }
+            }
+            /// <summary>
+            /// 将输入值拆分为字节后, 添加到当前索引处, 并推进索引位置
+            /// </summary>
+            /// <param name="v"></param>
+            /// <param name="bigEndian">是否使用大端序</param>
+            public void Add(ushort v, bool bigEndian = true)
+            {
+                int addCount = NeedAddCount(2);
+                if (bigEndian)
+                {
+                    for (int index = 0; index < addCount; index++)
+                    {
+                        SetByte(CurrentIndex, (byte)(v >> ((2 - 1 - index) * 8)));
+                        CurrentIndex++;
+                    }
+                }
+                else
+                {
+                    for (int index = 0; index < addCount; index++)
+                    {
+                        SetByte(CurrentIndex, (byte)(v >> (index * 8)));
                         CurrentIndex++;
                     }
                 }

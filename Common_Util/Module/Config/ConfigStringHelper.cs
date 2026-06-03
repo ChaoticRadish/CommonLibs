@@ -4,6 +4,9 @@ using Common_Util.String;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -29,42 +32,74 @@ namespace Common_Util.Module.Config
         {
             if (obj == null) return null;
 
+            var objType = obj.GetType();
+
+            string? baseValueConverted = obj switch
+            {
+                bool v => v.ToString(CultureInfo.InvariantCulture),
+                sbyte v => v.ToString(CultureInfo.InvariantCulture),
+                byte v => v.ToString(CultureInfo.InvariantCulture),
+                short v => v.ToString(CultureInfo.InvariantCulture),
+                ushort v => v.ToString(CultureInfo.InvariantCulture),
+                int v => v.ToString(CultureInfo.InvariantCulture),
+                uint v => v.ToString(CultureInfo.InvariantCulture),
+                long v => v.ToString(CultureInfo.InvariantCulture),
+                ulong v => v.ToString(CultureInfo.InvariantCulture),
+                float v => v.ToString(CultureInfo.InvariantCulture),
+                double v => v.ToString(CultureInfo.InvariantCulture),
+                decimal v => v.ToString(CultureInfo.InvariantCulture),
+                Guid v => v.ToString(),
+                DateTime v => v.ToString("o", CultureInfo.InvariantCulture),
+                DateTimeOffset v => v.ToString("o", CultureInfo.InvariantCulture),
+                DBNull v => "<null>",
+                _ => null,
+            };
+            if (baseValueConverted != null) return baseValueConverted;
+
             if (obj is Type _type)
             {
                 return _type.FullName;
             }
-            if (typeof(IEnumerable<string>).IsAssignableFrom(obj.GetType()))
+            if (objType.IsEnum)
+            {
+                Enum enumValue = (Enum)obj;
+                if (Enum.IsDefined(objType, enumValue))
+                    return enumValue.ToString();
+                else
+                    return enumValue.ToString("D");
+            }
+            if (typeof(IEnumerable<string>).IsAssignableFrom(objType))
             {
                 return StringHelper.Concat(((IEnumerable<string>)obj).ToList(), "; ", false);
             }
-            if (typeof(IEnumerable<int>).IsAssignableFrom(obj.GetType()))
+            if (typeof(IEnumerable<int>).IsAssignableFrom(objType))
             {
                 return StringHelper.Concat(((IEnumerable<int>)obj).Select(i => i.ToString()).ToList(), "; ", false);
             }
-            if (obj is IStringConveying conveying)
+            if (StringConveyingHelper.ToStringIfConvertible(objType, obj, out var convertResult))
             {
-                return conveying.ConvertToString();
+                return convertResult;
             }
-            if ((obj.GetType().IsEnumerable() || obj.GetType().IsList())
-                && obj.GetType().GenericTypeArguments.Length == 1
-                && typeof(IStringConveying).IsAssignableFrom(obj.GetType().GenericTypeArguments[0]))
+            if ((objType.IsEnumerable() || objType.IsList())
+                && objType.GenericTypeArguments.Length == 1
+                && StringConveyingHelper.ConvertibleCheck(objType.GenericTypeArguments[0]))
             {
                 IEnumerable list = (IEnumerable)obj;
                 List<string> valueStrings = new List<string>();
-                Type type = obj.GetType().GenericTypeArguments[0];
+                Type type = objType.GenericTypeArguments[0];
                 foreach (object item in list)
                 {
-                    valueStrings.Add(((IStringConveying)item).ConvertToString());
+                    valueStrings.Add(item == null ? string.Empty : StringConveyingHelper.ToString(item));
                 }
                 return StringHelper.Concat(valueStrings, COLLECTION_SPLIT, false);
             }
-            else if ((obj.GetType().IsEnumerable() || obj.GetType().IsList())
-                && obj.GetType().GenericTypeArguments.Length == 1
-                && obj.GetType().GenericTypeArguments[0].IsEnum)
+            else if ((objType.IsEnumerable() || objType.IsList())
+                && objType.GenericTypeArguments.Length == 1
+                && objType.GenericTypeArguments[0].IsEnum)
             {
                 IEnumerable list = (IEnumerable)obj;
                 List<string> valueStrings = new List<string>();
-                Type type = obj.GetType().GenericTypeArguments[0];
+                Type type = objType.GenericTypeArguments[0];
                 foreach (object item in list)
                 {
                     string? str = Enum.GetName(type, item);
@@ -81,7 +116,7 @@ namespace Common_Util.Module.Config
             }
         }
         /// <summary>
-        /// 字符串配置值转换为对象
+        /// 字符串配置值转换为 <typeparamref name="T"/> 对象
         /// </summary>
         /// <typeparam name="T">目标类型</typeparam>
         /// <param name="str"></param>
@@ -93,78 +128,159 @@ namespace Common_Util.Module.Config
             else return (T)obj;
         }
         /// <summary>
+        /// 尝试将字符串配置值转换为 <typeparamref name="T"/> 对象 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="str"></param>
+        /// <param name="convertResult"></param>
+        /// <returns></returns>
+        public static bool TryConfigValue2Obj<T>(string str, [NotNullWhen(true)] out T? convertResult)
+        {
+            object? obj = ConfigValue2Obj(str, typeof(T));
+            if (obj == null)
+            {
+                convertResult = default;
+                return false;
+            }
+            else
+            {
+                convertResult = (T)obj;
+                return true;
+            }
+        }
+        /// <summary>
         /// 字符串配置值转换为对象
         /// </summary>
         /// <param name="str"></param>
         /// <param name="targetType">目标类型</param>
+        /// <param name="options">可选参数</param>
         /// <returns></returns>
-        public static object? ConfigValue2Obj(string? str, Type targetType)
+        public static object? ConfigValue2Obj(string? str, Type targetType, ConfigValue2ObjOptions? options = null)
         {
+            options ??= ConfigValue2ObjOptions.Default;
+            if (options.Value.EmptyValueConvertWay.HasFlag(EmptyValueConvertWays.Empty2NullResult))
+            {
+                if (string.IsNullOrEmpty(str)) return null;
+            }
+            if (options.Value.EmptyValueConvertWay.HasFlag(EmptyValueConvertWays.WhiteSpace2NullResult))
+            {
+                if (string.IsNullOrWhiteSpace(str)) return null;
+            }
+
+
+
             if (str == null) return null;
 
-            if (targetType == typeof(string))
+            Type? nullableTarget = targetType.NullableTarget();
+            bool isNullable = nullableTarget != null;
+            if (isNullable)
             {
-                return str;
+                targetType = nullableTarget!;
             }
+
+            if (targetType == typeof(DBNull))
+                return DBNull.Value;
+            else if (targetType.IsEnum)
+            {
+                object? temp = null;
+                if (targetType.IsDefined(typeof(FlagsAttribute), false))
+                    temp = EnumHelper.Convert(targetType, str, false);
+                else
+                    temp = EnumHelper.Convert(targetType, str, true);
+                if (temp == null) goto ReturnDefault;
+                else return temp;
+            }
+            else if (targetType == typeof(string))
+                return str;
             else if (targetType == typeof(bool))
             {
-                return ValueHelper.IsTrueString(str);
+                if (ValueHelper.TryLooselyParse(str, out var val)) return val;
+                else goto ReturnDefault;
             }
             else if (targetType == typeof(int))
             {
-                return int.TryParse(str, out var val) ? val : 0;
+                if (int.TryParse(str, out var val)) return val;
+                else goto ReturnDefault;
             }
             else if (targetType == typeof(uint))
             {
-                return uint.TryParse(str, out var val) ? val : 0;
+                if (uint.TryParse(str, out var val)) return val;
+                else goto ReturnDefault;
             }
             else if (targetType == typeof(long))
             {
-                return long.TryParse(str, out var val) ? val : 0;
+                if (long.TryParse(str, out var val)) return val;
+                else goto ReturnDefault;
             }
             else if (targetType == typeof(ulong))
             {
-                return ulong.TryParse(str, out var val) ? val : 0;
+                if (ulong.TryParse(str, out var val)) return val;
+                else goto ReturnDefault;
             }
             else if (targetType == typeof(float))
             {
-                return float.TryParse(str, out var val) ? val : 0;
+                if (float.TryParse(str, out var val)) return val;
+                else goto ReturnDefault;
             }
             else if (targetType == typeof(double))
             {
-                return double.TryParse(str, out var val) ? val : 0;
+                if (double.TryParse(str, out var val)) return val;
+                else goto ReturnDefault;
+            }
+            else if (targetType == typeof(sbyte))
+            {
+                if (sbyte.TryParse(str, out var val)) return val;
+                else goto ReturnDefault;
             }
             else if (targetType == typeof(byte))
             {
-                return byte.TryParse(str, out var val) ? val : 0;
+                if (byte.TryParse(str, out var val)) return val;
+                else goto ReturnDefault;
             }
             else if (targetType == typeof(char))
             {
-                return char.TryParse(str, out var val) ? val : 0;
+                if (char.TryParse(str, out var val)) return val;
+                else goto ReturnDefault;
             }
             else if (targetType == typeof(short))
             {
-                return short.TryParse(str, out var val) ? val : 0;
+                if (short.TryParse(str, out var val)) return val;
+                else goto ReturnDefault;
             }
             else if (targetType == typeof(ushort))
             {
-                return ushort.TryParse(str, out var val) ? val : 0;
+                if (ushort.TryParse(str, out var val)) return val;
+                else goto ReturnDefault;
             }
             else if (targetType == typeof(decimal))
             {
-                return decimal.TryParse(str, out var val) ? val : 0;
+                if (decimal.TryParse(str, out var val)) return val;
+                else goto ReturnDefault;
             }
             else if (targetType == typeof(DateTime))
             {
-                return DateTime.TryParse(str, out var val) ? val : default;
+                if (DateTime.TryParse(str, out var val)) return val;
+                else goto ReturnDefault;
             }
-            else if (targetType.IsAssignableTo(typeof(IStringConveying)))
+            else if (targetType == typeof(DateTimeOffset))
             {
-                return StringConveyingHelper.FromString(targetType, str);
+                if (DateTimeOffset.TryParse(str, out var val)) return val;
+                else goto ReturnDefault;
+            }
+            else if (targetType == typeof(Guid))
+            {
+                if (Guid.TryParse(str, out var val)) return val;
+                else goto ReturnDefault;
+            }
+            else if (StringConveyingHelper.ToObjectIfConvertible(targetType, str, out var convertResult))
+            {
+                return convertResult;
             }
             else if (targetType.IsEnum)
             {
-                return EnumHelper.Convert(targetType, str);
+                var val = EnumHelper.Convert(targetType, str);
+                if (val != null) return val;
+                else goto ReturnDefault;
             }
             else if (targetType == typeof(Type))
             {
@@ -178,12 +294,13 @@ namespace Common_Util.Module.Config
                     }
                     return false;
                 });
-                return output;
+                if (output != null) return output;
+                else goto ReturnDefault;
             }
             else if (targetType.IsArray)
             {
                 var elementType = targetType.GetElementType();
-                if (elementType == null) return null;
+                if (elementType == null) goto ReturnDefault;
                 string[] strs = str.Split(COLLECTION_SPLIT);
                 var arr = Array.CreateInstance(elementType, strs.Length);
                 foreach (var (index, _s) in strs.WithIndex())
@@ -205,7 +322,7 @@ namespace Common_Util.Module.Config
                     if (genericArgs.Length == 1)
                     {
                         IList? list = (IList?)Activator.CreateInstance(typeof(List<>).MakeGenericType(genericArgs[0]));
-                        if (list == null) return null;
+                        if (list == null) goto ReturnDefault;
                         string[] strs = str.Split(COLLECTION_SPLIT);
                         foreach (string _s in strs)
                         {
@@ -216,7 +333,61 @@ namespace Common_Util.Module.Config
                     }
                 }
             }
-            return null;
+
+        ReturnDefault:
+            if (isNullable || !targetType.IsValueType) return null;
+            else return Activator.CreateInstance(targetType);
+
+        }
+
+        public readonly struct ConfigValue2ObjOptions
+        {
+            /// <summary>
+            /// 默认值
+            /// </summary>
+            public static ConfigValue2ObjOptions Default => new ConfigValue2ObjOptions()
+            {
+                EmptyValueConvertWay = EmptyValueConvertWays.None,
+            };
+
+            /// <summary>
+            /// 各类空值的转换方式
+            /// </summary>
+            public EmptyValueConvertWays EmptyValueConvertWay { get; init; }
+        }
+        /// <summary>
+        /// 各类空值的转换方式
+        /// </summary>
+        [Flags]
+        public enum EmptyValueConvertWays : int
+        {
+            /// <summary>
+            /// 不做转换
+            /// </summary>
+            None = 0,
+            /// <summary>
+            /// 空字符串直接转换为 <see langword="null"/> 结果
+            /// </summary>
+            /// <remarks>
+            /// 最高优先级
+            /// </remarks>
+            Empty2NullResult = 0b1,
+            /// <summary>
+            /// 空白字符串直接转换为 <see langword="null"/> 结果
+            /// </summary>
+            /// <remarks>
+            /// 最高优先级
+            /// </remarks>
+            WhiteSpace2NullResult = 0b10,
+
+            /// <summary>
+            /// <see langword="null"/> 值输入先转换为空字符串再做后续操作
+            /// </summary>
+            Null2EmptyString = 0b100,
+            /// <summary>
+            /// 空白字符串先转换为空字符串再做后续操作
+            /// </summary>
+            WhiteSpace2EmptyResult = 0b1000,
         }
         #endregion
 
