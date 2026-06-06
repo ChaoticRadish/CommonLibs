@@ -189,13 +189,13 @@ $projectListText
 
 To view the source code of this release:
 
-`````bash
+``````bash
 # Switch to $SourceBranch branch
 git checkout $SourceBranch
 
 # View the source commit
 git show $sourceCommitShort
-`````
+``````
 "@
 
     [System.IO.File]::WriteAllText($OutputPath, $content, [System.Text.UTF8Encoding]::new($false))
