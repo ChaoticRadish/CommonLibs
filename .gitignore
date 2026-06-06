@@ -1,0 +1,50 @@
+﻿################################################################################
+# 此 .gitignore 文件已由 Microsoft(R) Visual Studio 自动创建。
+################################################################################
+
+# 本地文件目录 - 放置保存在本地、仅在本地有意义的文件，包括临时文件
+.local/
+.temp/
+
+# Visual Studio 配置目录
+/.vs
+
+# 以下是各项目的编译输出目录
+
+# 测试项目
+/ChaoticKit.LibTest.Console/bin
+/ChaoticKit.LibTest.Console/obj
+/ChaoticKit.LibTest.Wpf/bin
+/ChaoticKit.LibTest.Wpf/obj
+/ChaoticKit.LibTest.Winform/bin
+/ChaoticKit.LibTest.Winform/obj
+/ChaoticKit.Test.Console/bin
+/ChaoticKit.Test.Console/obj
+
+# 核心库项目
+/ChaoticKit.Maui/bin
+/ChaoticKit.Maui/obj
+/ChaoticKit/bin
+/ChaoticKit/obj
+/ChaoticKit.Data/bin
+/ChaoticKit.Data/obj
+/ChaoticKit.GDI/bin
+/ChaoticKit.GDI/obj
+/ChaoticKit.NewtonsoftJson/bin
+/ChaoticKit.NewtonsoftJson/obj
+
+# Excel 相关项目
+/ChaoticKit.Excel.NPOI/bin
+/ChaoticKit.Excel.NPOI/obj
+/ChaoticKit.Excel.NPOI.GDI/bin
+/ChaoticKit.Excel.NPOI.GDI/obj
+/ChaoticKit.Excel.NPOI.SkiaSharp/bin
+/ChaoticKit.Excel.NPOI.SkiaSharp/obj
+
+# UI 框架项目
+/ChaoticKit.Winform/bin
+/ChaoticKit.Winform/obj
+/ChaoticKit.Wpf/bin
+/ChaoticKit.Wpf/obj
+/ChaoticKit.WpfWinformMix/bin
+/ChaoticKit.WpfWinformMix/obj
