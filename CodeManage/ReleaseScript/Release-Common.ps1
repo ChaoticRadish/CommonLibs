@@ -151,6 +151,56 @@ function New-SolutionFile {
     [System.IO.File]::WriteAllText($OutputPath, $slnContent, [System.Text.UTF8Encoding]::new($false))
 }
 
+function New-ReleaseInfoFile {
+    param(
+        [string]$OutputPath,
+        [string]$VersionNumber,
+        [string]$Scenario,
+        [string]$SourceBranch,
+        [string]$SourceCommitHash,
+        [string]$SourceCommitMessage,
+        [string[]]$Projects
+    )
+
+    $sourceCommitShort = $SourceCommitHash.Substring(0, 7)
+    $publishTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss K"
+    $publishedBy = $env:USERNAME
+
+    # 构建项目列表
+    $projectList = $Projects | ForEach-Object { "- $_" }
+    $projectListText = $projectList -join "`n"
+
+    # 构建内容
+    $content = @"
+# Release Info
+
+- **Version**: $VersionNumber
+- **Scenario**: $Scenario
+- **Source Commit**: ``$SourceCommitHash`` (on branch ``$SourceBranch``)
+- **Source Commit Message**: $SourceCommitMessage
+- **Publish Time**: $publishTime
+- **Published By**: $publishedBy
+
+## Projects
+
+$projectListText
+
+## How to Trace
+
+To view the source code of this release:
+
+`````bash
+# Switch to $SourceBranch branch
+git checkout $SourceBranch
+
+# View the source commit
+git show $sourceCommitShort
+`````
+"@
+
+    [System.IO.File]::WriteAllText($OutputPath, $content, [System.Text.UTF8Encoding]::new($false))
+}
+
 # ============================================================================
 # 主逻辑函数
 # ============================================================================
@@ -160,7 +210,8 @@ function Invoke-ReleaseBranchCreation {
         [hashtable]$ScenarioConfig,
         [string]$MainBranch = "dev/main",
         [string[]]$RootFilesToCopy = @(".gitignore", "LICENSE.txt"),
-        [switch]$SkipCleanCheck
+        [switch]$SkipCleanCheck,
+        [switch]$CreateTag
     )
     
     try {
@@ -201,14 +252,20 @@ function Invoke-ReleaseBranchCreation {
         $versionNumber = New-VersionNumber
         Write-Log "生成版本号：$versionNumber" -Level Success
         
-        # 4. 获取仓库根目录
+        # 4. 获取源提交信息（用于溯源）
+        $sourceCommitHash = git rev-parse HEAD
+        $sourceCommitShort = $sourceCommitHash.Substring(0, 7)
+        $sourceCommitMessage = git log -1 --pretty=format:"%s"
+        Write-Log "源提交：$sourceCommitShort - $sourceCommitMessage" -Level Info
+        
+        # 5. 获取仓库根目录
         $repoRoot = (git rev-parse --show-toplevel)
         if ($LASTEXITCODE -ne 0) {
             Write-Log "无法获取仓库根目录" -Level Error
             return $false
         }
         
-        # 5. 创建临时工作目录
+        # 6. 创建临时工作目录
         $tempDir = Join-Path $repoRoot ".local\temp\release-$versionNumber"
         if (Test-Path $tempDir) {
             Remove-Item -Path $tempDir -Recurse -Force
@@ -318,17 +375,69 @@ function Invoke-ReleaseBranchCreation {
                 $slnTarget = Join-Path $repoRoot "ChaoticKit.sln"
                 Copy-Item -Path $slnSource -Destination $slnTarget -Force
                 
+                # 创建 RELEASE_INFO.md 文件（溯源信息）
+                $releaseInfoPath = Join-Path $repoRoot "RELEASE_INFO.md"
+                New-ReleaseInfoFile -OutputPath $releaseInfoPath -VersionNumber $versionNumber -Scenario $scenario -SourceBranch $MainBranch -SourceCommitHash $sourceCommitHash -SourceCommitMessage $sourceCommitMessage -Projects $copiedProjects
+                Write-Log "已创建溯源文件：RELEASE_INFO.md" -Level Success
+                
                 # 添加所有文件到 Git
                 git add . 2>&1 | Out-Null
                 
-                # 提交
-                $commitMessage = "chore: release $versionNumber for $scenario"
+                # 提交（增强提交信息）
+                $commitMessage = @"
+chore: release $versionNumber for $scenario
+
+Based on: $MainBranch @ $sourceCommitShort
+Source commit: $sourceCommitHash
+Source message: $sourceCommitMessage
+"@
                 git commit -m $commitMessage 2>&1 | Out-Null
                 if ($LASTEXITCODE -ne 0) {
                     throw "提交失败"
                 }
                 
                 Write-Log "成功创建分支：$branchName" -Level Success
+                
+                # 可选：创建 Git Tag
+                if ($CreateTag) {
+                    Write-Log "创建 Git Tag..." -Level Info
+                    
+                    # 切回 dev/main 分支
+                    git checkout $MainBranch 2>&1 | Out-Null
+                    
+                    # 构建项目列表
+                    $projectList = $copiedProjects | ForEach-Object { "  - $_" }
+                    $projectListText = $projectList -join "`n"
+                    
+                    # 创建 Tag
+                    $tagName = "release/$versionNumber/$scenario"
+                    $tagMessage = @"
+Release $versionNumber for scenario: $scenario
+
+Source:
+  Branch: $MainBranch
+  Commit: $sourceCommitHash
+  Message: $sourceCommitMessage
+
+Projects:
+$projectListText
+
+Published by: $env:USERNAME
+Published at: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
+"@
+                    
+                    git tag -a $tagName -m $tagMessage 2>&1 | Out-Null
+                    if ($LASTEXITCODE -eq 0) {
+                        Write-Log "已创建 Tag: $tagName" -Level Success
+                    }
+                    else {
+                        Write-Log "创建 Tag 失败" -Level Warning
+                    }
+                    
+                    # 切回 Release 分支
+                    git checkout $branchName 2>&1 | Out-Null
+                }
+                
                 $successCount++
             }
             catch {

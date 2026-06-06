@@ -5,7 +5,10 @@
 
 param(
     [Parameter(HelpMessage = "是否跳过工作区干净检查（危险操作）")]
-    [switch]$SkipCleanCheck
+    [switch]$SkipCleanCheck,
+    
+    [Parameter(HelpMessage = "是否创建 Git Tag（可选功能）")]
+    [switch]$CreateTag
 )
 
 # ============================================================================
@@ -51,4 +54,4 @@ $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 . (Join-Path $scriptDir "Release-Common.ps1")
 
 # 执行发布分支创建
-Invoke-ReleaseBranchCreation -ScenarioConfig $ScenarioConfig -MainBranch $MainBranch -RootFilesToCopy $RootFilesToCopy -SkipCleanCheck:$SkipCleanCheck
+Invoke-ReleaseBranchCreation -ScenarioConfig $ScenarioConfig -MainBranch $MainBranch -RootFilesToCopy $RootFilesToCopy -SkipCleanCheck:$SkipCleanCheck -CreateTag:$CreateTag

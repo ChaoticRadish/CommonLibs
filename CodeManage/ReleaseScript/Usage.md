@@ -50,7 +50,76 @@
 .\CodeManage\ReleaseScript\New-ReleaseBranch-Core.ps1 -SkipCleanCheck
 ```
 
-### 3. 执行前提条件
+### 3. 创建 Git Tag（可选功能）
+
+如果需要在 `dev/main` 分支创建 Git Tag 用于溯源：
+
+```powershell
+# 创建 Release 分支并创建 Git Tag
+.\CodeManage\ReleaseScript\New-ReleaseBranch-Core.ps1 -CreateTag
+
+# 组合使用：跳过检查并创建 Tag
+.\CodeManage\ReleaseScript\New-ReleaseBranch-Core.ps1 -SkipCleanCheck -CreateTag
+```
+
+**注意**：
+- Git Tag 创建在 `dev/main` 分支上，指向源提交
+- Tag 命名格式：`release/版本号/场景名`，例如 `release/2026.0606.1430/core`
+- Tag 包含完整的发布信息（版本、场景、源提交、项目列表等）
+- 创建的 Tag 需要手动推送到远程：`git push origin --tags`
+
+### 4. 溯源功能
+
+每次发布都会自动创建溯源信息，便于追踪问题：
+
+#### 方式 1：查看 RELEASE_INFO.md
+
+Release 分支根目录会自动创建 `RELEASE_INFO.md` 文件：
+
+```bash
+# 切换到 Release 分支
+git checkout release/2026.0606.1430/core
+
+# 查看发布信息
+cat RELEASE_INFO.md
+```
+
+文件内容包括：
+- 版本号
+- 场景名称
+- 源提交 hash 和消息
+- 发布时间和发布者
+- 包含的项目列表
+- 溯源操作指引
+
+#### 方式 2：查看提交信息
+
+```bash
+# 切换到 Release 分支
+git checkout release/2026.0606.1430/core
+
+# 查看提交信息
+git log -1 --pretty=format:"%B"
+
+# 输出示例：
+# chore: release 2026.0606.1430 for core
+#
+# Based on: dev/main @ abc123d
+# Source commit: abc123def456...
+# Source message: fix: 修复数据序列化问题
+```
+
+#### 方式 3：查看 Git Tag（如果创建了）
+
+```bash
+# 查看所有 Release Tags
+git tag -l 'release/*'
+
+# 查看特定版本的 Tag
+git show release/2026.0606.1430/core
+```
+
+### 5. 执行前提条件
 
 - 当前分支必须是 `dev/main`（开发主干分支）
 - 工作区必须干净（无未提交的变更）
