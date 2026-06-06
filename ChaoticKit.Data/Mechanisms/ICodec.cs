@@ -1,0 +1,80 @@
+﻿using ChaoticKit.Data.Struct;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ChaoticKit.Data.Mechanisms
+{
+    /// <summary>
+    /// 适用于特定介质类型 (<typeparamref name="TMedium"/>) 的 Coder-Decoder（编码器-解码器 / 编解码器）接口
+    /// </summary>
+    /// <typeparam name="TMedium"></typeparam>
+    public interface ICodec<TMedium> : ISerializer<TMedium>, IDeserializer<TMedium>
+    {
+
+    }
+
+    /// <summary>
+    /// 适用于特定介质类型 (<typeparamref name="TMedium"/>) 的序列化器接口
+    /// </summary>
+    /// <typeparam name="TMedium">传输介质, 负载数据序列化之后用于传输或存储等用途的数据类型</typeparam>
+    public interface ISerializer<TMedium>
+    {
+        /// <summary>
+        /// 序列化负载数据为传输介质
+        /// </summary>
+        /// <typeparam name="TPayload"></typeparam>
+        /// <param name="payload"></param>
+        /// <returns></returns>
+        public IOperationResult<TMedium> Serialize<TPayload>([DisallowNull] TPayload payload)
+        {
+            var result = Serialize(typeof(TPayload), payload);
+            return new OperationResult<TMedium>()
+            {
+                Data = result.Data,
+                IsSuccess = result.IsSuccess,
+                SuccessInfo = result.SuccessInfo,
+                FailureReason = result.FailureReason,
+            };
+        }
+
+        /// <summary>
+        /// 序列化负载数据为传输介质
+        /// </summary>
+        IOperationResult<TMedium> Serialize(Type payloadType, [DisallowNull] object payload);
+    }
+    /// <summary>
+    /// 适用于特定介质类型 (<typeparamref name="TMedium"/>) 的反序列化器接口
+    /// </summary>
+    /// <typeparam name="TMedium">传输介质, 负载数据序列化之后用于传输或存储等用途的数据类型</typeparam>
+    public interface IDeserializer<TMedium>
+    {
+        /// <summary>
+        /// 反序列化传输介质为负责数据
+        /// </summary>
+        /// <typeparam name="TPayload"></typeparam>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public IOperationResult<TPayload> Deserialize<TPayload>(TMedium obj)
+        {
+            var result = Deserialize(typeof(TPayload), obj);
+            return new OperationResult<TPayload>()
+            {
+                Data = (TPayload?)result.Data,
+                IsSuccess = result.IsSuccess,
+                SuccessInfo = result.SuccessInfo,
+                FailureReason = result.FailureReason,
+            };
+        }
+
+        /// <summary>
+        /// 序列化负载数据为传输介质
+        /// </summary>
+        IOperationResult<object> Deserialize(Type payloadType, TMedium obj);
+
+    }
+    
+}
