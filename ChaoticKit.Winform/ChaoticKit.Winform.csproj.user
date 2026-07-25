@@ -50,6 +50,9 @@
     <Compile Update="Controls\ValueBox\IntegerBox.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Update="Controls\ValueBox\ReadOnlyCheckBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Update="Forms\AskOkCancelForm01.cs">
       <SubType>Form</SubType>
     </Compile>
