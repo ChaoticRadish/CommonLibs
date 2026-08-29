@@ -2,7 +2,7 @@
   "profiles": {
     "ChaoticKit.LibTest.Console": {
       "commandName": "Project",
-      "commandLineArgs": "DynamicIL.ValueTuple001\r\n"
+      "commandLineArgs": "ChaoticKit.LibTest.Console.VirtualFileSystem.LocalFileSystem001\r\nChaoticKit.LibTest.Console.VirtualFileSystem.LocalFileSystem002\r\nChaoticKit.LibTest.Console.VirtualFileSystem.LocalFileSystem003\r\n"
     }
   }
 }

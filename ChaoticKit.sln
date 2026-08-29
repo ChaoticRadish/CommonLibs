@@ -35,6 +35,17 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChaoticKit.LibTest.Wpf", "C
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChaoticKit.Test.Console", "ChaoticKit.Test.Console\ChaoticKit.Test.Console.csproj", "{53E3EB78-F0C2-4739-A600-8DC94BC97C44}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChaoticKit.VirtualFileSystem.FluentFTP", "ChaoticKit.VirtualFileSystem.FluentFTP\ChaoticKit.VirtualFileSystem.FluentFTP.csproj", "{B6D44575-B398-2369-530C-5A92A7F47F41}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChaoticKit.VirtualFileSystem", "ChaoticKit.VirtualFileSystem\ChaoticKit.VirtualFileSystem.csproj", "{BC31A5E0-5F38-A5A4-9DAA-CAAD50513A90}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChaoticKit.VirtualFileSystem.WindowsShare", "ChaoticKit.VirtualFileSystem.WindowsShare\ChaoticKit.VirtualFileSystem.WindowsShare.csproj", "{57C21F47-100D-9BFC-6925-E489D5FE406E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "VirtualFileSystem", "VirtualFileSystem", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+	ProjectSection(SolutionItems) = preProject
+		VirtualFileSystem.md = VirtualFileSystem.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -97,6 +108,18 @@ Global
 		{53E3EB78-F0C2-4739-A600-8DC94BC97C44}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{53E3EB78-F0C2-4739-A600-8DC94BC97C44}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{53E3EB78-F0C2-4739-A600-8DC94BC97C44}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B6D44575-B398-2369-530C-5A92A7F47F41}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B6D44575-B398-2369-530C-5A92A7F47F41}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B6D44575-B398-2369-530C-5A92A7F47F41}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B6D44575-B398-2369-530C-5A92A7F47F41}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BC31A5E0-5F38-A5A4-9DAA-CAAD50513A90}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BC31A5E0-5F38-A5A4-9DAA-CAAD50513A90}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BC31A5E0-5F38-A5A4-9DAA-CAAD50513A90}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BC31A5E0-5F38-A5A4-9DAA-CAAD50513A90}.Release|Any CPU.Build.0 = Release|Any CPU
+		{57C21F47-100D-9BFC-6925-E489D5FE406E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{57C21F47-100D-9BFC-6925-E489D5FE406E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{57C21F47-100D-9BFC-6925-E489D5FE406E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{57C21F47-100D-9BFC-6925-E489D5FE406E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -116,6 +139,10 @@ Global
 		{7D3515AE-7535-434D-9143-C8122F1061DA} = {C097F254-0EBB-4FCD-84B2-7BF08A52CD9F}
 		{5236E1C4-E6C9-4B7B-8641-C89179C26C18} = {C097F254-0EBB-4FCD-84B2-7BF08A52CD9F}
 		{53E3EB78-F0C2-4739-A600-8DC94BC97C44} = {78F3DC99-D5CF-4A7A-9BE6-810158BE2B2D}
+		{B6D44575-B398-2369-530C-5A92A7F47F41} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{BC31A5E0-5F38-A5A4-9DAA-CAAD50513A90} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{57C21F47-100D-9BFC-6925-E489D5FE406E} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{02EA681E-C7D8-13C7-8484-4AC65E1B71E8} = {78F3DC99-D5CF-4A7A-9BE6-810158BE2B2D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9A94B4BB-B651-42DD-A853-F94A0A76D38F}

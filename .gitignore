@@ -22,8 +22,6 @@
 /ChaoticKit.Test.Console/obj
 
 # 核心库项目
-/ChaoticKit.Maui/bin
-/ChaoticKit.Maui/obj
 /ChaoticKit/bin
 /ChaoticKit/obj
 /ChaoticKit.Data/bin
@@ -32,6 +30,14 @@
 /ChaoticKit.GDI/obj
 /ChaoticKit.NewtonsoftJson/bin
 /ChaoticKit.NewtonsoftJson/obj
+
+# 虚拟文件系统项目
+/ChaoticKit.VirtualFileSystem/bin
+/ChaoticKit.VirtualFileSystem/obj
+/ChaoticKit.VirtualFileSystem.FluentFTP/bin
+/ChaoticKit.VirtualFileSystem.FluentFTP/obj
+/ChaoticKit.VirtualFileSystem.WindowsShare/bin
+/ChaoticKit.VirtualFileSystem.WindowsShare/obj
 
 # Excel 相关项目
 /ChaoticKit.Excel.NPOI/bin
@@ -46,5 +52,7 @@
 /ChaoticKit.Winform/obj
 /ChaoticKit.Wpf/bin
 /ChaoticKit.Wpf/obj
+/ChaoticKit.Maui/bin
+/ChaoticKit.Maui/obj
 /ChaoticKit.WpfWinformMix/bin
 /ChaoticKit.WpfWinformMix/obj

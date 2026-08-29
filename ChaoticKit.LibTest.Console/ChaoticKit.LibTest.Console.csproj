@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -17,6 +17,7 @@
     <ProjectReference Include="..\ChaoticKit.Data\ChaoticKit.Data.csproj" />
     <ProjectReference Include="..\ChaoticKit.NewtonsoftJson\ChaoticKit.NewtonsoftJson.csproj" />
     <ProjectReference Include="..\ChaoticKit.Test.Console\ChaoticKit.Test.Console.csproj" />
+    <ProjectReference Include="..\ChaoticKit.VirtualFileSystem\ChaoticKit.VirtualFileSystem.csproj" />
     <ProjectReference Include="..\ChaoticKit\ChaoticKit.csproj" />
   </ItemGroup>
 
