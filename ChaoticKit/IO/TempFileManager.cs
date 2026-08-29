@@ -16,7 +16,7 @@ namespace ChaoticKit.IO
     public sealed class TempFileManager : ITempFileManager<ITempFile>
     {
         /// <summary>
-        /// 创建使用指定目录管理临时文件的管理器
+        /// 创建使用指定本地目录管理临时文件的管理器
         /// </summary>
         /// <remarks>
         /// 实例化时, 如果文件夹不存在, 将创建, 如果已存在, <b>将清空!</b> <br/>
@@ -176,9 +176,21 @@ namespace ChaoticKit.IO
 
             public TempFileManager Manager { get; set; }
 
+            public readonly string FileDescription => System.IO.Path.GetFullPath(Path);
+
             public void Dispose()
             {
                 Manager.ReleaseTempFile(Id);
+            }
+
+            public Stream OpenRead()
+            {
+                return new FileStream(Path, FileMode.OpenOrCreate, FileAccess.Read);
+            }
+
+            public Stream OpenWrite()
+            {
+                return new FileStream(Path, FileMode.OpenOrCreate, FileAccess.Write);
             }
         }
 

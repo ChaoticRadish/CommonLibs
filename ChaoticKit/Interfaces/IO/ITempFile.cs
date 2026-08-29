@@ -16,9 +16,21 @@ namespace ChaoticKit.Interfaces.IO
     public interface ITempFile : IDisposable
     {
         /// <summary>
-        /// 临时文件对应的文件实际绝对路径
+        /// 临时文件对应的文件描述, 根据实现的具体情况, 可能是文件路径之类的. 
         /// </summary>
-        string Path { get; }
+        string FileDescription { get; }
+
+        /// <summary>
+        /// 以只读的参数打开可写流
+        /// </summary>
+        /// <returns></returns>
+        Stream OpenWrite();
+
+        /// <summary>
+        /// 以只读的参数打开可读流
+        /// </summary>
+        /// <returns></returns>
+        Stream OpenRead();
     }
     /// <summary>
     /// 临时文件管理器接口

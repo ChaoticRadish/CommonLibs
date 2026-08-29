@@ -7,7 +7,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static ChaoticKit.IO.TempFileHelper;
 
 namespace ChaoticKit.IO
 {
@@ -227,9 +226,9 @@ namespace ChaoticKit.IO
         public ITempFile TempFile { get; set; }
 
         /// <summary>
-        /// 临时文件的绝对路径
+        /// 临时文件的描述信息
         /// </summary>
-        public readonly string Path => TempFile.Path;
+        public readonly string FileDescription => TempFile.FileDescription;
 
         /// <summary>
         /// 片段在文件中的偏移量 (起点)
@@ -257,7 +256,7 @@ namespace ChaoticKit.IO
         /// <returns></returns>
         public readonly string SegmentBrief
         {
-            get => $"{System.IO.Path.GetFileName(Path)} [{Offset}+{Length}]";
+            get => $"{FileDescription} [{Offset}+{Length}]";
         }
     }
 }

@@ -9,6 +9,9 @@ using System.Threading.Tasks;
 
 namespace ChaoticKit.IO
 {
+    /// <summary>
+    /// 基于本地文件实现, 使用 <see cref="CustomTempFileDir"/> 用作临时文件文件夹的帮助类
+    /// </summary>
     public static class TempFileHelper
     {
         #region Manager
@@ -76,6 +79,10 @@ namespace ChaoticKit.IO
             /// 文件路径
             /// </summary>
             public string Path { get; set; }
+            /// <summary>
+            /// 文件完整路径
+            /// </summary>
+            public string FileDescription => System.IO.Path.GetFullPath(Path);
 
             /// <summary>
             /// 调用 <see cref="ReleaseTempFileAsync(int)"/> 将临时文件从管理中移除, 同时删除对应的临时文件
@@ -93,13 +100,13 @@ namespace ChaoticKit.IO
             {
                 return new(Path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
             }
-            /// <summary>
-            /// 以只读的参数打开文件流
-            /// </summary>
-            /// <returns></returns>
-            public readonly FileStream OpenRead()
+            public readonly Stream OpenRead()
             {
-                return new(Path, FileMode.OpenOrCreate, FileAccess.Read, FileShare.Read);
+                return new FileStream(Path, FileMode.OpenOrCreate, FileAccess.Read, FileShare.Read);
+            }
+            public readonly Stream OpenWrite()
+            {
+                return new FileStream(Path, FileMode.OpenOrCreate, FileAccess.Write);
             }
         }
 
@@ -203,7 +210,7 @@ namespace ChaoticKit.IO
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        private static void ReleaseTempFile(int id)
+        public static void ReleaseTempFile(int id)
         {
             if (tempFiles.TryRemove(id, out var exist))
             {
@@ -225,7 +232,7 @@ namespace ChaoticKit.IO
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        private static Task ReleaseTempFileAsync(int id)
+        public static Task ReleaseTempFileAsync(int id)
         {
             return Task.Run(() => ReleaseTempFile(id));
         }
@@ -234,7 +241,7 @@ namespace ChaoticKit.IO
         /// </summary>
         /// <param name="ids"></param>
         /// <returns></returns>
-        private static Task ReleaseTempFileAsync(IEnumerable<int> ids)
+        public static Task ReleaseTempFileAsync(IEnumerable<int> ids)
         {
             return Task.Run(() =>
             {
@@ -244,6 +251,76 @@ namespace ChaoticKit.IO
                 }
             });
         }
+        #endregion
+
+    }
+
+    /// <summary>
+    /// 包装 <see cref="TempFileHelper"/> 从而实现为 <see cref="ITempFileManager{T}"/> 接口
+    /// </summary>
+    /// <remarks>
+    /// 释放时, 主动通过 <see cref="TempFileHelper"/> 释放 <see cref="CreatedByThis"/> 中的 Id
+    /// </remarks>
+    public class TempFileManagerOfHelper : ITempFileManager<TempFileHelper.TempFile>
+    {
+
+        /// <summary>
+        /// 通过当前实例获取的临时文件 ID 集合
+        /// </summary>
+        /// <remarks>
+        /// 获取的是获取的时刻的所有 ID 拷贝而得到的集合, 如果有变更, 则不会反映到该集合内
+        /// </remarks>
+        public IReadOnlySet<int> CreatedByThis => _createdByThis.ToHashSet();
+        private ConcurrentBag<int> _createdByThis { get; } = new();
+
+        public TempFileHelper.TempFile NewOne()
+        {
+            var output = TempFileHelper.NewTempFile();
+            _createdByThis.Add(output.Id);
+            return output;
+        }
+
+        ITempFile ITempFileManager.NewOne()
+        {
+            return NewOne();
+        }
+
+        #region 释放   
+        private bool disposedValue;
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    // TODO: 释放托管状态(托管对象)
+                    var ids = CreatedByThis;
+                    foreach (var id in ids)
+                    {
+                        TempFileHelper.ReleaseTempFile(id);
+                    }
+                }
+
+                // TODO: 释放未托管的资源(未托管的对象)并重写终结器
+                // TODO: 将大型字段设置为 null
+                disposedValue = true;
+            }
+        }
+
+        // TODO: 仅当“Dispose(bool disposing)”拥有用于释放未托管资源的代码时才替代终结器
+        ~TempFileManagerOfHelper()
+        {
+            // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
+            Dispose(disposing: false);
+        }
+
+        public void Dispose()
+        {
+            // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+}
+
         #endregion
 
     }
