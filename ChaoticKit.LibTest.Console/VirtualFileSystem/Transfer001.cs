@@ -34,16 +34,17 @@ namespace ChaoticKit.LibTest.Console.VirtualFileSystem
 
             WriteEmptyLine();
             WriteLine("== 传输方案注册与解析 ==");
-            var fallback = factory.GetTransfer(FileSystemTypeConstants.Local, FileSystemTypeConstants.Local);
+            var localPair = new TransferSourceTargetTypePair(FileSystemTypeConstants.Local, FileSystemTypeConstants.Local);
+            var fallback = factory.GetTransfer(localPair);
             WritePair("未注册时返回兜底 (非空)", fallback != null);
             WritePair("兜底类型", fallback!.GetType().Name);
 
             var fake = new FakeTransfer();
-            factory.RegisterTransfer(FileSystemTypeConstants.Local, FileSystemTypeConstants.Local, fake);
-            var resolved = factory.GetTransfer(FileSystemTypeConstants.Local, FileSystemTypeConstants.Local);
+            factory.RegisterTransfer(localPair, fake);
+            var resolved = factory.GetTransfer(localPair);
             WritePair("注册后返回优化实例", ReferenceEquals(resolved, fake));
-            factory.UnregisterTransfer(FileSystemTypeConstants.Local, FileSystemTypeConstants.Local);
-            var fallback2 = factory.GetTransfer(FileSystemTypeConstants.Local, FileSystemTypeConstants.Local);
+            factory.UnregisterTransfer(localPair);
+            var fallback2 = factory.GetTransfer(localPair);
             WritePair("注销后返回兜底", ReferenceEquals(fallback2, fallback));
 
             WriteEmptyLine();
