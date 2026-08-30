@@ -379,5 +379,56 @@ namespace ChaoticKit.VirtualFileSystem.FluentFTP
                     .ToArray();
             });
         }
+
+        /// <inheritdoc/>
+        public override ValueTask<IOperationResultEx> ClearDirectoryAsync(IVirtualDirectory directory, VirtualFileSystemClearOption option, CancellationToken cancellationToken = default)
+        {
+            return RunAsync(async () =>
+            {
+                string remote = ResolveRemotePath(directory);
+                using var client = CreateClient(directory);
+                await ConnectAndUseAsync(client, cancellationToken, async c =>
+                {
+                    await ClearRemoteDirectoryAsync(c, remote, option, cancellationToken);
+                });
+            });
+        }
+
+        /// <summary>
+        /// 清理 FTP 远程目录: 按选项删除文件/子目录, 可递归
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="remotePath"></param>
+        /// <param name="option"></param>
+        /// <param name="cancellationToken"></param>
+        private static async Task ClearRemoteDirectoryAsync(AsyncFtpClient client, string remotePath, VirtualFileSystemClearOption option, CancellationToken cancellationToken)
+        {
+            bool recursive = option.HasFlag(VirtualFileSystemClearOption.Recursive);
+            bool clearDirectories = option.HasFlag(VirtualFileSystemClearOption.Directories);
+            bool clearFiles = option.HasFlag(VirtualFileSystemClearOption.Files);
+
+            var items = await client.GetListing(remotePath, cancellationToken);
+            foreach (var item in items)
+            {
+                if (item.Type == FtpObjectType.Directory)
+                {
+                    if (recursive)
+                    {
+                        await ClearRemoteDirectoryAsync(client, item.FullName, option, cancellationToken);
+                    }
+                    if (clearDirectories)
+                    {
+                        await client.DeleteDirectory(item.FullName, cancellationToken);
+                    }
+                }
+                else if (item.Type == FtpObjectType.File)
+                {
+                    if (clearFiles)
+                    {
+                        await client.DeleteFile(item.FullName, cancellationToken);
+                    }
+                }
+            }
+        }
     }
 }

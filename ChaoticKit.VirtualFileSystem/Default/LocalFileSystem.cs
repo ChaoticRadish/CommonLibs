@@ -203,6 +203,53 @@ namespace ChaoticKit.VirtualFileSystem.Default
                 }).ToArray());
             });
         }
+
+        /// <inheritdoc/>
+        public override ValueTask<IOperationResultEx> ClearDirectoryAsync(IVirtualDirectory directory, VirtualFileSystemClearOption option, CancellationToken cancellationToken = default)
+        {
+            return RunAsync(() =>
+            {
+                string full = ResolveFullPath(directory);
+                if (!Directory.Exists(full))
+                {
+                    return Task.CompletedTask;
+                }
+                ClearLocalDirectory(full, option);
+                return Task.CompletedTask;
+            });
+        }
+
+        /// <summary>
+        /// 清理本地目录: 按选项删除文件/子目录, 可递归
+        /// </summary>
+        /// <param name="dirPath"></param>
+        /// <param name="option"></param>
+        private static void ClearLocalDirectory(string dirPath, VirtualFileSystemClearOption option)
+        {
+            bool recursive = option.HasFlag(VirtualFileSystemClearOption.Recursive);
+            bool clearDirectories = option.HasFlag(VirtualFileSystemClearOption.Directories);
+            bool clearFiles = option.HasFlag(VirtualFileSystemClearOption.Files);
+
+            foreach (var sub in Directory.GetDirectories(dirPath))
+            {
+                if (recursive)
+                {
+                    ClearLocalDirectory(sub, option);
+                }
+                if (clearDirectories)
+                {
+                    Directory.Delete(sub, true);
+                }
+            }
+
+            if (clearFiles)
+            {
+                foreach (var file in Directory.GetFiles(dirPath))
+                {
+                    File.Delete(file);
+                }
+            }
+        }
     }
 
     /// <summary>

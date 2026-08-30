@@ -107,5 +107,8 @@ namespace ChaoticKit.VirtualFileSystem.Default
 
         /// <inheritdoc/>
         public abstract ValueTask<IOperationResultEx<IVirtualDirectory[]>> ListDirectoriesAsync(IVirtualDirectory directory, CancellationToken cancellationToken = default);
+
+        /// <inheritdoc/>
+        public abstract ValueTask<IOperationResultEx> ClearDirectoryAsync(IVirtualDirectory directory, VirtualFileSystemClearOption option, CancellationToken cancellationToken = default);
     }
 }

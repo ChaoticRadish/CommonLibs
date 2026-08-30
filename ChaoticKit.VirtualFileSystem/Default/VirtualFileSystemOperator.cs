@@ -239,6 +239,13 @@ namespace ChaoticKit.VirtualFileSystem.Default
                 provider => provider.ListDirectoriesAsync(directory, cancellationToken));
         }
 
+        /// <inheritdoc/>
+        public ValueTask<IOperationResultEx> ClearDirectoryAsync(IVirtualDirectory directory, VirtualFileSystemClearOption option, CancellationToken cancellationToken = default)
+        {
+            return RunProviderAsync(VirtualFileSystemOperation.ClearDirectory, null, directory, directory.FileSystemType,
+                provider => provider.ClearDirectoryAsync(directory, option, cancellationToken));
+        }
+
         #endregion
 
         #region IVirtualFileSystemTransfer

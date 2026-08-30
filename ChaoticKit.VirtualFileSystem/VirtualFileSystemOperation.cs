@@ -66,6 +66,11 @@ namespace ChaoticKit.VirtualFileSystem
         ListDirectories,
 
         /// <summary>
+        /// 清理目录
+        /// </summary>
+        ClearDirectory,
+
+        /// <summary>
         /// 移动文件
         /// </summary>
         MoveFile,

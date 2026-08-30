@@ -86,5 +86,14 @@ namespace ChaoticKit.VirtualFileSystem
         /// <param name="directory"></param>
         /// <param name="cancellationToken"></param>
         ValueTask<IOperationResultEx<IVirtualDirectory[]>> ListDirectoriesAsync(IVirtualDirectory directory, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// 清理指定目录: 按 <paramref name="option"/> 决定清理文件/目录及是否包含子级
+        /// <para>示例: <see cref="VirtualFileSystemClearOption.Recursive"/> + <see cref="VirtualFileSystemClearOption.Files"/> = 保留目录结构, 删除所有文件</para>
+        /// </summary>
+        /// <param name="directory"></param>
+        /// <param name="option"></param>
+        /// <param name="cancellationToken"></param>
+        ValueTask<IOperationResultEx> ClearDirectoryAsync(IVirtualDirectory directory, VirtualFileSystemClearOption option, CancellationToken cancellationToken = default);
     }
 }
