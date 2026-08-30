@@ -39,4 +39,24 @@ namespace ChaoticKit.VirtualFileSystem
         /// <param name="cancellationToken"></param>
         ValueTask<IOperationResultEx> CopyDirectoryAsync(IVirtualDirectory source, IVirtualDirectory target, CancellationToken cancellationToken = default);
     }
+    /// <summary>
+    /// 在 <see cref="IVirtualFileSystemTransfer"/> 基础上, 包含支持的类型信息
+    /// </summary>
+    public interface IVirtualFileSystemTransferIncludeTypeInfo : IVirtualFileSystemTransfer
+    {
+        /// <summary>
+        /// 支持的类型信息对
+        /// </summary>
+        IReadOnlyList<TransferSourceTargetTypePair> SupportedTypePairs { get; }
+    }
+
+    /// <summary>
+    /// 单个信息对: <see cref="IVirtualFileSystemTransfer"/> 的源类型与目标类型的类型信息
+    /// </summary>
+    /// <param name="SourceType">源类型</param>
+    /// <param name="TargetType">目标类型</param>
+    public record struct TransferSourceTargetTypePair(string SourceType, string TargetType)
+    {
+
+    }
 }

@@ -97,10 +97,10 @@ namespace ChaoticKit.VirtualFileSystem.Default
             return result;
         }
 
-        private async ValueTask<IOperationResultEx> RunTransferAsync(VirtualFileSystemOperation operation, IVirtualFile? file, IVirtualDirectory? directory, Func<IVirtualFileSystemTransfer, ValueTask<IOperationResultEx>> action, string sourceType, string targetType)
+        private async ValueTask<IOperationResultEx> RunTransferAsync(VirtualFileSystemOperation operation, IVirtualFile? file, IVirtualDirectory? directory, Func<IVirtualFileSystemTransfer, ValueTask<IOperationResultEx>> action, TransferSourceTargetTypePair typePair)
         {
             RaiseInvoking(operation, file, directory);
-            var transfer = _factory.GetTransfer(sourceType, targetType);
+            var transfer = _factory.GetTransfer(typePair);
             var result = await action(transfer);
             RaiseInvoked(operation, file, directory, result);
             return result;
@@ -247,28 +247,28 @@ namespace ChaoticKit.VirtualFileSystem.Default
         public ValueTask<IOperationResultEx> MoveFileAsync(IVirtualFile source, IVirtualFile target, CancellationToken cancellationToken = default)
         {
             return RunTransferAsync(VirtualFileSystemOperation.MoveFile, source, null,
-                transfer => transfer.MoveFileAsync(source, target, cancellationToken), source.FileSystemType, target.FileSystemType);
+                transfer => transfer.MoveFileAsync(source, target, cancellationToken), new TransferSourceTargetTypePair(source.FileSystemType, target.FileSystemType));
         }
 
         /// <inheritdoc/>
         public ValueTask<IOperationResultEx> MoveDirectoryAsync(IVirtualDirectory source, IVirtualDirectory target, CancellationToken cancellationToken = default)
         {
             return RunTransferAsync(VirtualFileSystemOperation.MoveDirectory, null, source,
-                transfer => transfer.MoveDirectoryAsync(source, target, cancellationToken), source.FileSystemType, target.FileSystemType);
+                transfer => transfer.MoveDirectoryAsync(source, target, cancellationToken), new TransferSourceTargetTypePair(source.FileSystemType, target.FileSystemType));
         }
 
         /// <inheritdoc/>
         public ValueTask<IOperationResultEx> CopyFileAsync(IVirtualFile source, IVirtualFile target, CancellationToken cancellationToken = default)
         {
             return RunTransferAsync(VirtualFileSystemOperation.CopyFile, source, null,
-                transfer => transfer.CopyFileAsync(source, target, cancellationToken), source.FileSystemType, target.FileSystemType);
+                transfer => transfer.CopyFileAsync(source, target, cancellationToken), new TransferSourceTargetTypePair(source.FileSystemType, target.FileSystemType));
         }
 
         /// <inheritdoc/>
         public ValueTask<IOperationResultEx> CopyDirectoryAsync(IVirtualDirectory source, IVirtualDirectory target, CancellationToken cancellationToken = default)
         {
             return RunTransferAsync(VirtualFileSystemOperation.CopyDirectory, null, source,
-                transfer => transfer.CopyDirectoryAsync(source, target, cancellationToken), source.FileSystemType, target.FileSystemType);
+                transfer => transfer.CopyDirectoryAsync(source, target, cancellationToken), new TransferSourceTargetTypePair(source.FileSystemType, target.FileSystemType));
         }
 
         #endregion

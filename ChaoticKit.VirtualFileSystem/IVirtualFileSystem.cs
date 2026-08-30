@@ -34,27 +34,24 @@ namespace ChaoticKit.VirtualFileSystem
 
         #region 传输方案注册与解析
         /// <summary>
-        /// 注册 (源类型, 目标类型) 对应的优化传输实现
+        /// 注册 <see cref="TransferSourceTargetTypePair"/> 对应的优化传输实现
         /// </summary>
-        /// <param name="sourceType"></param>
-        /// <param name="targetType"></param>
+        /// <param name="typePair"></param>
         /// <param name="transfer"></param>
-        void RegisterTransfer(string sourceType, string targetType, IVirtualFileSystemTransfer transfer);
+        void RegisterTransfer(TransferSourceTargetTypePair typePair, IVirtualFileSystemTransfer transfer);
 
         /// <summary>
         /// 注销传输方案
         /// </summary>
-        /// <param name="sourceType"></param>
-        /// <param name="targetType"></param>
+        /// <param name="typePair"></param>
         /// <returns>是否注销成功</returns>
-        bool UnregisterTransfer(string sourceType, string targetType);
+        bool UnregisterTransfer(TransferSourceTargetTypePair typePair);
 
         /// <summary>
-        /// 解析 (源类型, 目标类型) 的传输实现, 未注册时返回兜底实现 (不为 <see langword="null"/>)
+        /// 解析 <see cref="TransferSourceTargetTypePair"/> 对应的传输实现, 未注册时返回兜底实现 (不为 <see langword="null"/>)
         /// </summary>
-        /// <param name="sourceType"></param>
-        /// <param name="targetType"></param>
-        IVirtualFileSystemTransfer GetTransfer(string sourceType, string targetType);
+        /// <param name="typePair"></param>
+        IVirtualFileSystemTransfer GetTransfer(TransferSourceTargetTypePair typePair);
         #endregion
 
         #region 操作器

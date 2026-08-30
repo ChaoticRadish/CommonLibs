@@ -6,7 +6,7 @@ namespace ChaoticKit.VirtualFileSystem.Default
     public class VirtualFileSystem : IVirtualFileSystem
     {
         private readonly Dictionary<string, IVirtualFileSystemProvider> _providers = [];
-        private readonly Dictionary<(string sourceType, string targetType), IVirtualFileSystemTransfer> _transfers = [];
+        private readonly Dictionary<TransferSourceTargetTypePair, IVirtualFileSystemTransfer> _transfers = [];
         private readonly FallbackTransfer _fallback;
 
         /// <summary>
@@ -39,21 +39,21 @@ namespace ChaoticKit.VirtualFileSystem.Default
         public IReadOnlyList<IVirtualFileSystemProvider> Providers => _providers.Values.ToList();
 
         /// <inheritdoc/>
-        public void RegisterTransfer(string sourceType, string targetType, IVirtualFileSystemTransfer transfer)
+        public void RegisterTransfer(TransferSourceTargetTypePair typePair, IVirtualFileSystemTransfer transfer)
         {
-            _transfers[(sourceType, targetType)] = transfer;
+            _transfers[typePair] = transfer;
         }
 
         /// <inheritdoc/>
-        public bool UnregisterTransfer(string sourceType, string targetType)
+        public bool UnregisterTransfer(TransferSourceTargetTypePair typePair)
         {
-            return _transfers.Remove((sourceType, targetType));
+            return _transfers.Remove(typePair);
         }
 
         /// <inheritdoc/>
-        public IVirtualFileSystemTransfer GetTransfer(string sourceType, string targetType)
+        public IVirtualFileSystemTransfer GetTransfer(TransferSourceTargetTypePair typePair)
         {
-            return _transfers.TryGetValue((sourceType, targetType), out var transfer) ? transfer : _fallback;
+            return _transfers.TryGetValue(typePair, out var transfer) ? transfer : _fallback;
         }
 
         /// <inheritdoc/>
