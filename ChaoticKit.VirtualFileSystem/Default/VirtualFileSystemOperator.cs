@@ -279,5 +279,24 @@ namespace ChaoticKit.VirtualFileSystem.Default
         }
 
         #endregion
+
+        #region 便捷方法
+
+        /// <inheritdoc/>
+        public async ValueTask<IOperationResultEx> EnsureDirectoryExistsAsync(IVirtualDirectory directory, CancellationToken cancellationToken = default)
+        {
+            var existsResult = await DirectoryExistsAsync(directory, cancellationToken);
+            if (existsResult.IsFailure)
+            {
+                return existsResult;
+            }
+            if (existsResult.Data)
+            {
+                return OperationResultEx.SuccessWithInfo("目录已存在");
+            }
+            return await CreateDirectoryAsync(directory, cancellationToken);
+        }
+
+        #endregion
     }
 }

@@ -1,3 +1,5 @@
+using ChaoticKit.Data.Struct;
+
 namespace ChaoticKit.VirtualFileSystem
 {
     /// <summary>
@@ -14,5 +16,12 @@ namespace ChaoticKit.VirtualFileSystem
         /// 操作执行后触发 (所有操作共用, 用 <see cref="VirtualFileSystemOperation"/> 区分)
         /// </summary>
         event EventHandler<VirtualFileSystemOperationEventArgs>? OperationInvoked;
+
+        /// <summary>
+        /// 确保指定目录存在: 不存在时创建 (封装常用操作, 简化调用; 内部通过 <see cref="IVirtualFileSystemProvider.DirectoryExistsAsync"/> 与 <see cref="IVirtualFileSystemProvider.CreateDirectoryAsync"/> 实现)
+        /// </summary>
+        /// <param name="directory"></param>
+        /// <param name="cancellationToken"></param>
+        ValueTask<IOperationResultEx> EnsureDirectoryExistsAsync(IVirtualDirectory directory, CancellationToken cancellationToken = default);
     }
 }
