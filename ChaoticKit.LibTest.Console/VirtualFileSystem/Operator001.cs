@@ -53,6 +53,13 @@ namespace ChaoticKit.LibTest.Console.VirtualFileSystem
             WritePair("删除", await op.DeleteFileAsync(file!));
 
             WriteEmptyLine();
+            WriteLine("== 便捷方法 EnsureDirectoryExists ==");
+            var ensureDir = (await op.GetDirectoryAsync(new VirtualFilePath(root, ["ensure_dir"]))).Data;
+            WritePair("首次确保 (应创建)", (await op.EnsureDirectoryExistsAsync(ensureDir!)).IsSuccess);
+            WritePair("目录已创建", (await op.DirectoryExistsAsync(ensureDir!)).Data);
+            WritePair("再次确保 (应已存在)", (await op.EnsureDirectoryExistsAsync(ensureDir!)).IsSuccess);
+
+            WriteEmptyLine();
             WriteLine("== 事件记录 ==");
             WriteLine("Invoking 事件序列: " + string.Join(", ", invokingOps));
             WriteLine("Invoked 事件序列: " + string.Join(", ", invokedOps));
