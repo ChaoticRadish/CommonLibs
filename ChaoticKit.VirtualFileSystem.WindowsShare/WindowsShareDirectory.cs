@@ -58,5 +58,37 @@ namespace ChaoticKit.VirtualFileSystem.WindowsShare
                 return root + "\\" + string.Join('\\', Paths);
             }
         }
+
+        /// <inheritdoc/>
+        public IVirtualFile GetFile(params string[] segments)
+        {
+            if (segments.Length == 0 || segments.Any(string.IsNullOrEmpty))
+            {
+                throw new ArgumentException("路径段不允许为空", nameof(segments));
+            }
+            string name = segments[^1];
+            WindowsShareDirectory directory = segments.Length == 1 ? this : CreateDescendantDirectory(segments[..^1]);
+            return new WindowsShareFile(name, directory, Source);
+        }
+
+        /// <inheritdoc/>
+        public IVirtualDirectory GetDirectory(params string[] segments)
+        {
+            if (segments.Length == 0 || segments.Any(string.IsNullOrEmpty))
+            {
+                throw new ArgumentException("路径段不允许为空", nameof(segments));
+            }
+            return CreateDescendantDirectory(segments);
+        }
+
+        /// <summary>
+        /// 由路径段创建深层目录条目 (路径段拼接到当前目录的 <see cref="Paths"/> 之后, 携带连接信息)
+        /// </summary>
+        /// <param name="segments"></param>
+        private WindowsShareDirectory CreateDescendantDirectory(string[] segments)
+        {
+            string[] paths = [.. Paths, .. segments];
+            return new WindowsShareDirectory(segments[^1], paths, Source, DeviceHost, ShareRootPath, Credential);
+        }
     }
 }

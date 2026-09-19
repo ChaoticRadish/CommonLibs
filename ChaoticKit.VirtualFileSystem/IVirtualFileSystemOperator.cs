@@ -22,6 +22,7 @@ namespace ChaoticKit.VirtualFileSystem
         /// </summary>
         /// <param name="directory"></param>
         /// <param name="cancellationToken"></param>
-        ValueTask<IOperationResultEx> EnsureDirectoryExistsAsync(IVirtualDirectory directory, CancellationToken cancellationToken = default);
+        /// <returns>成功时附带 <see langword="bool"/> 数据: <see langword="true"/> 表示执行了创建, <see langword="false"/> 表示目录原本已存在</returns>
+        ValueTask<IOperationResultEx<bool>> EnsureDirectoryExistsAsync(IVirtualDirectory directory, CancellationToken cancellationToken = default);
     }
 }

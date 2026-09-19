@@ -55,9 +55,13 @@ namespace ChaoticKit.LibTest.Console.VirtualFileSystem
             WriteEmptyLine();
             WriteLine("== 便捷方法 EnsureDirectoryExists ==");
             var ensureDir = (await op.GetDirectoryAsync(new VirtualFilePath(root, ["ensure_dir"]))).Data;
-            WritePair("首次确保 (应创建)", (await op.EnsureDirectoryExistsAsync(ensureDir!)).IsSuccess);
+            var ensureFirst = await op.EnsureDirectoryExistsAsync(ensureDir!);
+            WritePair("首次确保 (应创建, true)", ensureFirst.Data);
+            WritePair("首次成功", ensureFirst.IsSuccess);
             WritePair("目录已创建", (await op.DirectoryExistsAsync(ensureDir!)).Data);
-            WritePair("再次确保 (应已存在)", (await op.EnsureDirectoryExistsAsync(ensureDir!)).IsSuccess);
+            var ensureSecond = await op.EnsureDirectoryExistsAsync(ensureDir!);
+            WritePair("再次确保 (已存在, false)", ensureSecond.Data);
+            WritePair("再次成功", ensureSecond.IsSuccess);
 
             WriteEmptyLine();
             WriteLine("== 事件记录 ==");

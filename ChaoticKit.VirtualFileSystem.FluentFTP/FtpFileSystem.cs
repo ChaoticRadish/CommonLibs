@@ -271,6 +271,13 @@ namespace ChaoticKit.VirtualFileSystem.FluentFTP
         }
 
         /// <inheritdoc/>
+        /// <remarks>FTP 实现: 与覆盖模式的 <see cref="OpenWriteAsync(IVirtualFile, bool, CancellationToken)"/> 行为一致, 先下载远端现有内容到临时文件, 提交时整体上传覆盖</remarks>
+        public override ValueTask<IOperationResultEx<Stream>> OpenUpdateAsync(IVirtualFile file, CancellationToken cancellationToken = default)
+        {
+            return OpenWriteAsync(file, true, cancellationToken);
+        }
+
+        /// <inheritdoc/>
         public override ValueTask<IOperationResultEx<bool>> FileExistsAsync(IVirtualFile file, CancellationToken cancellationToken = default)
         {
             return RunAsync<bool>(async () =>
@@ -430,5 +437,22 @@ namespace ChaoticKit.VirtualFileSystem.FluentFTP
                 }
             }
         }
+
+        #region 条目比较
+
+        /// <inheritdoc/>
+        /// <remarks>定位键包含服务器主机与端口, 避免不同服务器上的同名路径被判为同一条目; 远程路径默认按序数区分大小写</remarks>
+        protected override string GetEntryKey(IVirtualFileSystemDescriptor entry)
+        {
+            var info = GetConnectionInfo(entry);
+            return entry switch
+            {
+                IVirtualDirectory directory => $"{info.Host}:{info.Port}{ResolveRemotePath(directory)}",
+                IVirtualFile file => $"{info.Host}:{info.Port}{ResolveRemotePath(file.Directory, file.Name)}",
+                _ => throw new NotSupportedException($"不支持的条目类型: {entry.GetType().FullName}"),
+            };
+        }
+
+        #endregion
     }
 }

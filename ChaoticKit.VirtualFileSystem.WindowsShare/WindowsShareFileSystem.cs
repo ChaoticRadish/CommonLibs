@@ -193,6 +193,17 @@ namespace ChaoticKit.VirtualFileSystem.WindowsShare
         }
 
         /// <inheritdoc/>
+        public override ValueTask<IOperationResultEx<Stream>> OpenUpdateAsync(IVirtualFile file, CancellationToken cancellationToken = default)
+        {
+            return RunAsync<Stream>(() =>
+            {
+                using var connection = TryConnect(file);
+                string full = ResolveFullPath(file.Directory, file.Name);
+                return Task.FromResult<Stream>(new FileStream(full, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None, 4096, FileOptions.Asynchronous));
+            });
+        }
+
+        /// <inheritdoc/>
         public override ValueTask<IOperationResultEx<bool>> FileExistsAsync(IVirtualFile file, CancellationToken cancellationToken = default)
         {
             return RunAsync<bool>(() =>
@@ -335,6 +346,27 @@ namespace ChaoticKit.VirtualFileSystem.WindowsShare
                 }
             }
         }
+
+        #region 条目比较
+
+        /// <inheritdoc/>
+        /// <remarks>Windows 共享目录不区分大小写</remarks>
+        protected override StringComparer EntryKeyComparer => StringComparer.OrdinalIgnoreCase;
+
+        /// <inheritdoc/>
+        /// <remarks>定位键包含设备主机与共享根路径, 避免不同设备或不同共享上的同名路径被判为同一条目</remarks>
+        protected override string GetEntryKey(IVirtualFileSystemDescriptor entry)
+        {
+            var info = GetConnectionInfo(entry);
+            return entry switch
+            {
+                IVirtualDirectory directory => $"{info.DeviceHost}|{info.ShareRootPath}|{ResolveFullPath(directory)}",
+                IVirtualFile file => $"{info.DeviceHost}|{info.ShareRootPath}|{ResolveFullPath(file.Directory, file.Name)}",
+                _ => throw new NotSupportedException($"不支持的条目类型: {entry.GetType().FullName}"),
+            };
+        }
+
+        #endregion
 
         #region P/Invoke
 

@@ -19,5 +19,17 @@ namespace ChaoticKit.VirtualFileSystem
         /// 完整路径 (主要用于显示/调试, 实际操作不使用)
         /// </summary>
         string FullPath { get; }
+
+        /// <summary>
+        /// 获取描述该目录下文件的条目: 最后一段为文件名, 前面的段为子目录路径 (仅传文件名即直接子级), 不检查存在性
+        /// </summary>
+        /// <param name="segments">路径段, 不允许为空</param>
+        IVirtualFile GetFile(params string[] segments);
+
+        /// <summary>
+        /// 获取描述该目录下子目录的条目: 路径段为子目录路径 (仅传目录名即直接子级), 不检查存在性
+        /// </summary>
+        /// <param name="segments">路径段, 不允许为空</param>
+        IVirtualDirectory GetDirectory(params string[] segments);
     }
 }

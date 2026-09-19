@@ -191,6 +191,32 @@ namespace ChaoticKit.VirtualFileSystem.Default
         }
 
         /// <inheritdoc/>
+        public async ValueTask<IOperationResultEx<Stream>> OpenUpdateAsync(IVirtualFile file, CancellationToken cancellationToken = default)
+        {
+            RaiseInvoking(VirtualFileSystemOperation.OpenUpdate, file, null);
+            var provider = Resolve(file.FileSystemType);
+            IOperationResultEx<Stream> result;
+            if (provider == null)
+            {
+                result = OperationResultEx<Stream>.Failure($"未注册实现: {file.FileSystemType}");
+            }
+            else
+            {
+                result = await provider.OpenUpdateAsync(file, cancellationToken);
+                if (result.IsSuccess && result.Data != null)
+                {
+                    var inner = result.Data;
+                    result = OperationResultEx<Stream>.Success(new EventStream(inner, () =>
+                    {
+                        RaiseInvoked(VirtualFileSystemOperation.CloseStream, file, null, OperationResultEx.Success);
+                    }));
+                }
+            }
+            RaiseInvoked(VirtualFileSystemOperation.OpenUpdate, file, null, result);
+            return result;
+        }
+
+        /// <inheritdoc/>
         public ValueTask<IOperationResultEx<bool>> FileExistsAsync(IVirtualFile file, CancellationToken cancellationToken = default)
         {
             return RunProviderAsync(VirtualFileSystemOperation.FileExists, file, null, file.FileSystemType,
@@ -246,6 +272,50 @@ namespace ChaoticKit.VirtualFileSystem.Default
                 provider => provider.ClearDirectoryAsync(directory, option, cancellationToken));
         }
 
+        /// <inheritdoc/>
+        public bool DirectoryEquals(IVirtualDirectory left, IVirtualDirectory right)
+        {
+            return EntryEquals(left, right, provider => provider.DirectoryEquals(left, right));
+        }
+
+        /// <inheritdoc/>
+        public bool FileEquals(IVirtualFile left, IVirtualFile right)
+        {
+            return EntryEquals(left, right, provider => provider.FileEquals(left, right));
+        }
+
+        /// <inheritdoc/>
+        public int GetDirectoryHashCode(IVirtualDirectory directory)
+        {
+            ArgumentNullException.ThrowIfNull(directory);
+            var provider = Resolve(directory.FileSystemType);
+            return provider == null ? 0 : HashCode.Combine(directory.FileSystemType, provider.GetDirectoryHashCode(directory));
+        }
+
+        /// <inheritdoc/>
+        public int GetFileHashCode(IVirtualFile file)
+        {
+            ArgumentNullException.ThrowIfNull(file);
+            var provider = Resolve(file.FileSystemType);
+            return provider == null ? 0 : HashCode.Combine(file.FileSystemType, provider.GetFileHashCode(file));
+        }
+
+        /// <summary>
+        /// 条目相等比较: 跨文件系统必定不相等, 同一文件系统交由对应实现比较
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <param name="compare">取得实现后的比较方法</param>
+        private bool EntryEquals(IVirtualFileSystemDescriptor? left, IVirtualFileSystemDescriptor? right, Func<IVirtualFileSystemProvider, bool> compare)
+        {
+            if (ReferenceEquals(left, right)) return true;
+            if (left == null || right == null) return false;
+            if (!string.Equals(left.FileSystemType, right.FileSystemType, StringComparison.Ordinal)) return false;
+
+            var provider = Resolve(left.FileSystemType);
+            return provider != null && compare(provider);
+        }
+
         #endregion
 
         #region IVirtualFileSystemTransfer
@@ -283,18 +353,27 @@ namespace ChaoticKit.VirtualFileSystem.Default
         #region 便捷方法
 
         /// <inheritdoc/>
-        public async ValueTask<IOperationResultEx> EnsureDirectoryExistsAsync(IVirtualDirectory directory, CancellationToken cancellationToken = default)
+        public async ValueTask<IOperationResultEx<bool>> EnsureDirectoryExistsAsync(IVirtualDirectory directory, CancellationToken cancellationToken = default)
         {
             var existsResult = await DirectoryExistsAsync(directory, cancellationToken);
             if (existsResult.IsFailure)
             {
-                return existsResult;
+                return existsResult.HasException && existsResult.Exception != null
+                    ? OperationResultEx<bool>.Failure(existsResult.Exception)
+                    : OperationResultEx<bool>.Failure(existsResult.FailureReason ?? "目录检查失败");
             }
             if (existsResult.Data)
             {
-                return OperationResultEx.SuccessWithInfo("目录已存在");
+                return OperationResultEx<bool>.Success(false, "目录已存在");
             }
-            return await CreateDirectoryAsync(directory, cancellationToken);
+            var createResult = await CreateDirectoryAsync(directory, cancellationToken);
+            if (createResult.IsFailure)
+            {
+                return createResult.HasException && createResult.Exception != null
+                    ? OperationResultEx<bool>.Failure(createResult.Exception)
+                    : OperationResultEx<bool>.Failure(createResult.FailureReason ?? "目录创建失败");
+            }
+            return OperationResultEx<bool>.Success(true, "目录已创建");
         }
 
         #endregion

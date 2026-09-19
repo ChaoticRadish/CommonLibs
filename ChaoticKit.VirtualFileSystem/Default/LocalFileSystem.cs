@@ -124,6 +124,16 @@ namespace ChaoticKit.VirtualFileSystem.Default
         }
 
         /// <inheritdoc/>
+        public override ValueTask<IOperationResultEx<Stream>> OpenUpdateAsync(IVirtualFile file, CancellationToken cancellationToken = default)
+        {
+            return RunAsync<Stream>(() =>
+            {
+                string full = ResolveFullPath(file.Directory, file.Name);
+                return Task.FromResult<Stream>(new FileStream(full, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None, 4096, FileOptions.Asynchronous));
+            });
+        }
+
+        /// <inheritdoc/>
         public override ValueTask<IOperationResultEx<bool>> FileExistsAsync(IVirtualFile file, CancellationToken cancellationToken = default)
         {
             return RunAsync<bool>(() => Task.FromResult(File.Exists(ResolveFullPath(file.Directory, file.Name))));
@@ -250,6 +260,26 @@ namespace ChaoticKit.VirtualFileSystem.Default
                 }
             }
         }
+
+        #region 条目比较
+
+        /// <inheritdoc/>
+        /// <remarks>Windows 文件系统不区分大小写, 其他系统按序数区分</remarks>
+        protected override StringComparer EntryKeyComparer =>
+            OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+
+        /// <inheritdoc/>
+        protected override string GetEntryKey(IVirtualFileSystemDescriptor entry)
+        {
+            return entry switch
+            {
+                IVirtualDirectory directory => ResolveFullPath(directory),
+                IVirtualFile file => ResolveFullPath(file.Directory, file.Name),
+                _ => throw new NotSupportedException($"不支持的条目类型: {entry.GetType().FullName}"),
+            };
+        }
+
+        #endregion
     }
 
     /// <summary>
@@ -382,6 +412,38 @@ namespace ChaoticKit.VirtualFileSystem.Default
                 // 首段为盘符 (如 "D:") 时从该盘根开始, 拼接使用环境分隔符, 方便拷贝使用
                 return Path.Combine([Paths[0] + Path.DirectorySeparatorChar, .. Paths[1..]]);
             }
+        }
+
+        /// <inheritdoc/>
+        public IVirtualFile GetFile(params string[] segments)
+        {
+            if (segments.Length == 0 || segments.Any(string.IsNullOrEmpty))
+            {
+                throw new ArgumentException("路径段不允许为空", nameof(segments));
+            }
+            string name = segments[^1];
+            IVirtualDirectory directory = segments.Length == 1 ? this : CreateDescendantDirectory(segments[..^1]);
+            return new LocalFile(name, directory, Source);
+        }
+
+        /// <inheritdoc/>
+        public IVirtualDirectory GetDirectory(params string[] segments)
+        {
+            if (segments.Length == 0 || segments.Any(string.IsNullOrEmpty))
+            {
+                throw new ArgumentException("路径段不允许为空", nameof(segments));
+            }
+            return CreateDescendantDirectory(segments);
+        }
+
+        /// <summary>
+        /// 由路径段创建深层目录条目 (路径段拼接到当前目录的 <see cref="Paths"/> 之后)
+        /// </summary>
+        /// <param name="segments"></param>
+        private LocalDirectory CreateDescendantDirectory(string[] segments)
+        {
+            string[] paths = [.. Paths, .. segments];
+            return new LocalDirectory(segments[^1], paths, Source);
         }
     }
 }

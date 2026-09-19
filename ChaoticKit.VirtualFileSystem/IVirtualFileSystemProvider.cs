@@ -31,11 +31,21 @@ namespace ChaoticKit.VirtualFileSystem
 
         /// <summary>
         /// 打开文件写入流
+        /// <para>需要保留已有内容时使用 <see cref="OpenUpdateAsync"/></para>
         /// </summary>
         /// <param name="file"></param>
         /// <param name="overwrite">为 <see langword="true"/> 时覆盖已存在文件, 否则新建</param>
         /// <param name="cancellationToken"></param>
         ValueTask<IOperationResultEx<Stream>> OpenWriteAsync(IVirtualFile file, bool overwrite = true, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// 以更新方式打开文件写入流: 不清空已有内容, 文件不存在时创建
+        /// <para>与 <see cref="OpenWriteAsync"/> 的区别: 后者覆盖模式下会清空已有内容, 本方法保留已有内容, 适合在现有数据上定位写入 (随机写入)</para>
+        /// <para>实现应尽量返回支持定位 (<see cref="Stream.CanSeek"/>) 的流, 不支持的实现由调用方负责检查并处理</para>
+        /// </summary>
+        /// <param name="file"></param>
+        /// <param name="cancellationToken"></param>
+        ValueTask<IOperationResultEx<Stream>> OpenUpdateAsync(IVirtualFile file, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// 文件是否存在
@@ -95,5 +105,33 @@ namespace ChaoticKit.VirtualFileSystem
         /// <param name="option"></param>
         /// <param name="cancellationToken"></param>
         ValueTask<IOperationResultEx> ClearDirectoryAsync(IVirtualDirectory directory, VirtualFileSystemClearOption option, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// 判断两个目录条目是否指向同一目录
+        /// <para>仅用于比较本实现的条目: 条目不属于本实现时一律返回 <see langword="false"/>; 跨文件系统比较由 <see cref="IVirtualFileSystemEntryComparer"/> 负责</para>
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        bool DirectoryEquals(IVirtualDirectory left, IVirtualDirectory right);
+
+        /// <summary>
+        /// 判断两个文件条目是否指向同一文件
+        /// <para>仅用于比较本实现的条目: 条目不属于本实现时一律返回 <see langword="false"/></para>
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        bool FileEquals(IVirtualFile left, IVirtualFile right);
+
+        /// <summary>
+        /// 取得目录条目的哈希码 (需与 <see cref="DirectoryEquals"/> 的判定结果保持一致)
+        /// </summary>
+        /// <param name="directory"></param>
+        int GetDirectoryHashCode(IVirtualDirectory directory);
+
+        /// <summary>
+        /// 取得文件条目的哈希码 (需与 <see cref="FileEquals"/> 的判定结果保持一致)
+        /// </summary>
+        /// <param name="file"></param>
+        int GetFileHashCode(IVirtualFile file);
     }
 }

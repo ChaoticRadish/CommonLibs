@@ -67,6 +67,25 @@ namespace ChaoticKit.LibTest.Console.VirtualFileSystem
             WritePair("删除后 a 存在", (await fs.DirectoryExistsAsync(dirA!)).Data);
 
             WriteEmptyLine();
+            WriteLine("== 目录条目便捷方法 GetFile / GetDirectory ==");
+            var directFile = baseDir.GetFile("direct.txt");
+            var deepFile = baseDir.GetFile("x", "y", "deep.txt");
+            var deepDir = baseDir.GetDirectory("x", "y");
+            WritePair("直接文件 FullPath", directFile.FullPath);
+            WritePair("深层文件 FullPath", deepFile.FullPath);
+            WritePair("深层目录 FullPath", deepDir.FullPath);
+            WritePair("深层文件所属目录", deepFile.Directory.Name);
+            try
+            {
+                baseDir.GetFile();
+                WritePair("空段抛异常(应发生)", false);
+            }
+            catch (ArgumentException)
+            {
+                WritePair("空段抛异常(应发生)", true);
+            }
+
+            WriteEmptyLine();
             WriteLine("== 清理 ==");
             await fs.DeleteDirectoryAsync(baseDir, true);
             WriteLine("清理完成");

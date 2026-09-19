@@ -69,5 +69,37 @@ namespace ChaoticKit.VirtualFileSystem.FluentFTP
                 return "/" + string.Join('/', segments);
             }
         }
+
+        /// <inheritdoc/>
+        public IVirtualFile GetFile(params string[] segments)
+        {
+            if (segments.Length == 0 || segments.Any(string.IsNullOrEmpty))
+            {
+                throw new ArgumentException("路径段不允许为空", nameof(segments));
+            }
+            string name = segments[^1];
+            FtpDirectory directory = segments.Length == 1 ? this : CreateDescendantDirectory(segments[..^1]);
+            return new FtpFile(name, directory, Source);
+        }
+
+        /// <inheritdoc/>
+        public IVirtualDirectory GetDirectory(params string[] segments)
+        {
+            if (segments.Length == 0 || segments.Any(string.IsNullOrEmpty))
+            {
+                throw new ArgumentException("路径段不允许为空", nameof(segments));
+            }
+            return CreateDescendantDirectory(segments);
+        }
+
+        /// <summary>
+        /// 由路径段创建深层目录条目 (路径段拼接到当前目录的 <see cref="Paths"/> 之后, 携带连接信息)
+        /// </summary>
+        /// <param name="segments"></param>
+        private FtpDirectory CreateDescendantDirectory(string[] segments)
+        {
+            string[] paths = [.. Paths, .. segments];
+            return new FtpDirectory(segments[^1], paths, Source, Host, Port, UserName, Password, RootPath);
+        }
     }
 }

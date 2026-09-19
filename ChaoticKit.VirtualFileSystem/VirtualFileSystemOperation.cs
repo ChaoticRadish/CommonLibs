@@ -16,6 +16,11 @@ namespace ChaoticKit.VirtualFileSystem
         OpenWrite,
 
         /// <summary>
+        /// 以更新方式打开写入流
+        /// </summary>
+        OpenUpdate,
+
+        /// <summary>
         /// 关闭流 (流被释放时触发)
         /// </summary>
         CloseStream,
