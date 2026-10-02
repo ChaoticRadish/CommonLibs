@@ -1,4 +1,5 @@
 using ChaoticKit.Data.Struct;
+using ChaoticKit.Streams;
 
 namespace ChaoticKit.VirtualFileSystem.Default
 {
@@ -92,6 +93,26 @@ namespace ChaoticKit.VirtualFileSystem.Default
 
         /// <inheritdoc/>
         public abstract ValueTask<IOperationResultEx<bool>> FileExistsAsync(IVirtualFile file, CancellationToken cancellationToken = default);
+
+        /// <inheritdoc/>
+        /// <remarks>默认不支持直接获取长度, 由 <see cref="GetFileLengthAsync"/> 以读取内容的方式计算; 实现可直接取得长度时应重写并返回 <see langword="true"/></remarks>
+        public virtual bool SupportGetFileLength(IVirtualFile file) => false;
+
+        /// <inheritdoc/>
+        /// <remarks>默认以读取内容的方式计算长度, 供直接调用实现的场景使用; 实现可直接取得长度时应重写</remarks>
+        public virtual ValueTask<IOperationResultEx<long>> GetFileLengthAsync(IVirtualFile file, CancellationToken cancellationToken = default)
+        {
+            return RunAsync<long>(async () =>
+            {
+                var openResult = await OpenReadAsync(file, cancellationToken);
+                if (openResult.IsFailure || openResult.Data == null)
+                {
+                    throw new IOException(openResult.FailureReason ?? "打开文件读取流失败");
+                }
+                using var stream = openResult.Data;
+                return await StreamLengthHelper.CountLengthAsync(stream, cancellationToken);
+            });
+        }
 
         /// <inheritdoc/>
         public abstract ValueTask<IOperationResultEx> DeleteFileAsync(IVirtualFile file, CancellationToken cancellationToken = default);

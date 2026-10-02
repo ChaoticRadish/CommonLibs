@@ -1,4 +1,5 @@
 using ChaoticKit.Data.Struct;
+using ChaoticKit.Streams;
 
 namespace ChaoticKit.VirtualFileSystem.Default
 {
@@ -221,6 +222,45 @@ namespace ChaoticKit.VirtualFileSystem.Default
         {
             return RunProviderAsync(VirtualFileSystemOperation.FileExists, file, null, file.FileSystemType,
                 provider => provider.FileExistsAsync(file, cancellationToken));
+        }
+
+        /// <inheritdoc/>
+        /// <remarks>由条目所属的实现决定; 未注册实现时返回 <see langword="false"/></remarks>
+        public bool SupportGetFileLength(IVirtualFile file)
+        {
+            return Resolve(file.FileSystemType)?.SupportGetFileLength(file) ?? false;
+        }
+
+        /// <inheritdoc/>
+        /// <remarks>条目所属实现支持直接获取时直接取得, 否则打开只读流计算长度; 结果不作缓存</remarks>
+        public async ValueTask<IOperationResultEx<long>> GetFileLengthAsync(IVirtualFile file, CancellationToken cancellationToken = default)
+        {
+            RaiseInvoking(VirtualFileSystemOperation.GetFileLength, file, null);
+            var provider = Resolve(file.FileSystemType);
+            IOperationResultEx<long> result;
+            if (provider == null)
+            {
+                result = OperationResultEx<long>.Failure($"未注册实现: {file.FileSystemType}");
+            }
+            else if (provider.SupportGetFileLength(file))
+            {
+                result = await provider.GetFileLengthAsync(file, cancellationToken);
+            }
+            else
+            {
+                var openResult = await OpenReadAsync(file, cancellationToken);
+                if (openResult.IsFailure || openResult.Data == null)
+                {
+                    result = OperationResultEx<long>.Failure(openResult.FailureReason ?? "打开文件读取流失败");
+                }
+                else
+                {
+                    using var stream = openResult.Data;
+                    result = OperationResultEx<long>.Success(await StreamLengthHelper.CountLengthAsync(stream, cancellationToken));
+                }
+            }
+            RaiseInvoked(VirtualFileSystemOperation.GetFileLength, file, null, result);
+            return result;
         }
 
         /// <inheritdoc/>

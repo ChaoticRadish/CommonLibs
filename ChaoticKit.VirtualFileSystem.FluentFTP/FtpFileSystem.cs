@@ -289,6 +289,25 @@ namespace ChaoticKit.VirtualFileSystem.FluentFTP
         }
 
         /// <inheritdoc/>
+        public override bool SupportGetFileLength(IVirtualFile file) => true;
+
+        /// <inheritdoc/>
+        public override ValueTask<IOperationResultEx<long>> GetFileLengthAsync(IVirtualFile file, CancellationToken cancellationToken = default)
+        {
+            return RunAsync<long>(async () =>
+            {
+                string remote = ResolveRemotePath(file.Directory, file.Name);
+                using var client = CreateClient(file);
+                long length = await ConnectAndUseAsync(client, cancellationToken, c => c.GetFileSize(remote, -1, cancellationToken));
+                if (length < 0)
+                {
+                    throw new IOException($"取得 FTP 文件长度失败: {remote}");
+                }
+                return length;
+            });
+        }
+
+        /// <inheritdoc/>
         public override ValueTask<IOperationResultEx> DeleteFileAsync(IVirtualFile file, CancellationToken cancellationToken = default)
         {
             return RunAsync(async () =>
