@@ -56,4 +56,6 @@ $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 . (Join-Path $scriptDir "Release-Common.ps1")
 
 # 执行发布分支创建
+# 注意：显式透传开关参数。Invoke-ReleaseBranchCreation 内部重新声明了同名参数
+# 并以 $false 为默认值，必须显式传入才能生效。
 Invoke-ReleaseBranchCreation -ScenarioConfig $ScenarioConfig -MainBranch $MainBranch -RootFilesToCopy $RootFilesToCopy -SkipCleanCheck:$SkipCleanCheck -CreateTag:$CreateTag

@@ -1,4 +1,4 @@
-﻿# ============================================================================
+# ============================================================================
 # Git 自动化发布脚本 - 仅发布核心库场景
 # 功能：从开发主干分支创建 core 场景的 Release 分支
 # ============================================================================
@@ -43,4 +43,6 @@ $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 . (Join-Path $scriptDir "Release-Common.ps1")
 
 # 执行发布分支创建
+# 注意：必须显式透传开关参数。Invoke-ReleaseBranchCreation 内部重新声明了
+# 同名参数并以 $false 为默认值，会遮蔽本脚本作用域内的同名变量。
 Invoke-ReleaseBranchCreation -ScenarioConfig $ScenarioConfig -MainBranch $MainBranch -RootFilesToCopy $RootFilesToCopy -SkipCleanCheck:$SkipCleanCheck -CreateTag:$CreateTag
