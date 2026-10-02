@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows;
 
 namespace ChaoticKit.WpfWinformMix.Adapter
 {
@@ -26,6 +25,13 @@ namespace ChaoticKit.WpfWinformMix.Adapter
             => new WpfWindowApiContext(window);
         public static IWindowApiContext Create(System.Windows.Forms.Form form)
             => new WinformWindowApiContext(form);
+
+        public static Func<System.Windows.Window, IWindowApiContext> CreateWpfContext { get; set; } = DefaultCreateWpfContext;
+        private static IWindowApiContext DefaultCreateWpfContext(System.Windows.Window window) => new WpfWindowApiContext(window);
+
+
+        public static Func<System.Windows.Forms.Form, IWindowApiContext> CreateWinformContext { get; set; } = DefaultCreateWinformContext;
+        private static IWindowApiContext DefaultCreateWinformContext(System.Windows.Forms.Form window) => new WinformWindowApiContext(window);
     }
 
     internal readonly struct WpfWindowApiContext(System.Windows.Window window) : IWindowApiContext
@@ -43,9 +49,9 @@ namespace ChaoticKit.WpfWinformMix.Adapter
     /// <param name="window"></param>
     public class WpfWindowApiImpl(System.Windows.Window window) : IWindowApi
     {
-        public Window Window { get; } = window;
+        public System.Windows.Window Window { get; } = window;
 
-        public void Show(object? owner)
+        public virtual void Show(object? owner)
         {
             if (owner is System.Windows.Window other)
             {
@@ -62,7 +68,7 @@ namespace ChaoticKit.WpfWinformMix.Adapter
                 Window.Show();
         }
 
-        public ModalResult ShowDialog(object? owner)
+        public virtual ModalResult ShowDialog(object? owner)
         {
             bool? result;
             if (owner is System.Windows.Window other)
@@ -101,7 +107,7 @@ namespace ChaoticKit.WpfWinformMix.Adapter
     {
         public Form Form { get; } = form;
 
-        public void Show(object? owner)
+        public virtual void Show(object? owner)
         {
             if (owner is System.Windows.Window window)
             {
@@ -116,7 +122,7 @@ namespace ChaoticKit.WpfWinformMix.Adapter
                 Form.Show();
         }
 
-        public ModalResult ShowDialog(object? owner)
+        public virtual ModalResult ShowDialog(object? owner)
         {
             DialogResult result;
             if (owner is System.Windows.Window window)

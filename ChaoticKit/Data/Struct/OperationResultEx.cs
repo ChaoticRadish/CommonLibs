@@ -1,4 +1,4 @@
-﻿using ChaoticKit.Extensions;
+using ChaoticKit.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -75,9 +75,9 @@ namespace ChaoticKit.Data.Struct
         /// 转换为 <see cref="OperationResult"/>
         /// </summary>
         /// <returns></returns>
-        public readonly OperationResult ToOpertionResult()
+        public readonly OperationResult ToOperationResult()
         {
-            if (Success)
+            if (IsSuccess)
             {
                 return (true, SuccessInfo);
             }
@@ -89,7 +89,17 @@ namespace ChaoticKit.Data.Struct
             {
                 return (false, "发生异常: " + Exception?.Message);
             }
-        } 
+        }
+
+        /// <summary>
+        /// 转换为 <see cref="OperationResult"/>
+        /// </summary>
+        /// <returns></returns>
+        [Obsolete("方法名拼写有误, 已弃用, 请使用 ToOperationResult() 代替。")]
+        public readonly OperationResult ToOpertionResult()
+        {
+            return ToOperationResult();
+        }
 
         #endregion
 

@@ -1,4 +1,4 @@
-﻿################################################################################
+################################################################################
 # 此 .gitignore 文件已由 Microsoft(R) Visual Studio 自动创建。
 ################################################################################
 
@@ -14,6 +14,8 @@
 # 测试项目
 /ChaoticKit.LibTest.Console/bin
 /ChaoticKit.LibTest.Console/obj
+/ChaoticKit.LibTest.Unit/bin
+/ChaoticKit.LibTest.Unit/obj
 /ChaoticKit.LibTest.Wpf/bin
 /ChaoticKit.LibTest.Wpf/obj
 /ChaoticKit.LibTest.Winform/bin
@@ -22,8 +24,6 @@
 /ChaoticKit.Test.Console/obj
 
 # 核心库项目
-/ChaoticKit.Maui/bin
-/ChaoticKit.Maui/obj
 /ChaoticKit/bin
 /ChaoticKit/obj
 /ChaoticKit.Data/bin
@@ -32,6 +32,14 @@
 /ChaoticKit.GDI/obj
 /ChaoticKit.NewtonsoftJson/bin
 /ChaoticKit.NewtonsoftJson/obj
+
+# 虚拟文件系统项目
+/ChaoticKit.VirtualFileSystem/bin
+/ChaoticKit.VirtualFileSystem/obj
+/ChaoticKit.VirtualFileSystem.FluentFTP/bin
+/ChaoticKit.VirtualFileSystem.FluentFTP/obj
+/ChaoticKit.VirtualFileSystem.WindowsShare/bin
+/ChaoticKit.VirtualFileSystem.WindowsShare/obj
 
 # Excel 相关项目
 /ChaoticKit.Excel.NPOI/bin
@@ -46,5 +54,7 @@
 /ChaoticKit.Winform/obj
 /ChaoticKit.Wpf/bin
 /ChaoticKit.Wpf/obj
+/ChaoticKit.Maui/bin
+/ChaoticKit.Maui/obj
 /ChaoticKit.WpfWinformMix/bin
 /ChaoticKit.WpfWinformMix/obj

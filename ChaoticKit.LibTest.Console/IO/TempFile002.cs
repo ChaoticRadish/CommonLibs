@@ -59,8 +59,8 @@ namespace ChaoticKit.LibTest.Console.IO
 
         private void testWrite(TempFileSegment segment, string text, bool dispose)
         {
-            using FileStream fs = File.Open(segment.Path, FileMode.Open);
-            using OffsetWrapperStream ows = new OffsetWrapperStream(fs, segment.Offset, segment.Length);
+            using var writeStream = segment.TempFile.OpenWrite();
+            using OffsetWrapperStream ows = new OffsetWrapperStream(writeStream, segment.Offset, segment.Length);
             ows.Seek(0, SeekOrigin.Begin);
             ows.Write(Encoding.ASCII.GetBytes(text));
 
