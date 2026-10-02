@@ -1,4 +1,4 @@
-﻿# ============================================================================
+# ============================================================================
 # Git 自动化发布脚本 - 完整版
 # 功能：从开发主干分支创建所有场景的 Release 分支
 # ============================================================================
@@ -33,7 +33,9 @@ $ScenarioConfig = @{
         "ChaoticKit.Excel.NPOI.GDI",
         "ChaoticKit.Excel.NPOI.SkiaSharp",
         "ChaoticKit.NewtonsoftJson",
-        "ChaoticKit.Test.Console"
+        "ChaoticKit.VirtualFileSystem",
+        "ChaoticKit.VirtualFileSystem.FluentFTP",
+        "ChaoticKit.VirtualFileSystem.WindowsShare"
     )
 }
 

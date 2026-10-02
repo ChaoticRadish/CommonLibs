@@ -149,7 +149,7 @@ git show release/2026.0606.1430/core
 
 | 场景名 | 包含的项目 |
 |--------|-----------|
-| all | ChaoticKit, ChaoticKit.Data, ChaoticKit.GDI, ChaoticKit.Winform, ChaoticKit.Wpf, ChaoticKit.WpfWinformMix, ChaoticKit.Maui, ChaoticKit.Excel.NPOI, ChaoticKit.Excel.NPOI.GDI, ChaoticKit.Excel.NPOI.SkiaSharp, ChaoticKit.NewtonsoftJson, ChaoticKit.Test.Console |
+| all | ChaoticKit, ChaoticKit.Data, ChaoticKit.GDI, ChaoticKit.Winform, ChaoticKit.Wpf, ChaoticKit.WpfWinformMix, ChaoticKit.Maui, ChaoticKit.Excel.NPOI, ChaoticKit.Excel.NPOI.GDI, ChaoticKit.Excel.NPOI.SkiaSharp, ChaoticKit.NewtonsoftJson, ChaoticKit.VirtualFileSystem, ChaoticKit.VirtualFileSystem.FluentFTP, ChaoticKit.VirtualFileSystem.WindowsShare |
 
 ### 如何修改场景配置
 
