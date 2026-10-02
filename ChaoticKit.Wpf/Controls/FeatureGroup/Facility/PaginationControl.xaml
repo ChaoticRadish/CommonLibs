@@ -1,0 +1,172 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:valueBox="clr-namespace:ChaoticKit.Wpf.Controls.ValueBox"
+    xmlns:converter="clr-namespace:ChaoticKit.Wpf.Converter"
+    mc:Ignorable="d"
+    xmlns:local_FeatureGroup="clr-namespace:ChaoticKit.Wpf.Controls.FeatureGroup">
+
+    <Style TargetType="{x:Type local_FeatureGroup:PaginationControl}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="local_FeatureGroup:PaginationControl">
+                    <ControlTemplate.Resources>
+                        
+                        <converter:TernaryOperatorMultiConverter x:Key="ternaryOperatorMultiConverter"/>
+                        <converter:AndMultiConverter x:Key="andMultiConverter"/>
+                        <converter:InverseBooleanConverter x:Key="inverseBooleanConverter"/>
+                        <converter:BoolToVisibilityConverter x:Key="boolToVisibilityConverter"/>
+
+                        <Style x:Key="DefaultControllerButtonStyle" TargetType="Button">
+                            <Setter Property="Padding" Value="8, 1"></Setter>
+                        </Style>
+                        <Style x:Key="PageNumberContentStyle" TargetType="ContentControl">
+                            <Setter Property="Margin" Value="2, 1"></Setter>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate>
+                                        <Border BorderThickness="1"
+                                                d:DataContext="{d:DesignData Type=local_FeatureGroup:PaginationControlPageButtonViewModel}">
+                                            <Border.BorderBrush>
+                                                <MultiBinding Converter="{StaticResource ternaryOperatorMultiConverter}">
+                                                    <Binding Path="IsSelected"/>
+                                                    <Binding Path="BorderBrush" ElementName="BodyButton"/>
+                                                    <Binding Source="{x:Static Brushes.Transparent}"/>
+                                                </MultiBinding>
+                                            </Border.BorderBrush>
+                                            
+                                            <Button x:Name="BodyButton" Padding="8, 1"
+                                                    Command="{Binding InternalViewModel.GoToPageCommand, RelativeSource={RelativeSource AncestorType=local_FeatureGroup:PaginationControl, Mode=FindAncestor}}"
+                                                    CommandParameter="{Binding PageCode}">
+                                                <Button.Content>
+                                                    <MultiBinding Converter="{StaticResource ternaryOperatorMultiConverter}">
+                                                        <Binding Path="MarkEllipsis"/>
+                                                        <Binding Source="..."/>
+                                                        <Binding Path="PageCode"/>
+                                                    </MultiBinding>
+                                                </Button.Content>
+                                                <Button.IsEnabled>
+                                                    <MultiBinding Converter="{StaticResource andMultiConverter}">
+                                                        <Binding Path="MarkEllipsis" Converter="{StaticResource inverseBooleanConverter}"/>
+                                                        <Binding Path="IsSelected" Converter="{StaticResource inverseBooleanConverter}"/>
+                                                    </MultiBinding>
+                                                </Button.IsEnabled>
+                                            </Button>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                        <Style x:Key="DefaultTextStyle" TargetType="TextBlock">
+                            <Setter Property="Padding" Value="2, 1"></Setter>
+                            <Setter Property="VerticalAlignment" Value="Center"></Setter>
+                        </Style>
+                        <Style x:Key="DefaultTextBoxStyle" TargetType="valueBox:IntInputer001">
+                            <Setter Property="Padding" Value="4, 1"></Setter>
+                            <Setter Property="Width" Value="30"></Setter>
+                            <Setter Property="VerticalAlignment" Value="Center"></Setter>
+                        </Style>
+
+                    </ControlTemplate.Resources>
+                    <Grid DataContext="{Binding RelativeSource={RelativeSource TemplatedParent}}"
+                          d:DataContext="{d:DesignInstance local_FeatureGroup:PaginationControl}"
+                          IsEnabled="{Binding ContentLoading, Converter={StaticResource inverseBooleanConverter}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="{Binding RefreshButtonAreaActualWidth}"/>
+                            <ColumnDefinition Width="{Binding LeftFixedAreaWidth}"/>
+                            <ColumnDefinition Width="{Binding PageNumberButtonAreaActualWidth}"/>
+                            <ColumnDefinition Width="{Binding RightFixedAreaWidth}"/>
+                            <ColumnDefinition Width="{Binding PageCountAreaActualWidth}"/>
+                            <ColumnDefinition Width="{Binding PageJumpAreaActualWidth}"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- 刷新按钮区域 -->
+                        <Button x:Name="PART_RefreshButton" Grid.Column="0" 
+                                Style="{StaticResource DefaultControllerButtonStyle}"
+                                Command="{Binding InternalViewModel.RefreshCommand}">
+                            刷新
+                        </Button>
+
+                        <!-- 左侧固定按钮区域 -->
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <Button Style="{StaticResource DefaultControllerButtonStyle}"
+                                    Command="{Binding InternalViewModel.FirstPageCommand}"
+                                    IsEnabled="{Binding InternalViewModel.HasPrevious}">
+                                首页
+                            </Button>
+                            <Button Style="{StaticResource DefaultControllerButtonStyle}"
+                                    Command="{Binding InternalViewModel.PreviousPageCommand}"
+                                    Visibility="{Binding InternalViewModel.HasPrevious, Converter={StaticResource boolToVisibilityConverter}}">
+                                上一页
+                            </Button>
+                        </StackPanel>
+
+                        <!-- 页码按钮区域 -->
+                        <Border x:Name="PART_PageNumberButtonArea" Grid.Column="2" BorderThickness="1" 
+                                BorderBrush="{Binding BorderBrush, ElementName=PART_RefreshButton}"
+                                         VerticalAlignment="Stretch">
+                            <ItemsControl ItemsSource="{Binding InternalViewModel.PageNumberOptions}"
+                                          HorizontalAlignment="Center">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal" IsItemsHost="True"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="local_FeatureGroup:PaginationControlPageButtonViewModel">
+                                        <ContentControl Style="{StaticResource PageNumberContentStyle}">
+                                        </ContentControl>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Border>
+                        <ContentControl x:Name="PART_PageNumberButtonTemplate" Grid.Column="2"
+                                DataContext="{Binding PageNumberButtonTemplateViewModel}"
+                                Style="{StaticResource PageNumberContentStyle}"
+                                Visibility="Hidden"
+                                HorizontalAlignment="Left"/>
+
+                        <!-- 右侧按钮区域 -->
+                        <StackPanel Grid.Column="3" Orientation="Horizontal">
+                            <Button Style="{StaticResource DefaultControllerButtonStyle}"
+                                    Command="{Binding InternalViewModel.NextPageCommand}"
+                                    Visibility="{Binding InternalViewModel.HasNext, Converter={StaticResource boolToVisibilityConverter}}">
+                                下一页
+                            </Button>
+                            <Button Style="{StaticResource DefaultControllerButtonStyle}"
+                                    Command="{Binding InternalViewModel.LastPageCommand}"
+                                    IsEnabled="{Binding InternalViewModel.HasNext}">
+                                尾页
+                            </Button>
+                        </StackPanel>
+                        
+                        <!-- 页面数量区域 -->
+                        <StackPanel Grid.Column="4" Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource DefaultTextStyle}" Text="{Binding InternalViewModel.PageCode}"/>
+                            <TextBlock Style="{StaticResource DefaultTextStyle}" Text="/"/>
+                            <TextBlock Style="{StaticResource DefaultTextStyle}" Text="{Binding InternalViewModel.TotalPages}"/>
+                            <TextBlock Style="{StaticResource DefaultTextStyle}" Text="页"/>
+                        </StackPanel>
+                        
+                        <!-- 页面跳转区域 -->
+                        <StackPanel Grid.Column="5" Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource DefaultTextStyle}" Text="到第"/>
+                            <valueBox:IntInputer001 Style="{StaticResource DefaultTextBoxStyle}" Value="{Binding InternalViewModel.PageJumpInput}"/>
+                            <TextBlock Style="{StaticResource DefaultTextStyle}" Text="页"/>
+                            <Button Style="{StaticResource DefaultControllerButtonStyle}"
+                                    Command="{Binding InternalViewModel.GoToPageCommand}"
+                                    CommandParameter="{Binding InternalViewModel.PageJumpInput}">跳转</Button>
+                        </StackPanel>
+                        
+                    </Grid>
+                    
+                </ControlTemplate>
+                
+            </Setter.Value>
+            
+        </Setter>
+    </Style>
+
+</ResourceDictionary>
