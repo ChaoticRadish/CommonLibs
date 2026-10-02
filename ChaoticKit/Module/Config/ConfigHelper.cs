@@ -1,4 +1,4 @@
-﻿using ChaoticKit;
+using ChaoticKit;
 using ChaoticKit.Data.Constraint;
 using ChaoticKit.Extensions;
 using ChaoticKit.Module.Config.Wrapper;
@@ -319,6 +319,11 @@ namespace ChaoticKit.Module.Config
 
             var managerWrapper = GetTypeKeyedShared();
             implName ??= GetUseImplName(type);
+            // ⚠ 疑似 bug (未修复, 待人工验证): 当 manager 处于缓存保护状态 (CacheProtecting / ConfigHelper.OnlyAllowAdd = true) 时,
+            // ICachedConfigManager.Save 会直接返回 false (见 ConfigManager.cs 中 `if (CacheProtecting) return false;`),
+            // 于是"保护态"下保存配置必然抛出异常, 而不是按保护语义被忽略或返回失败结果。
+            // 原控制台测试 ChaoticKit.LibTest.Console.Configs.JsonConfig001 正是在 OnlyAllowAdd=true 下调用 SaveConfig 的。
+            // 单元测试已用行为快照锁定当前行为: ChaoticKit.LibTest.Unit\Tests\Configs\JsonConfigNewtonsoftTest.cs
             if (!managerWrapper.Save(type, config, implName))
             {
                 throw new InvalidOperationException("保存配置信息失败")

@@ -196,34 +196,50 @@ namespace ChaoticKit.LibTest.Unit.DataStruct
         #region 异常结果转 OperationResult 的行为
 
         [TestMethod]
-        public void ToOpertionResult_WithException_ReturnsFailedResult()
+        public void ToOperationResult_WithException_ReturnsFailedResult()
         {
-            Log("--- 测试 OperationResultEx.ToOpertionResult() (失败带异常) ---");
+            Log("--- 测试 OperationResultEx.ToOperationResult() (失败带异常) ---");
             OperationResultEx exResult = OperationResultEx.Failure(new Exception(RawExceptionMessage));
 
-            OperationResult op = exResult.ToOpertionResult();
+            OperationResult op = exResult.ToOperationResult();
 
-            // 库行为快照: ToOpertionResult() 内 "if (Success)" 引用的是静态属性 OperationResultEx.Success (恒为成功),
-            // 导致此方法当前总是返回成功结果 —— 疑似库 bug, 待人工确认是否修复。
-            Assert.IsTrue(op.IsSuccess, "库行为快照: ToOpertionResult() 当前总是返回成功(疑似 bug)");
-            Log($"通过(行为快照): ToOpertionResult()={op}, IsSuccess={op.IsSuccess} (注意: 疑似库 bug, 待确认)");
+            // 回归点: 此前方法体写成 "if (Success)", 引用的是静态属性 OperationResultEx.Success (恒为成功),
+            // 导致失败结果也被转换成成功结果; 已修正为 "if (IsSuccess)"。
+            Assert.IsFalse(op.IsSuccess, "失败结果转换后 IsSuccess 应为 false");
+            Assert.AreEqual("发生异常: " + RawExceptionMessage, op.FailureReason, "应保留 FailureReason 中的异常信息");
+            Log($"通过: ToOperationResult()={op}, IsSuccess={op.IsSuccess}");
         }
 
         [TestMethod]
-        public void ToOpertionResult_ExceptionOnly_NoFailureReason_FallbackToExceptionMessage()
+        public void ToOperationResult_ExceptionOnly_NoFailureReason_FallbackToExceptionMessage()
         {
-            Log("--- 测试 OperationResultEx.ToOpertionResult() (仅异常, 无 FailureReason) ---");
+            Log("--- 测试 OperationResultEx.ToOperationResult() (仅异常, 无 FailureReason) ---");
             OperationResultEx exResult = new OperationResultEx
             {
                 IsSuccess = false,
                 Exception = new Exception(RawExceptionMessage),
             };
 
-            OperationResult op = exResult.ToOpertionResult();
+            OperationResult op = exResult.ToOperationResult();
 
-            // 同上: 库行为快照, ToOpertionResult() 总是返回成功(疑似 bug)
-            Assert.IsTrue(op.IsSuccess, "库行为快照: ToOpertionResult() 当前总是返回成功(疑似 bug)");
-            Log($"通过(行为快照): ToOpertionResult()={op}, IsSuccess={op.IsSuccess} (注意: 疑似库 bug, 待确认)");
+            // 回归点: 同 ToOperationResult_WithException_ReturnsFailedResult (恒成功 bug 已修复);
+            // 此用例无 FailureReason, 应走 else 分支回退到异常消息。
+            Assert.IsFalse(op.IsSuccess, "失败结果转换后 IsSuccess 应为 false");
+            Assert.AreEqual("发生异常: " + RawExceptionMessage, op.FailureReason, "无 FailureReason 时应回退到异常消息");
+            Log($"通过: ToOperationResult()={op}, IsSuccess={op.IsSuccess}");
+        }
+
+        [TestMethod]
+        public void ToOperationResult_SuccessWithInfo_ReturnsSuccess()
+        {
+            Log("--- 测试 OperationResultEx.ToOperationResult() (成功结果, 防止修复过度) ---");
+            OperationResultEx okResult = OperationResultEx.SuccessWithInfo("一切正常");
+
+            OperationResult op = okResult.ToOperationResult();
+
+            Assert.IsTrue(op.IsSuccess, "成功结果转换后 IsSuccess 应为 true");
+            Assert.AreEqual("一切正常", op.SuccessInfo, "应保留 SuccessInfo");
+            Log($"通过: ToOperationResult()={op}, IsSuccess={op.IsSuccess}");
         }
 
         [TestMethod]

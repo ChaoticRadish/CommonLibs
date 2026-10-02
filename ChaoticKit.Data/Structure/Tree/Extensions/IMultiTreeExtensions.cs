@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Metadata.Ecma335;
@@ -545,6 +545,11 @@ namespace ChaoticKit.Data.Structure.Tree.Extensions
                 newNodes.Add(newNode);
             }
 
+            // ⚠ 疑似 bug (未修复, 待人工验证后再改): 本行三元表达式的两个分支疑似写反, 且条件恒为真 ——
+            // IndexPreorder 至少会产出根节点, 因此 newNodes.Count > 0 恒成立, 本方法总是返回
+            // "由根节点值新建的孤立节点", 而遍历构建出的整棵新树 (newNodes[0]) 从未被返回, 子节点全部丢失。
+            // 受影响调用: Convert (转换后只剩根节点)。
+            // 单元测试已用行为快照锁定当前行为: ChaoticKit.LibTest.Unit\Tests\DataStruct\TreeExtensionsTest.cs
             return newNodes.Count > 0 ? new SimpleMultiTreeNode<TNewValue>(valueConvertFunc(node)) : newNodes[0];
         }
 

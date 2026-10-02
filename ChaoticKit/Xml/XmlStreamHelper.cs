@@ -1,4 +1,4 @@
-﻿using ChaoticKit.Attributes.Xml;
+using ChaoticKit.Attributes.Xml;
 using ChaoticKit.Data.Constraint;
 using ChaoticKit.Extensions;
 using ChaoticKit.IO;
@@ -901,6 +901,13 @@ namespace ChaoticKit.Xml
             }
             else 
             {
+                // ⚠ 疑似 bug (未修复, 待人工验证): 此处调用的是不带 out 的 Convert 重载, 转换失败时
+                // StringConvertHelper.Convert 会返回 null 并把 isSuccess 置为 false, 但失败信息在此被直接丢弃,
+                // 调用方无从得知转换失败、也不会抛异常。
+                // 表现: 标注 [XmlTextValue] 的类型若不被 StringConvertHelper 支持 (例如 LayeringAddressCode),
+                // 写出 XML 正常, 读回却静默变成默认值 (空值)。
+                // 建议: 改用带 out isSuccess 的重载, 失败时抛异常或记录诊断信息。
+                // 单元测试已用行为快照锁定当前行为: ChaoticKit.LibTest.Unit\Tests\Xml\XmlReadWriteTest.cs (ValueC 读回为空)
                 return StringConvertHelper.Convert(str, type);
             }
         }
