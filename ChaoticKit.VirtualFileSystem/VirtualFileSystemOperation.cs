@@ -41,6 +41,11 @@ namespace ChaoticKit.VirtualFileSystem
         FileExists,
 
         /// <summary>
+        /// 取得文件长度
+        /// </summary>
+        GetFileLength,
+
+        /// <summary>
         /// 删除文件
         /// </summary>
         DeleteFile,

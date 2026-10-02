@@ -55,6 +55,20 @@ namespace ChaoticKit.VirtualFileSystem
         ValueTask<IOperationResultEx<bool>> FileExistsAsync(IVirtualFile file, CancellationToken cancellationToken = default);
 
         /// <summary>
+        /// 判断指定文件是否支持直接获取长度
+        /// <para>为 <see langword="true"/> 表示无需读取文件内容即可取得长度; 为 <see langword="false"/> 时由调用方以读取内容的方式计算</para>
+        /// </summary>
+        /// <param name="file"></param>
+        bool SupportGetFileLength(IVirtualFile file);
+
+        /// <summary>
+        /// 取得文件长度 (字节)
+        /// </summary>
+        /// <param name="file"></param>
+        /// <param name="cancellationToken"></param>
+        ValueTask<IOperationResultEx<long>> GetFileLengthAsync(IVirtualFile file, CancellationToken cancellationToken = default);
+
+        /// <summary>
         /// 删除文件
         /// </summary>
         /// <param name="file"></param>

@@ -214,6 +214,20 @@ namespace ChaoticKit.VirtualFileSystem.WindowsShare
         }
 
         /// <inheritdoc/>
+        public override bool SupportGetFileLength(IVirtualFile file) => true;
+
+        /// <inheritdoc/>
+        public override ValueTask<IOperationResultEx<long>> GetFileLengthAsync(IVirtualFile file, CancellationToken cancellationToken = default)
+        {
+            return RunAsync<long>(() =>
+            {
+                using var connection = TryConnect(file);
+                string full = ResolveFullPath(file.Directory, file.Name);
+                return Task.FromResult(new FileInfo(full).Length);
+            });
+        }
+
+        /// <inheritdoc/>
         public override ValueTask<IOperationResultEx> DeleteFileAsync(IVirtualFile file, CancellationToken cancellationToken = default)
         {
             return RunAsync(() =>
