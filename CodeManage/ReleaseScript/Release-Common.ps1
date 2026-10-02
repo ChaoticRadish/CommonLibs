@@ -132,14 +132,60 @@ function Copy-ProjectDirectory {
     return $true
 }
 
+function Get-StagingProjects {
+    # 项目清单直接来自发布内容本身，而不是场景配置或主仓库的解决方案文件。
+    # 这样解决方案文件与校验逻辑都以"分支实际内容"为准：
+    # 既不会漏掉项目，也不会残留已被排除的项目。
+    param(
+        [string]$StagingDir
+    )
+
+    # 排除目录时只比较"相对于发布内容的路径"，绝不能拿绝对路径去匹配：
+    # 临时目录本身位于 .local\temp 下，用绝对路径匹配 .local 会把所有文件全部排除。
+    $excludedDirNames = @('bin', 'obj', '.git', '.vs')
+
+    $discovered = @()
+    $pendingDirs = New-Object System.Collections.Queue
+    $pendingDirs.Enqueue([PSCustomObject]@{ Full = $StagingDir; Relative = '' })
+
+    while ($pendingDirs.Count -gt 0) {
+        $current = $pendingDirs.Dequeue()
+
+        $subDirs = @(Get-ChildItem -LiteralPath $current.Full -Directory -Force -ErrorAction SilentlyContinue)
+        foreach ($subDir in $subDirs) {
+            if ($excludedDirNames -contains $subDir.Name) { continue }
+            $relativeDir = if ($current.Relative) { "$($current.Relative)/$($subDir.Name)" } else { $subDir.Name }
+            $pendingDirs.Enqueue([PSCustomObject]@{ Full = $subDir.FullName; Relative = $relativeDir })
+        }
+
+        $csprojFiles = @(Get-ChildItem -LiteralPath $current.Full -Filter *.csproj -File -Force -ErrorAction SilentlyContinue)
+        foreach ($csprojFile in $csprojFiles) {
+            # 只收集项目根目录下的 csproj，跳过 obj 等子目录里的中间产物
+            $relativePath = if ($current.Relative) { "$($current.Relative)/$($csprojFile.Name)" } else { $csprojFile.Name }
+            $discovered += [PSCustomObject]@{
+                Name = [System.IO.Path]::GetFileNameWithoutExtension($csprojFile.Name)
+                Path = $relativePath
+            }
+        }
+    }
+
+    return @($discovered | Sort-Object Name)
+}
+
 function New-SolutionFile {
     param(
         [string]$OutputPath,
-        [string[]]$ProjectNames,
+        [PSCustomObject[]]$Projects,
         [string]$VersionNumber,
         [string]$ScenarioName
     )
-    
+
+    if ($Projects.Count -eq 0) {
+        throw "生成解决方案文件时没有传入任何项目：$OutputPath"
+    }
+
+    Write-Log "解决方案将包含 $($Projects.Count) 个项目：$((($Projects | ForEach-Object { $_.Name }) -join ', '))" -Level Info
+
     # 使用 StringBuilder 构建解决方案文件内容
     $sb = [System.Text.StringBuilder]::new()
     
@@ -153,12 +199,12 @@ function New-SolutionFile {
     $projectGuids = @{}
     $projectTypeGuid = "{9A19103F-16F7-4668-BE54-9A1E7A4F7556}"  # SDK 风格项目
     
-    foreach ($projectName in $ProjectNames) {
+    foreach ($project in $Projects) {
         $guid = [System.Guid]::NewGuid().ToString().ToUpper()
-        $projectGuids[$projectName] = $guid
+        $projectGuids[$project.Name] = $guid
         
         [void]$sb.AppendLine()
-        [void]$sb.AppendLine("Project(`"$projectTypeGuid`") = `"$projectName`", `"$projectName\$projectName.csproj`", `{$guid}`"")
+        [void]$sb.AppendLine("Project(`"$projectTypeGuid`") = `"$($project.Name)`", `"$($project.Path)`", `{$guid}`"")
         [void]$sb.AppendLine("EndProject")
     }
     
@@ -172,8 +218,8 @@ function New-SolutionFile {
     [void]$sb.AppendLine("	GlobalSection(ProjectConfigurationPlatforms) = postSolution")
     
     # 为每个项目添加配置
-    foreach ($projectName in $ProjectNames) {
-        $guid = $projectGuids[$projectName]
+    foreach ($project in $Projects) {
+        $guid = $projectGuids[$project.Name]
         [void]$sb.AppendLine("		{$guid}.Debug|Any CPU.ActiveCfg = Debug|Any CPU")
         [void]$sb.AppendLine("		{$guid}.Debug|Any CPU.Build.0 = Debug|Any CPU")
         [void]$sb.AppendLine("		{$guid}.Release|Any CPU.ActiveCfg = Release|Any CPU")
@@ -429,18 +475,17 @@ function Invoke-ReleaseBranchCreation {
                 }
 
                 # ----- 6.2 生成解决方案文件 -----
-                # 场景 all 包含全部项目时沿用主仓库的解决方案文件，
-                # 避免因缺少 项目名 -> csproj 名称 映射而生成无法加载的工程条目。
-                $slnSource = Join-Path $repoRoot "ChaoticKit.sln"
+                # 项目清单来自发布内容实际包含的 .csproj，而不是场景配置，
+                # 也不用主仓库的 ChaoticKit.sln：后者引用了被排除的项目
+                # （例如测试项目），会让 Release 分支出现指向不存在项目的条目。
+                $discoveredProjects = @(Get-StagingProjects -StagingDir $stagingDir)
+                if ($discoveredProjects.Count -eq 0) {
+                    throw "在发布内容中没有找到任何 .csproj 项目文件：$stagingDir"
+                }
+
                 $slnTarget = Join-Path $stagingDir "ChaoticKit.sln"
-                if ($scenario -eq "all" -and (Test-Path $slnSource)) {
-                    Copy-Item -Path $slnSource -Destination $slnTarget -Force
-                    Write-Log "已复制解决方案文件：ChaoticKit.sln" -Level Success
-                }
-                else {
-                    New-SolutionFile -OutputPath $slnTarget -ProjectNames $copiedProjects -VersionNumber $versionNumber -ScenarioName $scenario
-                    Write-Log "已生成解决方案文件：ChaoticKit.sln" -Level Success
-                }
+                New-SolutionFile -OutputPath $slnTarget -Projects $discoveredProjects -VersionNumber $versionNumber -ScenarioName $scenario
+                Write-Log "已生成解决方案文件：ChaoticKit.sln" -Level Success
 
                 # ----- 6.3 生成溯源文件 -----
                 $releaseInfoPath = Join-Path $stagingDir "RELEASE_INFO.md"
@@ -483,6 +528,7 @@ function Invoke-ReleaseBranchCreation {
                         throw "读取树对象失败"
                     }
 
+                    # 1) 顶层条目不得出现场景配置之外的内容
                     $treeTopLevel = @($treeNames | ForEach-Object { ($_ -split '/')[0] } | Sort-Object -Unique)
                     $expectedTopLevel = @($copiedProjects + $RootFilesToCopy + @("ChaoticKit.sln", "RELEASE_INFO.md") | Sort-Object -Unique)
                     $unexpected = @($treeTopLevel | Where-Object { $expectedTopLevel -notcontains $_ })
@@ -491,7 +537,21 @@ function Invoke-ReleaseBranchCreation {
                         throw "发布内容校验失败，出现预期外的顶层条目：$($unexpected -join ', ')"
                     }
 
-                    Write-Log "发布内容校验通过（$($treeNames.Count) 个文件，$($treeTopLevel.Count) 个顶层条目）" -Level Success
+                    # 2) 解决方案文件引用的每个项目都必须真实存在于分支内容中
+                    $missingProjects = @($discoveredProjects |
+                        Where-Object { $treeNames -notcontains $_.Path })
+                    if ($missingProjects.Count -gt 0) {
+                        throw "ChaoticKit.sln 引用了分支内容中不存在的项目：$((($missingProjects | ForEach-Object { $_.Path }) -join ', '))"
+                    }
+
+                    # 3) 场景配置的项目都必须真正进入分支内容
+                    $absentProjects = @($copiedProjects |
+                        Where-Object { $project = $_; -not ($treeNames | Where-Object { $_ -like "$project/*" }) })
+                    if ($absentProjects.Count -gt 0) {
+                        throw "以下项目未进入发布内容：$($absentProjects -join ', ')"
+                    }
+
+                    Write-Log "发布内容校验通过（$($treeNames.Count) 个文件，$($treeTopLevel.Count) 个顶层条目，$($discoveredProjects.Count) 个项目）" -Level Success
 
                     # 生成无父提交的提交对象（等价于 Orphan 分支）
                     $newCommit = (git commit-tree $treeHash -F $messageFile 2>&1)
