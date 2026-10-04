@@ -58,3 +58,7 @@
 /ChaoticKit.Maui/obj
 /ChaoticKit.WpfWinformMix/bin
 /ChaoticKit.WpfWinformMix/obj
+
+# Microsoft 扩展项目
+/ChaoticKit.Microsoft.Configuration/bin
+/ChaoticKit.Microsoft.Configuration/obj
